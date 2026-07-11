@@ -9,8 +9,8 @@
 <!-- ============================================================
      FAVICON / ICÔNE DE L'ONGLET NAVIGATEUR
      ============================================================ -->
-<link rel="icon" href="/assets/favicon.ico" sizes="any">
-<link rel="icon" href="/icons/icon-192.png" type="image/png">
+<link rel="icon" href="assets/favicon.ico" sizes="any">
+<link rel="icon" href="icons/icon-192.png" type="image/png">
 
 <!-- ============================================================
      PARTAGE SUR RÉSEAUX SOCIAUX (Open Graph / Twitter Card)
@@ -20,12 +20,12 @@
 <meta property="og:type" content="website">
 <meta property="og:title" content="BOUA Trans — Transport & Logistique">
 <meta property="og:description" content="Transport routier et envois internationaux Espagne ↔ Afrique de l'Ouest. Devis instantané, suivi en temps réel.">
-<meta property="og:image" content="/assets/og-image.png">
+<meta property="og:image" content="assets/og-image.png">
 <meta property="og:locale" content="fr_FR">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="BOUA Trans — Transport & Logistique">
 <meta name="twitter:description" content="Transport routier et envois internationaux Espagne ↔ Afrique de l'Ouest.">
-<meta name="twitter:image" content="/assets/og-image.png">
+<meta name="twitter:image" content="assets/og-image.png">
 
 <!-- ============================================================
      DONNÉES STRUCTURÉES (SEO — aide Google à comprendre l'entreprise :
@@ -37,7 +37,7 @@
   "@context": "https://schema.org",
   "@type": "MovingCompany",
   "name": "BOUA Trans",
-  "image": "/assets/og-image.png",
+  "image": "assets/og-image.png",
   "telephone": "+34745006675",
   "email": "bouayuncos@gmail.com",
   "address": {
@@ -59,9 +59,9 @@
      au même niveau que index.html. Voir les instructions complètes en
      fin de réponse pour leur contenu exact.
      ============================================================ -->
-<link rel="manifest" href="/manifest.json">
+<link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#0F1F38">
-<link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 
 <!-- ============================================================
      POLICE (facultatif) : Barlow Condensed pour les titres.
@@ -143,7 +143,7 @@
 <header class="sticky top-0 z-50 bg-navy/95 backdrop-blur border-b border-white/10">
   <nav class="max-w-6xl mx-auto flex items-center justify-between px-5 py-4">
     <a href="#top" class="flex items-center gap-2.5">
-      <img src="/assets/logo-header.png" alt="Logo BOUA Trans" class="w-11 h-11 rounded-full bg-white p-0.5 object-contain">
+      <img src="assets/logo-header.png" alt="Logo BOUA Trans" class="w-11 h-11 rounded-full bg-white p-0.5 object-contain">
       <!-- MODIFIER LE TEXTE ICI : nom du logo -->
       <span class="font-display text-xl font-bold text-cream">BOUA <span class="text-amber">Trans</span></span>
     </a>
@@ -703,7 +703,7 @@
     <div class="grid sm:grid-cols-2 md:grid-cols-4 gap-10 pb-10 border-b border-white/10">
       <div>
         <div class="flex items-center gap-2.5 mb-4">
-          <img src="/assets/logo-header.png" alt="Logo BOUA Trans" class="w-10 h-10 rounded-full bg-white p-0.5 object-contain">
+          <img src="assets/logo-header.png" alt="Logo BOUA Trans" class="w-10 h-10 rounded-full bg-white p-0.5 object-contain">
           <h4 class="text-cream font-semibold">BOUA Trans</h4>
         </div>
         <p class="text-sm max-w-[240px]">Entreprise familiale de transport et logistique basée à Yuncos, Tolède.</p>
@@ -765,7 +765,7 @@
   <div class="absolute inset-0 bg-navy/70 backdrop-blur-sm" onclick="document.getElementById('iosInstallModal').classList.add('hidden')"></div>
   <div class="relative bg-white dark:bg-navylight rounded-2xl shadow-2xl w-full max-w-sm p-7 text-center">
     <button onclick="document.getElementById('iosInstallModal').classList.add('hidden')" aria-label="Fermer" class="absolute top-4 right-4 text-slate-400 hover:text-amber">✕</button>
-    <img src="/assets/logo-header.png" alt="Logo BOUA Trans" class="w-16 h-16 rounded-full bg-white p-1 mx-auto mb-4 shadow">
+    <img src="assets/logo-header.png" alt="Logo BOUA Trans" class="w-16 h-16 rounded-full bg-white p-1 mx-auto mb-4 shadow">
     <h3 class="text-xl font-bold text-navy dark:text-white mb-3">Installer sur iPhone / iPad</h3>
     <ol class="text-sm text-left text-slate-600 dark:text-cream/70 space-y-2.5 mb-2">
       <li>1. Appuie sur l'icône <strong>Partager</strong> ⬆️ en bas de Safari</li>
@@ -807,7 +807,7 @@
   <div class="sticky top-0 z-10 bg-navy border-b border-white/10">
     <div class="max-w-6xl mx-auto px-5 py-4 flex items-center justify-between flex-wrap gap-3">
       <div class="flex items-center gap-2.5">
-        <img src="/assets/logo-header.png" alt="Logo BOUA Trans" class="w-9 h-9 rounded-full bg-white p-0.5 object-contain">
+        <img src="assets/logo-header.png" alt="Logo BOUA Trans" class="w-9 h-9 rounded-full bg-white p-0.5 object-contain">
         <span class="font-display text-lg font-bold text-cream">Tableau de bord <span class="text-amber">admin</span></span>
       </div>
       <div class="flex items-center gap-3">
@@ -1504,7 +1504,7 @@ function ouvrirModaleInstallIOS(){
 // Enregistrement du Service Worker (nécessaire pour que le site soit installable)
 if('serviceWorker' in navigator){
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/sw.js').catch(err => {
+    navigator.serviceWorker.register('sw.js').catch(err => {
       console.log("Service Worker non enregistré (normal si sw.js n'existe pas encore) :", err);
     });
   });
