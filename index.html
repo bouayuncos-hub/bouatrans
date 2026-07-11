@@ -120,6 +120,14 @@
   }
   @keyframes dash{ to{ stroke-dashoffset:-400; } }
   @media (prefers-reduced-motion: reduce){ .route-line{ animation:none; } }
+
+  /* Onglets de collections du tableau de bord admin */
+  .admin-tab{
+    font-size: 0.82rem; font-weight: 600; padding: 8px 16px; border-radius: 999px;
+    color: rgba(245,243,237,0.6); background: transparent; transition: all .15s ease;
+  }
+  .admin-tab.active{ background: #E8A33D; color: #0F1F38; }
+  .admin-tab:not(.active):hover{ color: #F5F3ED; background: rgba(255,255,255,0.08); }
 </style>
 </head>
 
@@ -738,9 +746,12 @@
       </iframe>
     </div>
 
-    <div class="flex flex-wrap justify-between gap-2 pt-6 text-xs">
+    <div class="flex flex-wrap justify-between items-center gap-2 pt-6 text-xs">
       <span>© 2026 BOUA Trans. Tous droits réservés.</span>
-      <span>Site conçu avec soin à Yuncos</span>
+      <span class="flex items-center gap-4">
+        Site conçu avec soin à Yuncos
+        <button id="adminAccessBtn" class="text-cream/40 hover:text-amber transition">Administration</button>
+      </span>
     </div>
   </div>
 </footer>
@@ -761,6 +772,90 @@
       <li>2. Fais défiler et choisis <strong>« Sur l'écran d'accueil »</strong></li>
       <li>3. Appuie sur <strong>« Ajouter »</strong> en haut à droite</li>
     </ol>
+  </div>
+</div>
+
+<!-- ============================================================
+     MODALE CONNEXION ADMINISTRATEUR
+     ⚠️ SÉCURITÉ : ce mot de passe unique n'est qu'un verrou d'interface,
+     PAS une vraie sécurité. Il est visible par quiconque lit le code
+     source du site. La vraie protection des données doit venir des
+     règles de sécurité Firestore (voir explications en fin de réponse).
+     ============================================================ -->
+<div id="adminLoginModal" class="hidden fixed inset-0 z-[70] flex items-center justify-center p-5">
+  <div class="absolute inset-0 bg-navy/80 backdrop-blur-sm" id="adminLoginOverlay"></div>
+  <div class="relative bg-white dark:bg-navylight rounded-2xl shadow-2xl w-full max-w-sm p-7">
+    <button id="adminLoginClose" aria-label="Fermer" class="absolute top-4 right-4 text-slate-400 hover:text-amber">✕</button>
+    <h3 class="text-2xl font-bold text-navy dark:text-white mb-1.5">Administration</h3>
+    <p class="text-sm text-slate-500 dark:text-cream/60 mb-6">Accès réservé. Entrez le mot de passe.</p>
+    <form id="adminLoginForm">
+      <input type="password" id="adminPasswordInput" placeholder="Mot de passe" required autocomplete="off"
+        class="w-full px-3.5 py-3 rounded-lg border border-slate-200 dark:border-white/15 bg-cream dark:bg-navy focus:outline-none focus:border-amber mb-4">
+      <button type="submit" class="w-full bg-amber hover:bg-amberdark text-navy font-semibold py-3.5 rounded-full transition">Entrer</button>
+      <p id="adminLoginError" class="hidden text-xs mt-3 text-red-500 font-medium">Mot de passe incorrect.</p>
+    </form>
+  </div>
+</div>
+
+<!-- ============================================================
+     TABLEAU DE BORD ADMINISTRATEUR
+     Panneau plein écran, cliquable uniquement après connexion.
+     Permet de consulter, modifier, ajouter et supprimer les documents
+     de n'importe quelle collection Firestore du site.
+     ============================================================ -->
+<div id="adminDashboard" class="hidden fixed inset-0 z-[70] bg-cream dark:bg-navy overflow-y-auto">
+  <div class="sticky top-0 z-10 bg-navy border-b border-white/10">
+    <div class="max-w-6xl mx-auto px-5 py-4 flex items-center justify-between flex-wrap gap-3">
+      <div class="flex items-center gap-2.5">
+        <img src="/assets/logo-header.png" alt="Logo BOUA Trans" class="w-9 h-9 rounded-full bg-white p-0.5 object-contain">
+        <span class="font-display text-lg font-bold text-cream">Tableau de bord <span class="text-amber">admin</span></span>
+      </div>
+      <div class="flex items-center gap-3">
+        <button id="adminAddBtn" class="bg-amber hover:bg-amberdark text-navy font-semibold text-sm px-4 py-2.5 rounded-full transition">+ Ajouter</button>
+        <button id="adminLogoutBtn" class="text-cream/70 hover:text-amber text-sm font-medium">Déconnexion</button>
+        <button id="adminCloseBtn" aria-label="Fermer" class="text-cream/70 hover:text-amber text-xl leading-none">✕</button>
+      </div>
+    </div>
+    <!-- Onglets de collections -->
+    <div class="max-w-6xl mx-auto px-5 pb-3 flex gap-2 flex-wrap">
+      <button class="admin-tab" data-collection="devis">Devis</button>
+      <button class="admin-tab" data-collection="candidatures">Candidatures</button>
+      <button class="admin-tab" data-collection="commandes">Commandes / Suivi</button>
+      <button class="admin-tab" data-collection="fret">Bourse de fret</button>
+      <button class="admin-tab" data-collection="offres_emploi">Offres d'emploi</button>
+    </div>
+  </div>
+
+  <div class="max-w-6xl mx-auto px-5 py-8">
+    <p class="text-sm text-slate-500 dark:text-cream/50 mb-5">
+      Collection active : <span id="adminCollectionLabel" class="font-mono-num font-semibold text-navy dark:text-cream">devis</span>
+      — <span id="adminCount">0</span> document(s) chargé(s)
+    </p>
+
+    <!-- Liste des documents (remplie dynamiquement, scroll infini) -->
+    <div id="adminDocList" class="space-y-3"></div>
+
+    <!-- Sentinelle observée pour déclencher le chargement de la page suivante -->
+    <div id="adminScrollSentinel" class="h-10 flex items-center justify-center">
+      <span id="adminLoadingLabel" class="text-xs text-slate-400 dark:text-cream/40">Chargement...</span>
+    </div>
+  </div>
+</div>
+
+<!-- MODALE ÉDITION / AJOUT DE DOCUMENT (édition JSON = contrôle total sur n'importe quel champ) -->
+<div id="adminEditModal" class="hidden fixed inset-0 z-[80] flex items-center justify-center p-5">
+  <div class="absolute inset-0 bg-navy/80 backdrop-blur-sm" id="adminEditOverlay"></div>
+  <div class="relative bg-white dark:bg-navylight rounded-2xl shadow-2xl w-full max-w-lg p-7">
+    <button id="adminEditClose" aria-label="Fermer" class="absolute top-4 right-4 text-slate-400 hover:text-amber">✕</button>
+    <h3 id="adminEditTitle" class="text-xl font-bold text-navy dark:text-white mb-1.5">Modifier le document</h3>
+    <p class="text-xs text-slate-500 dark:text-cream/50 mb-4">Modifie les champs au format JSON, puis enregistre.</p>
+    <textarea id="adminEditTextarea" rows="12"
+      class="w-full font-mono-num text-xs px-3.5 py-3 rounded-lg border border-slate-200 dark:border-white/15 bg-cream dark:bg-navy focus:outline-none focus:border-amber"></textarea>
+    <p id="adminEditError" class="hidden text-xs mt-2 text-red-500 font-medium">JSON invalide, vérifie la syntaxe.</p>
+    <div class="flex gap-3 mt-5">
+      <button id="adminEditSave" class="flex-1 bg-amber hover:bg-amberdark text-navy font-semibold py-3 rounded-full transition">Enregistrer</button>
+      <button id="adminEditDelete" class="hidden text-red-500 hover:text-red-600 font-semibold px-4 text-sm">Supprimer</button>
+    </div>
   </div>
 </div>
 
@@ -822,8 +917,10 @@
      ============================================================ -->
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
-  import { getFirestore, collection, addDoc, getDocs, serverTimestamp }
-    from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
+  import {
+    getFirestore, collection, addDoc, getDocs, serverTimestamp,
+    query, orderBy, limit, startAfter, doc, updateDoc, deleteDoc
+  } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
   import { getStorage, ref, uploadBytes, getDownloadURL }
     from "https://www.gstatic.com/firebasejs/10.13.0/firebase-storage.js";
 
@@ -845,7 +942,7 @@
   // classique plus bas (qui gère aussi la logique non-Firebase du site).
   window._db = db;
   window._storage = storage;
-  window._firestore = { collection, addDoc, getDocs, serverTimestamp };
+  window._firestore = { collection, addDoc, getDocs, serverTimestamp, query, orderBy, limit, startAfter, doc, updateDoc, deleteDoc };
   window._storageFns = { ref, uploadBytes, getDownloadURL };
 </script>
 
@@ -1528,6 +1625,285 @@ if('IntersectionObserver' in window && elementsARevelerAuScroll.length){
   }, { threshold: 0.12 });
   elementsARevelerAuScroll.forEach(el => observateur.observe(el));
 }
+
+/* ================================================================
+   TABLEAU DE BORD ADMINISTRATEUR
+   ================================================================
+   ⚠️ AVERTISSEMENT DE SÉCURITÉ IMPORTANT — à lire avant mise en ligne :
+
+   Ce mot de passe unique ("aicha") n'est PAS une sécurité réelle.
+   C'est un simple verrou d'interface : il empêche un visiteur ordinaire
+   de tomber par hasard sur le panneau admin, mais n'importe qui sachant
+   lire du code source (clic droit → Afficher le code source) peut voir
+   ce mot de passe en clair et l'utiliser.
+
+   La vraie sécurité de tes données doit venir des RÈGLES DE SÉCURITÉ
+   FIRESTORE (Firebase Console → Firestore Database → Règles), pas de ce
+   mot de passe. Tant que ces règles autorisent la lecture/écriture
+   publique, N'IMPORTE QUI peut lire ou modifier tes données directement
+   via l'API Firebase, mot de passe ou non.
+
+   Solution robuste recommandée pour la suite : remplacer ce mot de passe
+   par Firebase Authentication (un vrai compte administrateur avec email/
+   mot de passe géré par Firebase) + des règles Firestore du type
+   "allow write: if request.auth.uid == 'TON_UID_ADMIN'". On peut le
+   mettre en place ensemble dans un prochain échange.
+   ================================================================ */
+const MOT_DE_PASSE_ADMIN = "aicha";
+
+const adminAccessBtn = document.getElementById('adminAccessBtn');
+const adminLoginModal = document.getElementById('adminLoginModal');
+const adminLoginOverlay = document.getElementById('adminLoginOverlay');
+const adminLoginClose = document.getElementById('adminLoginClose');
+const adminLoginForm = document.getElementById('adminLoginForm');
+const adminPasswordInput = document.getElementById('adminPasswordInput');
+const adminLoginError = document.getElementById('adminLoginError');
+const adminDashboard = document.getElementById('adminDashboard');
+const adminCloseBtn = document.getElementById('adminCloseBtn');
+const adminLogoutBtn = document.getElementById('adminLogoutBtn');
+
+function ouvrirConnexionAdmin(){
+  adminLoginModal.classList.remove('hidden');
+  adminLoginModal.classList.add('flex');
+}
+function fermerConnexionAdmin(){
+  adminLoginModal.classList.add('hidden');
+  adminLoginModal.classList.remove('flex');
+  adminLoginError.classList.add('hidden');
+  adminLoginForm.reset();
+}
+function ouvrirTableauDeBord(){
+  adminDashboard.classList.remove('hidden');
+  document.body.style.overflow = 'hidden';
+  chargerCollection('devis', true); // collection affichée par défaut à l'ouverture
+}
+function fermerTableauDeBord(){
+  adminDashboard.classList.add('hidden');
+  document.body.style.overflow = '';
+}
+
+adminAccessBtn.addEventListener('click', () => {
+  if(sessionStorage.getItem('boua-admin-auth') === 'ok'){
+    ouvrirTableauDeBord();
+  } else {
+    ouvrirConnexionAdmin();
+  }
+});
+adminLoginClose.addEventListener('click', fermerConnexionAdmin);
+adminLoginOverlay.addEventListener('click', fermerConnexionAdmin);
+
+adminLoginForm.addEventListener('submit', (e) => {
+  e.preventDefault();
+  if(adminPasswordInput.value === MOT_DE_PASSE_ADMIN){
+    sessionStorage.setItem('boua-admin-auth', 'ok'); // valable le temps de l'onglet ouvert uniquement
+    fermerConnexionAdmin();
+    ouvrirTableauDeBord();
+  } else {
+    adminLoginError.classList.remove('hidden');
+  }
+});
+
+adminCloseBtn.addEventListener('click', fermerTableauDeBord);
+adminLogoutBtn.addEventListener('click', () => {
+  sessionStorage.removeItem('boua-admin-auth');
+  fermerTableauDeBord();
+});
+
+/* ----------------------------------------------------------------
+   Chargement des documents + SCROLL INFINI
+   Principe : on charge 10 documents, puis dès que la sentinelle en
+   bas de liste devient visible à l'écran, on charge les 10 suivants
+   et on les ajoute à la suite (sans jamais tout recharger).
+   ---------------------------------------------------------------- */
+const PAGE_SIZE = 10;
+let collectionActive = 'devis';
+let dernierDocumentCharge = null;
+let chargementEnCours = false;
+let ilResteDesDocuments = true;
+
+const adminDocList = document.getElementById('adminDocList');
+const adminCollectionLabel = document.getElementById('adminCollectionLabel');
+const adminCount = document.getElementById('adminCount');
+const adminLoadingLabel = document.getElementById('adminLoadingLabel');
+const adminScrollSentinel = document.getElementById('adminScrollSentinel');
+
+document.querySelectorAll('.admin-tab').forEach((tab, index) => {
+  if(index === 0) tab.classList.add('active');
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.admin-tab').forEach(t => t.classList.remove('active'));
+    tab.classList.add('active');
+    chargerCollection(tab.dataset.collection, true);
+  });
+});
+
+async function chargerCollection(nomCollection, reinitialiser){
+  if(reinitialiser){
+    collectionActive = nomCollection;
+    adminCollectionLabel.textContent = nomCollection;
+    adminDocList.innerHTML = '';
+    dernierDocumentCharge = null;
+    ilResteDesDocuments = true;
+    adminCount.textContent = '0';
+  }
+  await chargerPageSuivante();
+}
+
+async function chargerPageSuivante(){
+  if(chargementEnCours || !ilResteDesDocuments || !window._db) return;
+  chargementEnCours = true;
+  adminLoadingLabel.textContent = "Chargement...";
+
+  try {
+    const { collection, query, orderBy, limit, startAfter, getDocs } = window._firestore;
+    let q = query(collection(window._db, collectionActive), orderBy('__name__'), limit(PAGE_SIZE));
+    if(dernierDocumentCharge){
+      q = query(collection(window._db, collectionActive), orderBy('__name__'), startAfter(dernierDocumentCharge), limit(PAGE_SIZE));
+    }
+
+    const snapshot = await getDocs(q);
+
+    if(snapshot.empty){
+      ilResteDesDocuments = false;
+      adminLoadingLabel.textContent = adminDocList.children.length === 0
+        ? "Aucun document dans cette collection pour le moment."
+        : "Fin de la liste.";
+      chargementEnCours = false;
+      return;
+    }
+
+    snapshot.forEach(docSnap => afficherDocument(docSnap.id, docSnap.data()));
+    dernierDocumentCharge = snapshot.docs[snapshot.docs.length - 1];
+    adminCount.textContent = adminDocList.children.length;
+
+    if(snapshot.docs.length < PAGE_SIZE){
+      ilResteDesDocuments = false;
+      adminLoadingLabel.textContent = "Fin de la liste.";
+    } else {
+      adminLoadingLabel.textContent = "";
+    }
+  } catch (err) {
+    console.error("Erreur de chargement admin :", err);
+    adminLoadingLabel.textContent = "Erreur de chargement (vérifie ta configuration Firebase et tes règles Firestore).";
+  } finally {
+    chargementEnCours = false;
+  }
+}
+
+// Observe la sentinelle en bas de liste : dès qu'elle apparaît à l'écran, on charge la suite
+const observateurScrollInfini = new IntersectionObserver((entrees) => {
+  entrees.forEach(entree => {
+    if(entree.isIntersecting) chargerPageSuivante();
+  });
+}, { threshold: 0.1 });
+observateurScrollInfini.observe(adminScrollSentinel);
+
+function afficherDocument(id, donnees){
+  const carte = document.createElement('div');
+  carte.className = "bg-white dark:bg-navylight border border-slate-200 dark:border-white/10 rounded-xl p-4 flex items-start justify-between gap-4";
+
+  const apercu = Object.entries(donnees)
+    .filter(([cle]) => cle !== 'dateCreation' && cle !== 'dateCandidature')
+    .slice(0, 4)
+    .map(([cle, val]) => `<span class="text-xs text-slate-500 dark:text-cream/50">${cle} : <span class="text-navy dark:text-cream font-medium">${String(val).slice(0,60)}</span></span>`)
+    .join(' · ');
+
+  carte.innerHTML = `
+    <div class="min-w-0">
+      <p class="font-mono-num text-xs text-amberdark mb-1.5">${id}</p>
+      <div class="flex flex-wrap gap-x-3 gap-y-1">${apercu}</div>
+    </div>
+    <button class="admin-edit-btn shrink-0 text-sm font-semibold text-teal hover:text-amber transition">Modifier</button>
+  `;
+
+  carte.querySelector('.admin-edit-btn').addEventListener('click', () => ouvrirEditionDocument(id, donnees));
+  adminDocList.appendChild(carte);
+}
+
+/* ----------------------------------------------------------------
+   ÉDITION / AJOUT / SUPPRESSION — via un simple éditeur JSON,
+   ce qui permet de modifier N'IMPORTE QUEL champ, quelle que soit
+   la collection, sans avoir à coder un formulaire par cas.
+   ---------------------------------------------------------------- */
+const adminAddBtn = document.getElementById('adminAddBtn');
+const adminEditModal = document.getElementById('adminEditModal');
+const adminEditOverlay = document.getElementById('adminEditOverlay');
+const adminEditClose = document.getElementById('adminEditClose');
+const adminEditTitle = document.getElementById('adminEditTitle');
+const adminEditTextarea = document.getElementById('adminEditTextarea');
+const adminEditError = document.getElementById('adminEditError');
+const adminEditSave = document.getElementById('adminEditSave');
+const adminEditDelete = document.getElementById('adminEditDelete');
+
+let idDocumentEnEdition = null; // null = création d'un nouveau document
+
+function ouvrirEditionDocument(id, donnees){
+  idDocumentEnEdition = id;
+  adminEditTitle.textContent = `Modifier — ${id}`;
+  adminEditTextarea.value = JSON.stringify(donnees, null, 2);
+  adminEditError.classList.add('hidden');
+  adminEditDelete.classList.remove('hidden');
+  adminEditModal.classList.remove('hidden');
+  adminEditModal.classList.add('flex');
+}
+
+adminAddBtn.addEventListener('click', () => {
+  idDocumentEnEdition = null;
+  adminEditTitle.textContent = `Ajouter un document — ${collectionActive}`;
+  adminEditTextarea.value = JSON.stringify({ exemple: "valeur" }, null, 2);
+  adminEditError.classList.add('hidden');
+  adminEditDelete.classList.add('hidden');
+  adminEditModal.classList.remove('hidden');
+  adminEditModal.classList.add('flex');
+});
+
+function fermerEditionDocument(){
+  adminEditModal.classList.add('hidden');
+  adminEditModal.classList.remove('flex');
+}
+adminEditClose.addEventListener('click', fermerEditionDocument);
+adminEditOverlay.addEventListener('click', fermerEditionDocument);
+
+adminEditSave.addEventListener('click', async () => {
+  let donnees;
+  try {
+    donnees = JSON.parse(adminEditTextarea.value);
+  } catch (err) {
+    adminEditError.classList.remove('hidden');
+    return;
+  }
+
+  const { collection, addDoc, doc, updateDoc, serverTimestamp } = window._firestore;
+
+  try {
+    if(idDocumentEnEdition){
+      await updateDoc(doc(window._db, collectionActive, idDocumentEnEdition), donnees);
+    } else {
+      await addDoc(collection(window._db, collectionActive), { ...donnees, dateCreation: serverTimestamp() });
+    }
+    fermerEditionDocument();
+    chargerCollection(collectionActive, true); // recharge la liste depuis le début pour refléter le changement
+  } catch (err) {
+    console.error("Erreur d'enregistrement admin :", err);
+    adminEditError.textContent = "Échec de l'enregistrement (vérifie tes règles Firestore).";
+    adminEditError.classList.remove('hidden');
+  }
+});
+
+adminEditDelete.addEventListener('click', async () => {
+  if(!idDocumentEnEdition) return;
+  if(!confirm("Supprimer définitivement ce document ?")) return;
+
+  const { doc, deleteDoc } = window._firestore;
+  try {
+    await deleteDoc(doc(window._db, collectionActive, idDocumentEnEdition));
+    fermerEditionDocument();
+    chargerCollection(collectionActive, true);
+  } catch (err) {
+    console.error("Erreur de suppression admin :", err);
+    alert("Échec de la suppression (vérifie tes règles Firestore).");
+  }
+});
+
 
 </script>
 
