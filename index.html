@@ -7,6 +7,52 @@
 <meta name="description" content="BOUA Trans, entreprise familiale de transport et logistique. Devis instantané, suivi de colis en temps réel.">
 
 <!-- ============================================================
+     FAVICON / ICÔNE DE L'ONGLET NAVIGATEUR
+     ============================================================ -->
+<link rel="icon" href="/assets/favicon.ico" sizes="any">
+<link rel="icon" href="/icons/icon-192.png" type="image/png">
+
+<!-- ============================================================
+     PARTAGE SUR RÉSEAUX SOCIAUX (Open Graph / Twitter Card)
+     Ce qui s'affiche quand un lien vers le site est partagé sur
+     WhatsApp, Facebook, LinkedIn, Twitter/X...
+     ============================================================ -->
+<meta property="og:type" content="website">
+<meta property="og:title" content="BOUA Trans — Transport & Logistique">
+<meta property="og:description" content="Transport routier et envois internationaux Espagne ↔ Afrique de l'Ouest. Devis instantané, suivi en temps réel.">
+<meta property="og:image" content="/assets/og-image.png">
+<meta property="og:locale" content="fr_FR">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="BOUA Trans — Transport & Logistique">
+<meta name="twitter:description" content="Transport routier et envois internationaux Espagne ↔ Afrique de l'Ouest.">
+<meta name="twitter:image" content="/assets/og-image.png">
+
+<!-- ============================================================
+     DONNÉES STRUCTURÉES (SEO — aide Google à comprendre l'entreprise :
+     nom, adresse, téléphone. Améliore l'affichage dans les résultats
+     de recherche et sur Google Maps.)
+     ============================================================ -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "MovingCompany",
+  "name": "BOUA Trans",
+  "image": "/assets/og-image.png",
+  "telephone": "+34745006675",
+  "email": "bouayuncos@gmail.com",
+  "address": {
+    "@type": "PostalAddress",
+    "streetAddress": "Avenida Castilla-La Mancha 122",
+    "addressLocality": "Yuncos",
+    "addressRegion": "Tolède",
+    "postalCode": "45210",
+    "addressCountry": "ES"
+  },
+  "areaServed": ["Espagne", "Europe", "Afrique de l'Ouest"]
+}
+</script>
+
+<!-- ============================================================
      PWA — Progressive Web App
      Ces 3 lignes rendent le site "installable". Le fichier manifest.json
      et le Service Worker (sw.js) doivent être placés à la racine du site,
@@ -15,7 +61,7 @@
      ============================================================ -->
 <link rel="manifest" href="/manifest.json">
 <meta name="theme-color" content="#0F1F38">
-<link rel="apple-touch-icon" href="/icons/icon-192.png">
+<link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
 
 <!-- ============================================================
      POLICE (facultatif) : Barlow Condensed pour les titres.
@@ -89,7 +135,7 @@
 <header class="sticky top-0 z-50 bg-navy/95 backdrop-blur border-b border-white/10">
   <nav class="max-w-6xl mx-auto flex items-center justify-between px-5 py-4">
     <a href="#top" class="flex items-center gap-2.5">
-      <span class="w-9 h-9 rounded-lg bg-gradient-to-br from-amber to-teal flex items-center justify-center font-display font-extrabold text-navy">BT</span>
+      <img src="/assets/logo-header.png" alt="Logo BOUA Trans" class="w-11 h-11 rounded-full bg-white p-0.5 object-contain">
       <!-- MODIFIER LE TEXTE ICI : nom du logo -->
       <span class="font-display text-xl font-bold text-cream">BOUA <span class="text-amber">Trans</span></span>
     </a>
@@ -122,7 +168,7 @@
       </button>
 
       <!-- Bouton d'installation PWA — masqué tant que l'installation n'est pas possible (voir JS) -->
-      <button id="pwaInstallBtn" class="hidden items-center gap-1.5 border border-white/15 hover:border-amber hover:text-amber text-cream text-sm font-semibold px-4 py-2.5 rounded-full transition">
+      <button id="pwaInstallBtn" class="inline-flex items-center gap-1.5 border border-white/15 hover:border-amber hover:text-amber text-cream text-sm font-semibold px-4 py-2.5 rounded-full transition">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M12 3v13m0 0l-4-4m4 4l4-4M5 21h14"/></svg>
         <span data-i18n="nav.install">Télécharger l'app</span>
       </button>
@@ -150,7 +196,7 @@
     <li><a href="#fret" class="block py-2.5 border-b border-white/10" data-i18n="nav.fret">Transporteurs</a></li>
     <li><a href="#contact" class="block py-2.5 border-b border-white/10" data-i18n="nav.contact">Contact</a></li>
     <li><button id="clientLoginBtnMobile" class="block w-full text-left py-2.5 border-b border-white/10" data-i18n="nav.login">Espace Client</button></li>
-    <li><button id="pwaInstallBtnMobile" class="hidden w-full text-left py-2.5" data-i18n="nav.install">Télécharger l'app</button></li>
+    <li><button id="pwaInstallBtnMobile" class="block w-full text-left py-2.5" data-i18n="nav.install">Télécharger l'app</button></li>
   </ul>
 </header>
 
@@ -547,14 +593,111 @@
 </section>
 
 <!-- ============================================================
+     AVIS CLIENTS
+     ============================================================ -->
+<section id="avis" class="py-20 md:py-24" data-reveal>
+  <div class="max-w-6xl mx-auto px-5">
+    <div class="max-w-xl mb-12">
+      <span class="font-mono-num text-xs tracking-widest uppercase text-amberdark block mb-2">Ils nous font confiance</span>
+      <h2 class="text-3xl md:text-4xl font-bold text-navy dark:text-white">Avis clients</h2>
+    </div>
+
+    <!-- Duplique une carte pour ajouter un avis. MODIFIER LE TEXTE ICI -->
+    <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
+
+      <div class="bg-white dark:bg-navylight border border-slate-200 dark:border-white/10 rounded-xl p-6">
+        <div class="text-amber mb-3">★★★★★</div>
+        <p class="text-sm text-slate-600 dark:text-cream/70 mb-4">Envoi vers Bamako arrivé sans encombre et bien plus vite que ce que j'imaginais. Suivi très clair du début à la fin.</p>
+        <p class="text-sm font-semibold text-navy dark:text-white">Aïcha K.</p>
+        <p class="text-xs text-slate-400 dark:text-cream/40">Cliente particulière</p>
+      </div>
+
+      <div class="bg-white dark:bg-navylight border border-slate-200 dark:border-white/10 rounded-xl p-6">
+        <div class="text-amber mb-3">★★★★★</div>
+        <p class="text-sm text-slate-600 dark:text-cream/70 mb-4">On travaille avec BOUA Trans depuis deux ans pour nos livraisons régulières Madrid-Tolède. Toujours ponctuels.</p>
+        <p class="text-sm font-semibold text-navy dark:text-white">Restaurant El Sabor</p>
+        <p class="text-xs text-slate-400 dark:text-cream/40">Client professionnel</p>
+      </div>
+
+      <div class="bg-white dark:bg-navylight border border-slate-200 dark:border-white/10 rounded-xl p-6">
+        <div class="text-amber mb-3">★★★★★</div>
+        <p class="text-sm text-slate-600 dark:text-cream/70 mb-4">Équipe sérieuse et disponible sur WhatsApp à chaque question. Le devis en ligne m'a fait gagner un temps fou.</p>
+        <p class="text-sm font-semibold text-navy dark:text-white">Moussa T.</p>
+        <p class="text-xs text-slate-400 dark:text-cream/40">Client particulier</p>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     FOIRE AUX QUESTIONS (FAQ)
+     ============================================================ -->
+<section id="faq" class="py-20 md:py-24 bg-white dark:bg-navylight" data-reveal>
+  <div class="max-w-3xl mx-auto px-5">
+    <div class="mb-12">
+      <span class="font-mono-num text-xs tracking-widest uppercase text-amberdark block mb-2">Questions fréquentes</span>
+      <h2 class="text-3xl md:text-4xl font-bold text-navy dark:text-white">Besoin d'y voir plus clair ?</h2>
+    </div>
+
+    <!-- Duplique un .faq-item pour ajouter une question. MODIFIER LE TEXTE ICI -->
+    <div class="space-y-3">
+
+      <div class="faq-item border border-slate-200 dark:border-white/10 rounded-xl overflow-hidden">
+        <button class="faq-question w-full flex justify-between items-center gap-4 text-left px-5 py-4 font-semibold text-navy dark:text-white">
+          Combien de temps met un envoi vers l'Afrique de l'Ouest ?
+          <span class="faq-icon text-amber text-xl leading-none">+</span>
+        </button>
+        <div class="faq-answer hidden px-5 pb-4 text-sm text-slate-500 dark:text-cream/60">
+          En moyenne entre 7 et 12 jours selon la destination et les formalités douanières, avec un suivi mis à jour à chaque étape depuis la section Suivi.
+        </div>
+      </div>
+
+      <div class="faq-item border border-slate-200 dark:border-white/10 rounded-xl overflow-hidden">
+        <button class="faq-question w-full flex justify-between items-center gap-4 text-left px-5 py-4 font-semibold text-navy dark:text-white">
+          Le devis en ligne est-il définitif ?
+          <span class="faq-icon text-amber text-xl leading-none">+</span>
+        </button>
+        <div class="faq-answer hidden px-5 pb-4 text-sm text-slate-500 dark:text-cream/60">
+          Non, c'est une estimation indicative. Un conseiller confirme le prix exact après vérification du poids et du volume réels.
+        </div>
+      </div>
+
+      <div class="faq-item border border-slate-200 dark:border-white/10 rounded-xl overflow-hidden">
+        <button class="faq-question w-full flex justify-between items-center gap-4 text-left px-5 py-4 font-semibold text-navy dark:text-white">
+          Puis-je suivre mon colis sans créer de compte ?
+          <span class="faq-icon text-amber text-xl leading-none">+</span>
+        </button>
+        <div class="faq-answer hidden px-5 pb-4 text-sm text-slate-500 dark:text-cream/60">
+          Oui, il te suffit de ton numéro de suivi dans la section « Suivi » — aucune inscription n'est nécessaire.
+        </div>
+      </div>
+
+      <div class="faq-item border border-slate-200 dark:border-white/10 rounded-xl overflow-hidden">
+        <button class="faq-question w-full flex justify-between items-center gap-4 text-left px-5 py-4 font-semibold text-navy dark:text-white">
+          Comment postuler comme conducteur ?
+          <span class="faq-icon text-amber text-xl leading-none">+</span>
+        </button>
+        <div class="faq-answer hidden px-5 pb-4 text-sm text-slate-500 dark:text-cream/60">
+          Rends-toi dans la section « Carrières », choisis une offre et envoie ta candidature avec ton CV directement depuis le site.
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
      PIED DE PAGE
      ============================================================ -->
 <footer id="contact" class="bg-navy text-cream/70 pt-16 pb-8 border-t border-white/10">
   <div class="max-w-6xl mx-auto px-5">
     <div class="grid sm:grid-cols-2 md:grid-cols-4 gap-10 pb-10 border-b border-white/10">
       <div>
-        <!-- MODIFIER LE TEXTE ICI -->
-        <h4 class="text-cream font-semibold mb-4">BOUA Trans</h4>
+        <div class="flex items-center gap-2.5 mb-4">
+          <img src="/assets/logo-header.png" alt="Logo BOUA Trans" class="w-10 h-10 rounded-full bg-white p-0.5 object-contain">
+          <h4 class="text-cream font-semibold">BOUA Trans</h4>
+        </div>
         <p class="text-sm max-w-[240px]">Entreprise familiale de transport et logistique basée à Yuncos, Tolède.</p>
       </div>
       <div>
@@ -563,15 +706,16 @@
           <li><a href="#services" class="hover:text-amber">Services</a></li>
           <li><a href="#devis" class="hover:text-amber">Devis</a></li>
           <li><a href="#suivi" class="hover:text-amber">Suivi de colis</a></li>
+          <li><a href="#avis" class="hover:text-amber">Avis clients</a></li>
+          <li><a href="#faq" class="hover:text-amber">FAQ</a></li>
         </ul>
       </div>
       <div>
         <h4 class="text-cream font-semibold mb-4">Contact</h4>
-        <!-- MODIFIER LES COORDONNÉES ICI -->
         <ul class="text-sm space-y-2.5">
-          <li>Yuncos, Tolède, Espagne</li>
-          <li>+34 000 000 000</li>
-          <li>contact@boua-trans.com</li>
+          <li>Avenida Castilla-La Mancha 122<br>Yuncos, Tolède, 45210</li>
+          <li><a href="tel:+34745006675" class="hover:text-amber">+34 745 00 66 75</a></li>
+          <li><a href="mailto:bouayuncos@gmail.com" class="hover:text-amber">bouayuncos@gmail.com</a></li>
         </ul>
       </div>
       <div>
@@ -582,12 +726,43 @@
         </ul>
       </div>
     </div>
+
+    <!-- Carte Google Maps — mise à jour automatique de l'itinéraire, aucune clé API requise pour cet affichage simple -->
+    <div class="py-8 border-b border-white/10">
+      <iframe
+        title="Localisation BOUA Trans"
+        src="https://www.google.com/maps?q=Avenida+Castilla-La+Mancha+122,+Yuncos,+Toledo,+45210,+Espagne&output=embed"
+        class="w-full h-64 rounded-xl border border-white/10"
+        loading="lazy"
+        referrerpolicy="no-referrer-when-downgrade">
+      </iframe>
+    </div>
+
     <div class="flex flex-wrap justify-between gap-2 pt-6 text-xs">
       <span>© 2026 BOUA Trans. Tous droits réservés.</span>
       <span>Site conçu avec soin à Yuncos</span>
     </div>
   </div>
 </footer>
+
+<!-- ============================================================
+     MODALE INSTRUCTIONS INSTALLATION iOS
+     Safari sur iPhone/iPad ne propose pas d'installation automatique :
+     l'utilisateur doit le faire manuellement via le bouton Partager.
+     ============================================================ -->
+<div id="iosInstallModal" class="hidden fixed inset-0 z-[60] flex items-center justify-center p-5">
+  <div class="absolute inset-0 bg-navy/70 backdrop-blur-sm" onclick="document.getElementById('iosInstallModal').classList.add('hidden')"></div>
+  <div class="relative bg-white dark:bg-navylight rounded-2xl shadow-2xl w-full max-w-sm p-7 text-center">
+    <button onclick="document.getElementById('iosInstallModal').classList.add('hidden')" aria-label="Fermer" class="absolute top-4 right-4 text-slate-400 hover:text-amber">✕</button>
+    <img src="/assets/logo-header.png" alt="Logo BOUA Trans" class="w-16 h-16 rounded-full bg-white p-1 mx-auto mb-4 shadow">
+    <h3 class="text-xl font-bold text-navy dark:text-white mb-3">Installer sur iPhone / iPad</h3>
+    <ol class="text-sm text-left text-slate-600 dark:text-cream/70 space-y-2.5 mb-2">
+      <li>1. Appuie sur l'icône <strong>Partager</strong> ⬆️ en bas de Safari</li>
+      <li>2. Fais défiler et choisis <strong>« Sur l'écran d'accueil »</strong></li>
+      <li>3. Appuie sur <strong>« Ajouter »</strong> en haut à droite</li>
+    </ol>
+  </div>
+</div>
 
 <!-- ============================================================
      MODALE ESPACE CLIENT / CONNEXION
@@ -621,10 +796,19 @@
 </div>
 
 <!-- ============================================================
+     BOUTON RETOUR EN HAUT
+     Apparaît seulement après un peu de défilement (voir JS).
+     ============================================================ -->
+<button id="backToTopBtn" aria-label="Retour en haut de page"
+  class="hidden fixed bottom-24 right-6 z-40 w-11 h-11 rounded-full bg-navy dark:bg-white/10 border border-white/15 text-cream flex items-center justify-center shadow-lg hover:border-amber hover:text-amber transition">
+  <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
+</button>
+
+<!-- ============================================================
      BOUTON FLOTTANT WHATSAPP
      MODIFIE le numéro dans href (format international, sans "+" ni espaces)
      ============================================================ -->
-<a href="https://wa.me/34600000000?text=Bonjour%2C%20j%27ai%20besoin%20d%27aide%20concernant%20un%20envoi%20BOUA%20Trans."
+<a href="https://wa.me/34745006675?text=Bonjour%2C%20j%27ai%20besoin%20d%27aide%20concernant%20un%20envoi%20BOUA%20Trans."
    target="_blank" rel="noopener"
    aria-label="Contacter le support via WhatsApp"
    class="fixed bottom-6 right-6 z-50 w-14 h-14 rounded-full bg-[#25D366] flex items-center justify-center shadow-lg hover:scale-110 transition">
@@ -1163,36 +1347,62 @@ document.addEventListener('click', (e) => {
 appliquerLangue(localStorage.getItem('boua-lang') || 'fr');
 
 /* ================================================================
-   INSTALLATION PWA
+   INSTALLATION PWA — COMPATIBLE TOUS LES APPAREILS
    ================================================================
-   Le bouton reste caché tant que le navigateur ne juge pas le site
-   "installable" (critères PWA remplis : manifest.json + Service Worker
-   + HTTPS). Voir les instructions de configuration en fin de réponse.
+   - Android / Chrome / Edge desktop : installation native en un clic
+     via l'événement "beforeinstallprompt".
+   - iOS (Safari) : ce mécanisme n'existe pas côté Apple. Le bouton
+     ouvre alors une petite modale expliquant comment faire manuellement
+     ("Partager" → "Sur l'écran d'accueil").
+   - Si le site tourne déjà en mode application (installé), le bouton
+     l'indique au lieu de proposer une nouvelle installation.
    ================================================================ */
 let evenementInstallDiffere = null;
 const pwaInstallBtn = document.getElementById('pwaInstallBtn');
 const pwaInstallBtnMobile = document.getElementById('pwaInstallBtnMobile');
 
+function estIOS(){
+  return /iphone|ipad|ipod/i.test(navigator.userAgent);
+}
+function estDejaInstalle(){
+  return window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+}
+
 window.addEventListener('beforeinstallprompt', (e) => {
   e.preventDefault();
   evenementInstallDiffere = e;
-  pwaInstallBtn.classList.remove('hidden');
-  pwaInstallBtn.classList.add('inline-flex');
-  pwaInstallBtnMobile.classList.remove('hidden');
 });
 
 async function lancerInstallationPWA(){
-  if(!evenementInstallDiffere) return;
-  evenementInstallDiffere.prompt();
-  const choix = await evenementInstallDiffere.userChoice;
-  if(choix.outcome === 'accepted'){
-    pwaInstallBtn.classList.add('hidden');
-    pwaInstallBtnMobile.classList.add('hidden');
+  if(estDejaInstalle()){
+    alert("BOUA Trans est déjà installée sur cet appareil ✅");
+    return;
   }
-  evenementInstallDiffere = null;
+  if(evenementInstallDiffere){
+    evenementInstallDiffere.prompt();
+    const choix = await evenementInstallDiffere.userChoice;
+    if(choix.outcome === 'accepted'){
+      pwaInstallBtn.classList.add('hidden');
+      pwaInstallBtnMobile.classList.add('hidden');
+    }
+    evenementInstallDiffere = null;
+    return;
+  }
+  if(estIOS()){
+    ouvrirModaleInstallIOS();
+    return;
+  }
+  // Cas restant (ex : navigateur ne supportant pas l'installation) : on informe simplement.
+  alert("Pour installer BOUA Trans, utilise le menu de ton navigateur puis \"Ajouter à l'écran d'accueil\" ou \"Installer l'application\".");
 }
 pwaInstallBtn.addEventListener('click', lancerInstallationPWA);
 pwaInstallBtnMobile.addEventListener('click', lancerInstallationPWA);
+
+function ouvrirModaleInstallIOS(){
+  const modale = document.getElementById('iosInstallModal');
+  modale.classList.remove('hidden');
+  modale.classList.add('flex');
+}
 
 // Enregistrement du Service Worker (nécessaire pour que le site soit installable)
 if('serviceWorker' in navigator){
@@ -1272,6 +1482,53 @@ vehiculeBtn.addEventListener('click', () => {
   }
 });
 vehiculeInput.addEventListener('keydown', (e) => { if(e.key === 'Enter') vehiculeBtn.click(); });
+
+/* ================================================================
+   FAQ — ACCORDÉON
+   ================================================================ */
+document.querySelectorAll('.faq-question').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const reponse = btn.nextElementSibling;
+    const icone = btn.querySelector('.faq-icon');
+    const estOuvert = !reponse.classList.contains('hidden');
+    reponse.classList.toggle('hidden', estOuvert);
+    icone.textContent = estOuvert ? '+' : '−';
+  });
+});
+
+/* ================================================================
+   BOUTON RETOUR EN HAUT
+   ================================================================ */
+const backToTopBtn = document.getElementById('backToTopBtn');
+window.addEventListener('scroll', () => {
+  backToTopBtn.classList.toggle('hidden', window.scrollY < 500);
+});
+backToTopBtn.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
+
+/* ================================================================
+   ANIMATIONS D'APPARITION AU DÉFILEMENT
+   Ajoute l'attribut data-reveal sur n'importe quelle section pour
+   qu'elle apparaisse en fondu quand l'utilisateur y arrive.
+   ================================================================ */
+const elementsARevelerAuScroll = document.querySelectorAll('[data-reveal]');
+if('IntersectionObserver' in window && elementsARevelerAuScroll.length){
+  elementsARevelerAuScroll.forEach(el => {
+    el.style.opacity = '0';
+    el.style.transform = 'translateY(24px)';
+    el.style.transition = 'opacity .7s ease, transform .7s ease';
+  });
+  const observateur = new IntersectionObserver((entrees) => {
+    entrees.forEach(entree => {
+      if(entree.isIntersecting){
+        entree.target.style.opacity = '1';
+        entree.target.style.transform = 'translateY(0)';
+        observateur.unobserve(entree.target);
+      }
+    });
+  }, { threshold: 0.12 });
+  elementsARevelerAuScroll.forEach(el => observateur.observe(el));
+}
+
 </script>
 
 </body>
