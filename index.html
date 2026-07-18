@@ -808,22 +808,23 @@
 
 <!-- ============================================================
      MODALE CONNEXION ADMINISTRATEUR
-     ⚠️ SÉCURITÉ : ce mot de passe unique n'est qu'un verrou d'interface,
-     PAS une vraie sécurité. Il est visible par quiconque lit le code
-     source du site. La vraie protection des données doit venir des
-     règles de sécurité Firestore (voir explications en fin de réponse).
+     Authentification réelle via Firebase Authentication (email + mot
+     de passe). Le compte admin se crée depuis Firebase Console →
+     Authentication → Users → Add user (voir explications fournies).
      ============================================================ -->
 <div id="adminLoginModal" class="hidden fixed inset-0 z-[70] flex items-center justify-center p-5">
   <div class="absolute inset-0 bg-navy/80 backdrop-blur-sm" id="adminLoginOverlay"></div>
   <div class="relative bg-white dark:bg-navylight rounded-2xl shadow-2xl w-full max-w-sm p-7">
     <button id="adminLoginClose" aria-label="Fermer" class="absolute top-4 right-4 text-slate-400 hover:text-amber">✕</button>
     <h3 class="text-2xl font-bold text-navy dark:text-white mb-1.5">Administration</h3>
-    <p class="text-sm text-slate-500 dark:text-cream/60 mb-6">Accès réservé. Entrez le mot de passe.</p>
+    <p class="text-sm text-slate-500 dark:text-cream/60 mb-6">Accès réservé. Connecte-toi avec ton compte admin.</p>
     <form id="adminLoginForm">
+      <input type="email" id="adminEmailInput" placeholder="Email" required autocomplete="off"
+        class="w-full px-3.5 py-3 rounded-lg border border-slate-200 dark:border-white/15 bg-cream dark:bg-navy focus:outline-none focus:border-amber mb-3">
       <input type="password" id="adminPasswordInput" placeholder="Mot de passe" required autocomplete="off"
         class="w-full px-3.5 py-3 rounded-lg border border-slate-200 dark:border-white/15 bg-cream dark:bg-navy focus:outline-none focus:border-amber mb-4">
-      <button type="submit" class="w-full bg-amber hover:bg-amberdark text-navy font-semibold py-3.5 rounded-full transition">Entrer</button>
-      <p id="adminLoginError" class="hidden text-xs mt-3 text-red-500 font-medium">Mot de passe incorrect.</p>
+      <button type="submit" id="adminLoginSubmitBtn" class="w-full bg-amber hover:bg-amberdark text-navy font-semibold py-3.5 rounded-full transition">Se connecter</button>
+      <p id="adminLoginError" class="hidden text-xs mt-3 text-red-500 font-medium">Email ou mot de passe incorrect.</p>
     </form>
   </div>
 </div>
@@ -954,6 +955,8 @@
   } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
   import { getStorage, ref, uploadBytes, getDownloadURL }
     from "https://www.gstatic.com/firebasejs/10.13.0/firebase-storage.js";
+  import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged }
+    from "https://www.gstatic.com/firebasejs/10.13.0/firebase-auth.js";
 
   // --- Configuration de ton projet Firebase (boua-trans) ---
   const firebaseConfig = {
@@ -968,13 +971,16 @@
   const app = initializeApp(firebaseConfig);
   const db = getFirestore(app);
   const storage = getStorage(app);
+  const auth = getAuth(app);
 
-  // On rend "db", "storage" et les fonctions Firebase accessibles au script
-  // classique plus bas (qui gère aussi la logique non-Firebase du site).
+  // On rend "db", "storage", "auth" et les fonctions Firebase accessibles au
+  // script classique plus bas (qui gère aussi la logique non-Firebase du site).
   window._db = db;
   window._storage = storage;
+  window._auth = auth;
   window._firestore = { collection, addDoc, getDocs, getDoc, serverTimestamp, query, orderBy, limit, startAfter, doc, updateDoc, deleteDoc, onSnapshot };
   window._storageFns = { ref, uploadBytes, getDownloadURL };
+  window._authFns = { signInWithEmailAndPassword, signOut, onAuthStateChanged };
 </script>
 
 <!-- ============================================================
@@ -1943,37 +1949,25 @@ if('IntersectionObserver' in window && elementsARevelerAuScroll.length){
 }
 
 /* ================================================================
-   TABLEAU DE BORD ADMINISTRATEUR
+   TABLEAU DE BORD ADMINISTRATEUR — AUTHENTIFICATION RÉELLE
    ================================================================
-   ⚠️ AVERTISSEMENT DE SÉCURITÉ IMPORTANT — à lire avant mise en ligne :
-
-   Ce mot de passe unique ("aicha") n'est PAS une sécurité réelle.
-   C'est un simple verrou d'interface : il empêche un visiteur ordinaire
-   de tomber par hasard sur le panneau admin, mais n'importe qui sachant
-   lire du code source (clic droit → Afficher le code source) peut voir
-   ce mot de passe en clair et l'utiliser.
-
-   La vraie sécurité de tes données doit venir des RÈGLES DE SÉCURITÉ
-   FIRESTORE (Firebase Console → Firestore Database → Règles), pas de ce
-   mot de passe. Tant que ces règles autorisent la lecture/écriture
-   publique, N'IMPORTE QUI peut lire ou modifier tes données directement
-   via l'API Firebase, mot de passe ou non.
-
-   Solution robuste recommandée pour la suite : remplacer ce mot de passe
-   par Firebase Authentication (un vrai compte administrateur avec email/
-   mot de passe géré par Firebase) + des règles Firestore du type
-   "allow write: if request.auth.uid == 'TON_UID_ADMIN'". On peut le
-   mettre en place ensemble dans un prochain échange.
+   Connexion via Firebase Authentication (email + mot de passe).
+   Le compte admin se crée une seule fois depuis Firebase Console →
+   Authentication → Users → "Add user". Aucun mot de passe n'est
+   écrit dans ce fichier : Firebase vérifie les identifiants côté
+   serveur, et les règles Firestore/Storage peuvent maintenant
+   s'appuyer sur request.auth pour réellement protéger les données
+   (voir les règles fournies séparément).
    ================================================================ */
-const MOT_DE_PASSE_ADMIN = "aicha";
-
 const adminAccessBtn = document.getElementById('adminAccessBtn');
 const adminLoginModal = document.getElementById('adminLoginModal');
 const adminLoginOverlay = document.getElementById('adminLoginOverlay');
 const adminLoginClose = document.getElementById('adminLoginClose');
 const adminLoginForm = document.getElementById('adminLoginForm');
+const adminEmailInput = document.getElementById('adminEmailInput');
 const adminPasswordInput = document.getElementById('adminPasswordInput');
 const adminLoginError = document.getElementById('adminLoginError');
+const adminLoginSubmitBtn = document.getElementById('adminLoginSubmitBtn');
 const adminDashboard = document.getElementById('adminDashboard');
 const adminCloseBtn = document.getElementById('adminCloseBtn');
 const adminLogoutBtn = document.getElementById('adminLogoutBtn');
@@ -1999,7 +1993,9 @@ function fermerTableauDeBord(){
 }
 
 adminAccessBtn.addEventListener('click', () => {
-  if(sessionStorage.getItem('boua-admin-auth') === 'ok'){
+  // onAuthStateChanged (plus bas) garde en mémoire si un admin est déjà
+  // connecté ; s'il ne l'est pas, on lui montre le formulaire de connexion.
+  if(window._auth && window._auth.currentUser){
     ouvrirTableauDeBord();
   } else {
     ouvrirConnexionAdmin();
@@ -2008,20 +2004,29 @@ adminAccessBtn.addEventListener('click', () => {
 adminLoginClose.addEventListener('click', fermerConnexionAdmin);
 adminLoginOverlay.addEventListener('click', fermerConnexionAdmin);
 
-adminLoginForm.addEventListener('submit', (e) => {
+adminLoginForm.addEventListener('submit', async (e) => {
   e.preventDefault();
-  if(adminPasswordInput.value === MOT_DE_PASSE_ADMIN){
-    sessionStorage.setItem('boua-admin-auth', 'ok'); // valable le temps de l'onglet ouvert uniquement
+  adminLoginError.classList.add('hidden');
+  adminLoginSubmitBtn.disabled = true;
+
+  try {
+    const { signInWithEmailAndPassword } = window._authFns;
+    await signInWithEmailAndPassword(window._auth, adminEmailInput.value.trim(), adminPasswordInput.value);
     fermerConnexionAdmin();
     ouvrirTableauDeBord();
-  } else {
+  } catch (err) {
+    console.error("Erreur de connexion admin :", err);
+    adminLoginError.textContent = "Email ou mot de passe incorrect.";
     adminLoginError.classList.remove('hidden');
+  } finally {
+    adminLoginSubmitBtn.disabled = false;
   }
 });
 
 adminCloseBtn.addEventListener('click', fermerTableauDeBord);
-adminLogoutBtn.addEventListener('click', () => {
-  sessionStorage.removeItem('boua-admin-auth');
+adminLogoutBtn.addEventListener('click', async () => {
+  const { signOut } = window._authFns;
+  await signOut(window._auth);
   fermerTableauDeBord();
 });
 
