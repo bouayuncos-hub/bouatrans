@@ -448,7 +448,7 @@
           class="flex-1 font-mono-num px-4 py-3.5 rounded-lg border border-slate-200 dark:border-white/15 bg-cream dark:bg-navy focus:outline-none focus:border-amber">
         <button id="trackingBtn" class="bg-amber hover:bg-amberdark text-navy font-semibold px-7 py-3.5 rounded-lg transition">Rechercher</button>
       </div>
-      <p class="text-xs text-slate-500 dark:text-cream/50 mb-7">Exemple pour tester la démo : <code class="font-mono-num bg-cream dark:bg-navy px-1.5 py-0.5 rounded">BT-2026-00458</code></p>
+      <p class="text-xs text-slate-500 dark:text-cream/50 mb-7">Le numéro correspond exactement à l'identifiant du document créé dans Firestore (collection <code class="font-mono-num bg-cream dark:bg-navy px-1.5 py-0.5 rounded">commandes</code>).</p>
 
       <p id="trackingError" class="hidden text-red-500 text-sm font-semibold -mt-4 mb-6">Aucune expédition trouvée avec ce numéro. Vérifiez la saisie ou contactez-nous.</p>
 
@@ -541,36 +541,14 @@
     </div>
 
     <!--
-      LISTE DES OFFRES
-      Pour l'instant les offres sont écrites en dur dans le HTML.
-      Dès que la collection Firestore "offres_emploi" existe (voir explications en fin de réponse),
-      remplace ce bloc statique par un rendu JS chargé depuis Firestore, sur le même principe
-      que "renderFretOffres()" plus bas dans le script.
+      LISTE DES OFFRES — remplie en temps réel depuis Firestore
+      (collection "offres_emploi") par la fonction renderOffresEmploi()
+      plus bas dans le script. Ajoute/modifie des offres directement
+      depuis le tableau de bord admin : elles apparaissent ici aussitôt,
+      sans redéploiement du site.
     -->
-    <div id="offresEmploiList" class="grid sm:grid-cols-2 lg:grid-cols-3 gap-5 mb-14">
-
-      <div class="offre-card bg-white dark:bg-navylight border border-slate-200 dark:border-white/10 rounded-xl p-6" data-offre="Conducteur SPL international">
-        <span class="text-xs font-bold uppercase tracking-wide bg-amber/15 text-amberdark px-2.5 py-1 rounded-full">CDI</span>
-        <h3 class="text-lg font-bold text-navy dark:text-white mt-3 mb-1.5">Conducteur SPL international</h3>
-        <p class="text-sm text-slate-500 dark:text-cream/60 mb-4">Lignes régulières Espagne ↔ Afrique de l'Ouest. Permis CE + FIMO/FCO exigés.</p>
-        <button class="btn-postuler w-full bg-amber hover:bg-amberdark text-navy font-semibold text-sm py-2.5 rounded-full transition">Postuler</button>
-      </div>
-
-      <div class="offre-card bg-white dark:bg-navylight border border-slate-200 dark:border-white/10 rounded-xl p-6" data-offre="Conducteur régional Espagne">
-        <span class="text-xs font-bold uppercase tracking-wide bg-teal/15 text-teal px-2.5 py-1 rounded-full">CDD</span>
-        <h3 class="text-lg font-bold text-navy dark:text-white mt-3 mb-1.5">Conducteur régional Espagne</h3>
-        <p class="text-sm text-slate-500 dark:text-cream/60 mb-4">Tournées quotidiennes entre Tolède et Madrid. Retour au dépôt chaque soir.</p>
-        <button class="btn-postuler w-full bg-amber hover:bg-amberdark text-navy font-semibold text-sm py-2.5 rounded-full transition">Postuler</button>
-      </div>
-
-      <div class="offre-card bg-white dark:bg-navylight border border-slate-200 dark:border-white/10 rounded-xl p-6" data-offre="Agent d'entrepôt">
-        <span class="text-xs font-bold uppercase tracking-wide bg-amber/15 text-amberdark px-2.5 py-1 rounded-full">CDI</span>
-        <h3 class="text-lg font-bold text-navy dark:text-white mt-3 mb-1.5">Agent d'entrepôt</h3>
-        <p class="text-sm text-slate-500 dark:text-cream/60 mb-4">Réception, tri et préparation des colis à l'entrepôt de Yuncos.</p>
-        <button class="btn-postuler w-full bg-amber hover:bg-amberdark text-navy font-semibold text-sm py-2.5 rounded-full transition">Postuler</button>
-      </div>
-
-    </div>
+    <div id="offresEmploiList" class="grid sm:grid-cols-2 lg:grid-cols-3 gap-5 mb-14"></div>
+    <p id="offresEmploiEmpty" class="hidden text-slate-400 dark:text-cream/40 text-sm mb-14">Aucune offre disponible pour le moment.</p>
 
     <!-- FORMULAIRE DE CANDIDATURE -->
     <div id="candidatureBox" class="bg-white dark:bg-navylight rounded-2xl shadow-xl p-7 md:p-10 max-w-2xl">
@@ -971,8 +949,8 @@
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
   import {
-    getFirestore, collection, addDoc, getDocs, serverTimestamp,
-    query, orderBy, limit, startAfter, doc, updateDoc, deleteDoc
+    getFirestore, collection, addDoc, getDocs, getDoc, serverTimestamp,
+    query, orderBy, limit, startAfter, doc, updateDoc, deleteDoc, onSnapshot
   } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
   import { getStorage, ref, uploadBytes, getDownloadURL }
     from "https://www.gstatic.com/firebasejs/10.13.0/firebase-storage.js";
@@ -995,7 +973,7 @@
   // classique plus bas (qui gère aussi la logique non-Firebase du site).
   window._db = db;
   window._storage = storage;
-  window._firestore = { collection, addDoc, getDocs, serverTimestamp, query, orderBy, limit, startAfter, doc, updateDoc, deleteDoc };
+  window._firestore = { collection, addDoc, getDocs, getDoc, serverTimestamp, query, orderBy, limit, startAfter, doc, updateDoc, deleteDoc, onSnapshot };
   window._storageFns = { ref, uploadBytes, getDownloadURL };
 </script>
 
@@ -1313,22 +1291,17 @@ async function envoyerDevisFirestore(donnees){
 }
 
 /* ------------------------------------------------------------
-   SUIVI DE COLIS — VERSION DÉMO
+   SUIVI DE COLIS — TEMPS RÉEL (Firestore, collection "commandes")
    ------------------------------------------------------------
-   Données fictives pour l'instant. À remplacer par une vraie
-   lecture Firestore sur la collection "commandes" :
-     const snap = await getDoc(doc(window._db, "commandes", numero));
-   Le champ "etapeActuelle" (0 à 3) pilote l'animation du stepper.
+   Chaque commande est un document dont l'ID EST le numéro de suivi
+   (ex : le document "BT-2026-00458" dans la collection "commandes").
+   On écoute ce document précis avec onSnapshot : si un admin change
+   son statut pendant que le client a la page ouverte, le stepper se
+   met à jour tout seul, sans rechargement.
+   Champs attendus sur le document : etapeActuelle (0 à 3), dates
+   (tableau de 4 textes), statutLabel (texte du badge de statut).
    ------------------------------------------------------------ */
 const ETAPES_LIVRAISON = ["Commande reçue", "En transit", "En cours de livraison", "Livré"];
-
-const colisDemo = {
-  "BT-2026-00458": {
-    etapeActuelle: 1, // index dans ETAPES_LIVRAISON (0 = première étape)
-    dates: ["05/07/2026 09:14", "07/07/2026 07:22", "—", "—"],
-    statutLabel: "En transit"
-  }
-};
 
 const trackingBtn = document.getElementById('trackingBtn');
 const trackingInput = document.getElementById('trackingInput');
@@ -1338,6 +1311,8 @@ const timelineId = document.getElementById('timelineId');
 const timelineStatutPill = document.getElementById('timelineStatutPill');
 const stepperSteps = document.getElementById('stepperSteps');
 const stepperProgress = document.getElementById('stepperProgress');
+
+let arreterEcouteColis = null; // permet de couper l'écoute précédente avant d'en démarrer une nouvelle
 
 // Construit le stepper (4 icônes + libellés) et anime la ligne de progression
 function construireStepper(colis){
@@ -1365,7 +1340,7 @@ function construireStepper(colis){
         </span>
         <div>
           <p class="text-sm font-semibold ${estActif ? 'text-amber' : 'text-navy dark:text-white'}">${etape}</p>
-          <p class="font-mono-num text-xs text-slate-400 dark:text-cream/40">${colis.dates[index]}</p>
+          <p class="font-mono-num text-xs text-slate-400 dark:text-cream/40">${(colis.dates && colis.dates[index]) || '—'}</p>
         </div>
       </div>
     `;
@@ -1378,46 +1353,106 @@ function construireStepper(colis){
 
 function chercherColis(){
   const numero = trackingInput.value.trim().toUpperCase();
-  const colis = colisDemo[numero];
+  if(!numero) return;
 
-  if(!colis){
+  if(!window._db){
+    trackingError.textContent = "Connexion à la base de données indisponible pour le moment.";
     trackingError.classList.remove('hidden');
-    timelineBox.classList.add('hidden');
     return;
   }
 
-  trackingError.classList.add('hidden');
-  timelineId.textContent = numero;
-  timelineStatutPill.textContent = colis.statutLabel;
-  stepperProgress.style.width = '0%'; // réinitialise avant de relancer l'animation
+  // Coupe l'écoute du colis précédemment recherché, pour ne pas accumuler
+  // les connexions ouvertes à chaque nouvelle recherche.
+  if(arreterEcouteColis) arreterEcouteColis();
 
-  construireStepper(colis);
-  timelineBox.classList.remove('hidden');
+  const { doc, onSnapshot } = window._firestore;
+  const refCommande = doc(window._db, "commandes", numero);
+
+  arreterEcouteColis = onSnapshot(refCommande, (snap) => {
+    if(!snap.exists()){
+      trackingError.textContent = "Aucune expédition trouvée avec ce numéro. Vérifiez la saisie ou contactez-nous.";
+      trackingError.classList.remove('hidden');
+      timelineBox.classList.add('hidden');
+      return;
+    }
+
+    const colis = snap.data();
+    trackingError.classList.add('hidden');
+    timelineId.textContent = numero;
+    timelineStatutPill.textContent = colis.statutLabel || ETAPES_LIVRAISON[colis.etapeActuelle] || '';
+    stepperProgress.style.width = '0%'; // réinitialise avant de relancer l'animation
+
+    construireStepper(colis);
+    timelineBox.classList.remove('hidden');
+  }, (err) => {
+    console.error("Erreur d'écoute temps réel sur 'commandes' :", err);
+    trackingError.textContent = "Impossible de charger le suivi (vérifie tes règles Firestore).";
+    trackingError.classList.remove('hidden');
+  });
 }
 
 trackingBtn.addEventListener('click', chercherColis);
 trackingInput.addEventListener('keydown', (e) => { if(e.key === 'Enter') chercherColis(); });
 
 /* ================================================================
-   ESPACE CARRIÈRES — CANDIDATURE + UPLOAD DU CV VERS FIREBASE STORAGE
+   ESPACE CARRIÈRES — OFFRES EN TEMPS RÉEL + CANDIDATURE
    ================================================================
-   Étapes de la soumission :
-   1. Le fichier CV est envoyé dans Firebase Storage, dossier "cv/"
-   2. On récupère son URL de téléchargement
-   3. On enregistre la candidature dans Firestore, collection "candidatures",
-      avec cette URL (voir structure des collections en fin de réponse)
+   1. Les offres d'emploi sont chargées en direct depuis Firestore
+      (collection "offres_emploi") via onSnapshot — toute offre
+      ajoutée ou modifiée depuis le tableau de bord admin apparaît
+      instantanément ici.
+   2. Le CV est envoyé dans Firebase Storage, dossier "cv/"
+   3. On enregistre la candidature dans Firestore, collection
+      "candidatures", avec l'URL du CV (voir structure des
+      collections en fin de réponse)
    ================================================================ */
+const offresEmploiListEl = document.getElementById('offresEmploiList');
+const offresEmploiEmptyEl = document.getElementById('offresEmploiEmpty');
 const posteSelectionneEl = document.getElementById('posteSelectionne');
 let posteChoisi = null;
 
-// Chaque bouton "Postuler" d'une offre pré-remplit le formulaire en dessous
-document.querySelectorAll('.btn-postuler').forEach(btn => {
-  btn.addEventListener('click', () => {
-    const carte = btn.closest('.offre-card');
-    posteChoisi = carte.dataset.offre;
-    posteSelectionneEl.textContent = posteChoisi;
-    document.getElementById('candidatureBox').scrollIntoView({ behavior: 'smooth', block: 'start' });
+function renderOffresEmploi(offres){
+  if(offres.length === 0){
+    offresEmploiListEl.innerHTML = '';
+    offresEmploiEmptyEl.classList.remove('hidden');
+    return;
+  }
+  offresEmploiEmptyEl.classList.add('hidden');
+  offresEmploiListEl.innerHTML = offres.map(offre => `
+    <div class="offre-card bg-white dark:bg-navylight border border-slate-200 dark:border-white/10 rounded-xl p-6" data-offre="${offre.titre}">
+      <span class="text-xs font-bold uppercase tracking-wide bg-amber/15 text-amberdark px-2.5 py-1 rounded-full">${offre.type || 'CDI'}</span>
+      <h3 class="text-lg font-bold text-navy dark:text-white mt-3 mb-1.5">${offre.titre}</h3>
+      <p class="text-sm text-slate-500 dark:text-cream/60 mb-4">${offre.description || ''}</p>
+      <button class="btn-postuler w-full bg-amber hover:bg-amberdark text-navy font-semibold text-sm py-2.5 rounded-full transition">Postuler</button>
+    </div>
+  `).join('');
+}
+
+if(window._db){
+  const { collection, query, orderBy, onSnapshot } = window._firestore;
+  // On n'affiche que les offres actives (champ "actif" à true, réglable depuis l'admin)
+  onSnapshot(collection(window._db, "offres_emploi"), (snapshot) => {
+    const offres = snapshot.docs
+      .map(d => ({ id: d.id, ...d.data() }))
+      .filter(o => o.actif !== false); // une offre sans champ "actif" reste visible par défaut
+    renderOffresEmploi(offres);
+  }, (err) => {
+    console.error("Erreur d'écoute temps réel sur 'offres_emploi' :", err);
+    offresEmploiEmptyEl.classList.remove('hidden');
+    offresEmploiEmptyEl.textContent = "Impossible de charger les offres (vérifie tes règles Firestore).";
   });
+}
+
+// Chaque bouton "Postuler" d'une offre pré-remplit le formulaire en dessous.
+// Délégation d'événements : on écoute le conteneur plutôt que chaque bouton,
+// car les cartes sont recréées à chaque mise à jour temps réel.
+offresEmploiListEl.addEventListener('click', (e) => {
+  const btn = e.target.closest('.btn-postuler');
+  if(!btn) return;
+  const carte = btn.closest('.offre-card');
+  posteChoisi = carte.dataset.offre;
+  posteSelectionneEl.textContent = posteChoisi;
+  document.getElementById('candidatureBox').scrollIntoView({ behavior: 'smooth', block: 'start' });
 });
 
 const candidatureForm = document.getElementById('candidatureForm');
@@ -1499,21 +1534,14 @@ async function envoyerCVStorage(fichier){
 }
 
 /* ================================================================
-   BOURSE DE FRET — VERSION DÉMO
+   BOURSE DE FRET — TEMPS RÉEL (Firestore, collection "fret")
    ================================================================
-   Données fictives pour l'instant. À remplacer par une vraie lecture
-   Firestore sur la collection "fret" :
-     const snap = await getDocs(collection(window._db, "fret"));
-     const offres = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+   onSnapshot() ouvre une connexion permanente à Firestore : dès qu'un
+   document est ajouté, modifié ou supprimé dans la collection "fret"
+   (par exemple depuis le tableau de bord admin), CETTE page se met à
+   jour toute seule, sans que le visiteur ait besoin de recharger.
    ================================================================ */
-const fretDemo = [
-  { villeDepart: "Paris",   villeArrivee: "Madrid",  poids: 12, unite: "t", vehicule: "Semi-remorque", prix: 950,  date: "12/07/2026" },
-  { villeDepart: "Lyon",    villeArrivee: "Tolède",  poids: 8,  unite: "t", vehicule: "Porteur",        prix: 620,  date: "13/07/2026" },
-  { villeDepart: "Paris",   villeArrivee: "Bamako",  poids: 22, unite: "t", vehicule: "Semi-remorque", prix: 2400, date: "15/07/2026" },
-  { villeDepart: "Séville", villeArrivee: "Toulouse",poids: 6,  unite: "t", vehicule: "Fourgon",        prix: 480,  date: "14/07/2026" },
-  { villeDepart: "Madrid",  villeArrivee: "Dakar",   poids: 18, unite: "t", vehicule: "Semi-remorque", prix: 2100, date: "16/07/2026" },
-  { villeDepart: "Toledo",  villeArrivee: "Barcelone",poids: 4, unite: "t", vehicule: "Fourgon",        prix: 310,  date: "12/07/2026" },
-];
+let fretDataActuelle = []; // toujours à jour grâce à l'écoute temps réel ci-dessous
 
 const fretListEl = document.getElementById('fretList');
 const fretEmptyEl = document.getElementById('fretEmpty');
@@ -1522,17 +1550,18 @@ function renderFretOffres(liste){
   if(liste.length === 0){
     fretListEl.innerHTML = '';
     fretEmptyEl.classList.remove('hidden');
+    fretEmptyEl.textContent = "Aucune offre de fret disponible pour le moment.";
     return;
   }
   fretEmptyEl.classList.add('hidden');
   fretListEl.innerHTML = liste.map(offre => `
     <div class="bg-white/[0.06] border border-white/10 rounded-xl p-6">
       <div class="flex items-center justify-between mb-3">
-        <span class="font-mono-num text-xs text-amber">${offre.date}</span>
-        <span class="text-xs font-semibold bg-teal/20 text-teal px-2.5 py-1 rounded-full">${offre.vehicule}</span>
+        <span class="font-mono-num text-xs text-amber">${offre.date || ''}</span>
+        <span class="text-xs font-semibold bg-teal/20 text-teal px-2.5 py-1 rounded-full">${offre.vehicule || ''}</span>
       </div>
       <h3 class="font-semibold text-white mb-1">${offre.villeDepart} → ${offre.villeArrivee}</h3>
-      <p class="text-sm text-cream/60 mb-4">${offre.poids} ${offre.unite} de marchandise</p>
+      <p class="text-sm text-cream/60 mb-4">${offre.poids} ${offre.unite || 't'} de marchandise</p>
       <div class="flex items-center justify-between">
         <span class="font-mono-num text-xl font-bold text-amber">${offre.prix} €</span>
         <button class="text-sm font-semibold text-cream hover:text-amber transition">Contacter →</button>
@@ -1541,7 +1570,19 @@ function renderFretOffres(liste){
   `).join('');
 }
 
-renderFretOffres(fretDemo); // Affichage initial de toutes les offres
+// Écoute en direct de la collection "fret". Se déclenche une première fois
+// immédiatement (chargement initial), puis à chaque changement côté serveur.
+if(window._db){
+  const { collection, onSnapshot } = window._firestore;
+  onSnapshot(collection(window._db, "fret"), (snapshot) => {
+    fretDataActuelle = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+    renderFretOffres(fretDataActuelle);
+  }, (err) => {
+    console.error("Erreur d'écoute temps réel sur 'fret' :", err);
+    fretEmptyEl.classList.remove('hidden');
+    fretEmptyEl.textContent = "Impossible de charger les offres (vérifie tes règles Firestore).";
+  });
+}
 
 /* ================================================================
    ASSISTANT DE RECHERCHE IA
@@ -1573,7 +1614,9 @@ iaSearchForm.addEventListener('submit', async function(e){
 
   const criteres = await interpreterRechercheIA(question);
 
-  const resultats = fretDemo.filter(offre => {
+  // La recherche IA filtre désormais les offres réelles chargées en temps réel
+  // (fretDataActuelle), et non plus un tableau de démonstration figé.
+  const resultats = fretDataActuelle.filter(offre => {
     const okDepart = !criteres.villeDepart || offre.villeDepart.toLowerCase().includes(criteres.villeDepart.toLowerCase());
     const okArrivee = !criteres.villeArrivee || offre.villeArrivee.toLowerCase().includes(criteres.villeArrivee.toLowerCase());
     const okPoids = !criteres.poids || Math.abs(offre.poids - criteres.poids) <= 5; // tolérance de +/- 5 tonnes
@@ -1590,7 +1633,7 @@ iaSearchForm.addEventListener('submit', async function(e){
     ? `Recherche comprise : ${resume} — ${resultats.length} offre(s) trouvée(s)`
     : `Aucun critère clair détecté — affichage de toutes les offres`;
 
-  renderFretOffres(resultats.length || resume ? resultats : fretDemo);
+  renderFretOffres(resultats.length || resume ? resultats : fretDataActuelle);
   iaSearchBtn.disabled = false;
 });
 
