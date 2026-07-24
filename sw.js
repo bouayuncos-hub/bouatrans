@@ -5,27 +5,39 @@
 // (même une petite). C'est ce qui force les navigateurs des visiteurs
 // à récupérer la nouvelle version plutôt que de servir l'ancienne
 // depuis le cache indéfiniment.
-const CACHE_VERSION = "v2";
+const CACHE_VERSION = "v3";
 const CACHE_NAME = `boua-trans-${CACHE_VERSION}`;
 
 // Fichiers essentiels mis en cache dès l'installation, pour que le
 // site s'ouvre même hors-ligne dès la première visite.
+// ⚠️ Ne liste ici QUE des fichiers qui existent réellement sur le site
+// déployé — un seul chemin incorrect faisait échouer TOUTE l'installation
+// avec cache.addAll() (voir correctif ci-dessous).
 const PRECACHE_FILES = [
   "./",
   "./index.html",
   "./manifest.json",
-  "./output.css",
   "./offline.html"
 ];
 
 // ------------------------------------------------------------
 // INSTALLATION : télécharge et met en cache les fichiers essentiels
 // ------------------------------------------------------------
+// On met chaque fichier en cache INDIVIDUELLEMENT (plutôt que
+// cache.addAll(), qui annule tout au moindre fichier manquant).
+// Ainsi, même si un fichier de la liste venait à disparaître un jour,
+// l'installation du site continue de fonctionner pour tout le reste.
 self.addEventListener("install", (event) => {
   event.waitUntil(
-    caches.open(CACHE_NAME)
-      .then((cache) => cache.addAll(PRECACHE_FILES))
-      .catch((err) => console.warn("Précache partiellement échouée :", err))
+    caches.open(CACHE_NAME).then((cache) =>
+      Promise.all(
+        PRECACHE_FILES.map((fichier) =>
+          cache.add(fichier).catch((err) =>
+            console.warn(`Précache impossible pour ${fichier} :`, err)
+          )
+        )
+      )
+    )
   );
   self.skipWaiting();
 });
