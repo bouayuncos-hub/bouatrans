@@ -1073,33 +1073,74 @@
 </div>
 
 <!-- ============================================================
-     MODALE ESPACE CLIENT / CONNEXION
-     ⚠️ UI uniquement pour l'instant : le formulaire ne vérifie rien.
-     Prochaine étape : brancher Firebase Authentication (signInWithEmailAndPassword)
-     pour que ce formulaire connecte réellement un client à son espace
-     (factures, bons de livraison, historique de commandes).
+     MODALE ESPACE CLIENT — vraie authentification Firebase
+     Deux formulaires (connexion / création de compte) + un panneau
+     "compte connecté" avec déconnexion et suppression de compte.
      ============================================================ -->
 <div id="loginModal" class="hidden fixed inset-0 z-[60] flex items-center justify-center p-5">
   <div id="loginModalOverlay" class="absolute inset-0 bg-navy/70 backdrop-blur-sm"></div>
   <div class="relative bg-white dark:bg-navylight rounded-2xl shadow-2xl w-full max-w-sm p-7">
     <button id="loginModalClose" aria-label="Fermer" class="absolute top-4 right-4 text-slate-400 hover:text-amber">✕</button>
-    <h3 class="text-2xl font-bold text-navy dark:text-white mb-1.5" data-i18n="login.title">Espace Client</h3>
-    <p class="text-sm text-slate-500 dark:text-cream/60 mb-6" data-i18n="login.subtitle">Accédez à vos factures et bons de livraison.</p>
 
-    <form id="loginForm">
-      <div class="mb-4">
-        <label for="loginEmail" class="block text-sm font-semibold text-navy dark:text-cream mb-2">Email</label>
-        <input type="email" id="loginEmail" required
-          class="w-full px-3.5 py-3 rounded-lg border border-slate-200 dark:border-white/15 bg-cream dark:bg-navy focus:outline-none focus:border-amber">
-      </div>
-      <div class="mb-5">
-        <label for="loginPassword" class="block text-sm font-semibold text-navy dark:text-cream mb-2">Mot de passe</label>
-        <input type="password" id="loginPassword" required
-          class="w-full px-3.5 py-3 rounded-lg border border-slate-200 dark:border-white/15 bg-cream dark:bg-navy focus:outline-none focus:border-amber">
-      </div>
-      <button type="submit" class="w-full bg-amber hover:bg-amberdark text-navy font-semibold py-3.5 rounded-full transition" data-i18n="login.submit">Se connecter</button>
-      <p id="loginStatus" class="text-xs mt-3 text-slate-500 dark:text-cream/60"></p>
-    </form>
+    <!-- VUE 1 : CONNEXION -->
+    <div id="loginViewSignin">
+      <h3 class="text-2xl font-bold text-navy dark:text-white mb-1.5">Espace Client</h3>
+      <p class="text-sm text-slate-500 dark:text-cream/60 mb-6">Accédez à vos factures et bons de livraison.</p>
+
+      <form id="loginForm">
+        <div class="mb-4">
+          <label for="loginEmail" class="block text-sm font-semibold text-navy dark:text-cream mb-2">Email</label>
+          <input type="email" id="loginEmail" required
+            class="w-full px-3.5 py-3 rounded-lg border border-slate-200 dark:border-white/15 bg-cream dark:bg-navy focus:outline-none focus:border-amber">
+        </div>
+        <div class="mb-5">
+          <label for="loginPassword" class="block text-sm font-semibold text-navy dark:text-cream mb-2">Mot de passe</label>
+          <input type="password" id="loginPassword" required
+            class="w-full px-3.5 py-3 rounded-lg border border-slate-200 dark:border-white/15 bg-cream dark:bg-navy focus:outline-none focus:border-amber">
+        </div>
+        <button type="submit" id="loginSubmitBtn" class="w-full bg-amber hover:bg-amberdark text-navy font-semibold py-3.5 rounded-full transition">Se connecter</button>
+        <p id="loginStatus" class="text-xs mt-3 text-slate-500 dark:text-cream/60"></p>
+      </form>
+
+      <p class="text-sm text-center text-slate-500 dark:text-cream/60 mt-5">
+        Pas encore de compte ? <button id="switchToSignup" class="text-amberdark font-semibold hover:underline">Créer un compte gratuit</button>
+      </p>
+    </div>
+
+    <!-- VUE 2 : CRÉATION DE COMPTE -->
+    <div id="loginViewSignup" class="hidden">
+      <h3 class="text-2xl font-bold text-navy dark:text-white mb-1.5">Créer mon compte</h3>
+      <p class="text-sm text-slate-500 dark:text-cream/60 mb-6">Gratuit, en 30 secondes.</p>
+
+      <form id="signupForm">
+        <div class="mb-4">
+          <label for="signupEmail" class="block text-sm font-semibold text-navy dark:text-cream mb-2">Email</label>
+          <input type="email" id="signupEmail" required
+            class="w-full px-3.5 py-3 rounded-lg border border-slate-200 dark:border-white/15 bg-cream dark:bg-navy focus:outline-none focus:border-amber">
+        </div>
+        <div class="mb-5">
+          <label for="signupPassword" class="block text-sm font-semibold text-navy dark:text-cream mb-2">Mot de passe (6 caractères minimum)</label>
+          <input type="password" id="signupPassword" required minlength="6"
+            class="w-full px-3.5 py-3 rounded-lg border border-slate-200 dark:border-white/15 bg-cream dark:bg-navy focus:outline-none focus:border-amber">
+        </div>
+        <button type="submit" id="signupSubmitBtn" class="w-full bg-amber hover:bg-amberdark text-navy font-semibold py-3.5 rounded-full transition">Créer mon compte</button>
+        <p id="signupStatus" class="text-xs mt-3 text-slate-500 dark:text-cream/60"></p>
+      </form>
+
+      <p class="text-sm text-center text-slate-500 dark:text-cream/60 mt-5">
+        Déjà un compte ? <button id="switchToSignin" class="text-amberdark font-semibold hover:underline">Se connecter</button>
+      </p>
+    </div>
+
+    <!-- VUE 3 : COMPTE CONNECTÉ -->
+    <div id="loginViewAccount" class="hidden">
+      <h3 class="text-2xl font-bold text-navy dark:text-white mb-1.5">Mon compte</h3>
+      <p class="text-sm text-slate-500 dark:text-cream/60 mb-6">Connecté en tant que <span id="accountEmailDisplay" class="font-semibold text-navy dark:text-white"></span></p>
+
+      <button id="accountLogoutBtn" class="w-full border-2 border-navy dark:border-cream/30 text-navy dark:text-cream font-semibold py-3 rounded-full transition hover:bg-navy hover:text-white dark:hover:bg-white/10 mb-3">Se déconnecter</button>
+      <button id="accountDeleteBtn" class="w-full text-red-500 hover:text-red-600 font-semibold py-3 text-sm">Supprimer mon compte</button>
+      <p id="accountStatus" class="text-xs mt-3 text-center text-slate-500 dark:text-cream/60"></p>
+    </div>
   </div>
 </div>
 
@@ -1136,8 +1177,11 @@
   } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
   import { getStorage, ref, uploadBytes, getDownloadURL }
     from "https://www.gstatic.com/firebasejs/10.13.0/firebase-storage.js";
-  import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged }
-    from "https://www.gstatic.com/firebasejs/10.13.0/firebase-auth.js";
+  import {
+    getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword,
+    signOut, onAuthStateChanged, deleteUser,
+    EmailAuthProvider, reauthenticateWithCredential
+  } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-auth.js";
 
   // --- Configuration de ton projet Firebase (boua-trans) ---
   const firebaseConfig = {
@@ -1161,7 +1205,11 @@
   window._auth = auth;
   window._firestore = { collection, addDoc, getDocs, getDoc, serverTimestamp, query, orderBy, limit, startAfter, doc, updateDoc, deleteDoc, onSnapshot, where };
   window._storageFns = { ref, uploadBytes, getDownloadURL };
-  window._authFns = { signInWithEmailAndPassword, signOut, onAuthStateChanged };
+  window._authFns = {
+    signInWithEmailAndPassword, createUserWithEmailAndPassword,
+    signOut, onAuthStateChanged, deleteUser,
+    EmailAuthProvider, reauthenticateWithCredential
+  };
 </script>
 
 <!-- ============================================================
@@ -1986,31 +2034,162 @@ if('serviceWorker' in navigator){
 }
 
 /* ================================================================
-   ESPACE CLIENT / CONNEXION (modale)
+   ESPACE CLIENT — vraie authentification Firebase
    ================================================================
-   Formulaire d'interface uniquement pour l'instant. À brancher sur
-   Firebase Authentication : remplace le contenu du try{} par
-   signInWithEmailAndPassword(getAuth(app), email, motDePasse).
+   N'importe qui peut créer un compte gratuitement avec un email et
+   un mot de passe (Firebase Authentication), se connecter, et
+   supprimer son propre compte à tout moment — en libre-service,
+   sans intervention de l'admin.
    ================================================================ */
 const loginModal = document.getElementById('loginModal');
 const loginModalClose = document.getElementById('loginModalClose');
 const loginModalOverlay = document.getElementById('loginModalOverlay');
-const loginForm = document.getElementById('loginForm');
-const loginStatus = document.getElementById('loginStatus');
 
-function ouvrirModaleConnexion(){ loginModal.classList.remove('hidden'); loginModal.classList.add('flex'); }
-function fermerModaleConnexion(){ loginModal.classList.add('hidden'); loginModal.classList.remove('flex'); }
+const loginViewSignin = document.getElementById('loginViewSignin');
+const loginViewSignup = document.getElementById('loginViewSignup');
+const loginViewAccount = document.getElementById('loginViewAccount');
+
+function afficherVueClient(vue){
+  loginViewSignin.classList.toggle('hidden', vue !== 'signin');
+  loginViewSignup.classList.toggle('hidden', vue !== 'signup');
+  loginViewAccount.classList.toggle('hidden', vue !== 'account');
+}
+
+function ouvrirModaleConnexion(){
+  loginModal.classList.remove('hidden');
+  loginModal.classList.add('flex');
+  // Si déjà connecté, on montre directement le panneau "Mon compte"
+  if(window._auth && window._auth.currentUser){
+    document.getElementById('accountEmailDisplay').textContent = window._auth.currentUser.email;
+    afficherVueClient('account');
+  } else {
+    afficherVueClient('signin');
+  }
+}
+function fermerModaleConnexion(){
+  loginModal.classList.add('hidden');
+  loginModal.classList.remove('flex');
+}
 
 document.getElementById('clientLoginBtn').addEventListener('click', ouvrirModaleConnexion);
 document.getElementById('clientLoginBtnMobile').addEventListener('click', ouvrirModaleConnexion);
 loginModalClose.addEventListener('click', fermerModaleConnexion);
 loginModalOverlay.addEventListener('click', fermerModaleConnexion);
 
-loginForm.addEventListener('submit', (e) => {
+document.getElementById('switchToSignup').addEventListener('click', () => afficherVueClient('signup'));
+document.getElementById('switchToSignin').addEventListener('click', () => afficherVueClient('signin'));
+
+// ---------- CONNEXION ----------
+const loginForm = document.getElementById('loginForm');
+const loginStatus = document.getElementById('loginStatus');
+const loginSubmitBtn = document.getElementById('loginSubmitBtn');
+
+loginForm.addEventListener('submit', async (e) => {
   e.preventDefault();
-  // TODO : remplacer cette simulation par un vrai appel Firebase Authentication
-  loginStatus.textContent = "Connexion Firebase à brancher (voir commentaire dans le code).";
-  loginStatus.className = "text-xs mt-3 text-amberdark font-medium";
+  loginStatus.textContent = "Connexion en cours...";
+  loginStatus.className = "text-xs mt-3 text-slate-500 dark:text-cream/60";
+  loginSubmitBtn.disabled = true;
+
+  try {
+    const { signInWithEmailAndPassword } = window._authFns;
+    const email = document.getElementById('loginEmail').value.trim();
+    const motDePasse = document.getElementById('loginPassword').value;
+    await signInWithEmailAndPassword(window._auth, email, motDePasse);
+    loginForm.reset();
+    document.getElementById('accountEmailDisplay').textContent = email;
+    afficherVueClient('account');
+  } catch (err) {
+    console.error("Erreur de connexion client :", err);
+    loginStatus.textContent = "Email ou mot de passe incorrect.";
+    loginStatus.className = "text-xs mt-3 text-red-500 font-medium";
+  } finally {
+    loginSubmitBtn.disabled = false;
+  }
+});
+
+// ---------- CRÉATION DE COMPTE (gratuite, libre-service) ----------
+const signupForm = document.getElementById('signupForm');
+const signupStatus = document.getElementById('signupStatus');
+const signupSubmitBtn = document.getElementById('signupSubmitBtn');
+
+signupForm.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  signupStatus.textContent = "Création du compte...";
+  signupStatus.className = "text-xs mt-3 text-slate-500 dark:text-cream/60";
+  signupSubmitBtn.disabled = true;
+
+  try {
+    const { createUserWithEmailAndPassword } = window._authFns;
+    const email = document.getElementById('signupEmail').value.trim();
+    const motDePasse = document.getElementById('signupPassword').value;
+    await createUserWithEmailAndPassword(window._auth, email, motDePasse);
+    signupForm.reset();
+    document.getElementById('accountEmailDisplay').textContent = email;
+    afficherVueClient('account');
+  } catch (err) {
+    console.error("Erreur de création de compte :", err);
+    if(err.code === 'auth/email-already-in-use'){
+      signupStatus.textContent = "Cet email a déjà un compte — connecte-toi plutôt.";
+    } else if(err.code === 'auth/weak-password'){
+      signupStatus.textContent = "Mot de passe trop court (6 caractères minimum).";
+    } else {
+      signupStatus.textContent = "Échec de la création du compte. Réessaie.";
+    }
+    signupStatus.className = "text-xs mt-3 text-red-500 font-medium";
+  } finally {
+    signupSubmitBtn.disabled = false;
+  }
+});
+
+// ---------- COMPTE CONNECTÉ : DÉCONNEXION + SUPPRESSION ----------
+const accountStatus = document.getElementById('accountStatus');
+
+document.getElementById('accountLogoutBtn').addEventListener('click', async () => {
+  const { signOut } = window._authFns;
+  await signOut(window._auth);
+  fermerModaleConnexion();
+});
+
+document.getElementById('accountDeleteBtn').addEventListener('click', async () => {
+  if(!confirm("Supprimer définitivement ton compte ? Cette action est irréversible.")) return;
+
+  const { deleteUser, EmailAuthProvider, reauthenticateWithCredential } = window._authFns;
+  const utilisateur = window._auth.currentUser;
+  if(!utilisateur) return;
+
+  accountStatus.textContent = "Suppression en cours...";
+  accountStatus.className = "text-xs mt-3 text-center text-slate-500 dark:text-cream/60";
+
+  try {
+    await deleteUser(utilisateur);
+    accountStatus.textContent = "Compte supprimé.";
+    accountStatus.className = "text-xs mt-3 text-center text-teal font-medium";
+    setTimeout(fermerModaleConnexion, 1200);
+  } catch (err) {
+    // Par sécurité, Firebase exige une connexion récente pour supprimer un
+    // compte. Si la session est plus ancienne, on redemande le mot de passe
+    // une seule fois, puis on relance la suppression automatiquement.
+    if(err.code === 'auth/requires-recent-login'){
+      const motDePasse = prompt("Pour confirmer la suppression, ressaisis ton mot de passe :");
+      if(!motDePasse) return;
+      try {
+        const credential = EmailAuthProvider.credential(utilisateur.email, motDePasse);
+        await reauthenticateWithCredential(utilisateur, credential);
+        await deleteUser(utilisateur);
+        accountStatus.textContent = "Compte supprimé.";
+        accountStatus.className = "text-xs mt-3 text-center text-teal font-medium";
+        setTimeout(fermerModaleConnexion, 1200);
+      } catch (err2) {
+        console.error("Échec de la ré-authentification :", err2);
+        accountStatus.textContent = "Mot de passe incorrect, compte non supprimé.";
+        accountStatus.className = "text-xs mt-3 text-center text-red-500 font-medium";
+      }
+    } else {
+      console.error("Erreur de suppression de compte :", err);
+      accountStatus.textContent = "Échec de la suppression. Réessaie.";
+      accountStatus.className = "text-xs mt-3 text-center text-red-500 font-medium";
+    }
+  }
 });
 
 /* ================================================================
