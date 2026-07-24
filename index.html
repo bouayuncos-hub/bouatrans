@@ -83,6 +83,14 @@
      supprime cette ligne + la ligne "fontFamily" dans tailwind.config plus bas.
      ============================================================ -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
+
+<!-- ============================================================
+     EMAILJS — envoi d'emails directement depuis le navigateur,
+     sans backend ni terminal. Utilisé pour notifier automatiquement
+     le client par email à chaque changement de statut de sa commande
+     (voir REMPLIR TES IDENTIFIANTS plus bas dans le script).
+     ============================================================ -->
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
 
 <!-- ============================================================
@@ -801,6 +809,22 @@
 </section>
 
 <!-- ============================================================
+     PROCHAINS DÉPARTS — fréquence des trajets, temps réel Firestore
+     ============================================================ -->
+<section id="departs" class="py-20 md:py-24" data-reveal>
+  <div class="max-w-6xl mx-auto px-5">
+    <div class="max-w-xl mb-10">
+      <span class="font-mono-num text-xs tracking-widest uppercase text-amberdark block mb-2">Planning</span>
+      <h2 class="text-3xl md:text-4xl font-bold text-navy dark:text-white">Prochains départs</h2>
+      <p class="text-slate-500 dark:text-cream/65 mt-3">Réserve ta place sur un trajet déjà programmé.</p>
+    </div>
+
+    <div id="departsList" class="grid sm:grid-cols-2 lg:grid-cols-3 gap-5"></div>
+    <p id="departsEmpty" class="hidden text-slate-400 dark:text-cream/40 text-sm">Aucun départ programmé pour le moment — contacte-nous directement pour une demande sur mesure.</p>
+  </div>
+</section>
+
+<!-- ============================================================
      ÉCO-TRANSPORT — Estimation de CO₂ économisé
      ============================================================ -->
 <section id="eco" class="py-20 md:py-24 bg-teal/5" data-reveal>
@@ -834,11 +858,26 @@
   <div class="max-w-6xl mx-auto px-5">
     <div class="max-w-xl mb-10">
       <span class="font-mono-num text-xs tracking-widest uppercase text-amberdark block mb-2">Espace client</span>
-      <h2 class="text-3xl md:text-4xl font-bold text-navy dark:text-white">Vos documents de livraison</h2>
-      <p class="text-slate-500 dark:text-cream/65 mt-3">Entrez votre numéro de commande pour récupérer le bordereau de livraison (CMR) et la facture.</p>
+      <h2 class="text-3xl md:text-4xl font-bold text-navy dark:text-white">Vos commandes et documents</h2>
+      <p class="text-slate-500 dark:text-cream/65 mt-3">Retrouvez l'historique de vos envois, ou récupérez un bordereau et une facture.</p>
+    </div>
+
+    <!-- Historique des commandes par email -->
+    <div class="bg-white dark:bg-navylight rounded-2xl shadow-xl p-7 md:p-10 max-w-xl mb-6">
+      <h3 class="text-lg font-bold text-navy dark:text-white mb-1">Mes commandes</h3>
+      <p class="text-sm text-slate-500 dark:text-cream/60 mb-4">Retrouve toutes tes commandes passées avec l'email utilisé lors de tes demandes.</p>
+      <div class="flex flex-col sm:flex-row gap-3 mb-3">
+        <input type="email" id="historiqueEmailInput" placeholder="ton@email.com" autocomplete="off"
+          class="flex-1 px-4 py-3.5 rounded-lg border border-slate-200 dark:border-white/15 bg-cream dark:bg-navy focus:outline-none focus:border-amber">
+        <button id="historiqueBtn" class="bg-amber hover:bg-amberdark text-navy font-semibold px-7 py-3.5 rounded-lg transition">Rechercher</button>
+      </div>
+      <p id="historiqueEmpty" class="hidden text-sm text-slate-400 dark:text-cream/40"></p>
+      <div id="historiqueList" class="space-y-2"></div>
     </div>
 
     <div class="bg-white dark:bg-navylight rounded-2xl shadow-xl p-7 md:p-10 max-w-xl">
+      <h3 class="text-lg font-bold text-navy dark:text-white mb-1">Documents de livraison</h3>
+      <p class="text-sm text-slate-500 dark:text-cream/60 mb-4">Entrez votre numéro de commande pour récupérer le bordereau (CMR) et la facture.</p>
       <div class="flex flex-col sm:flex-row gap-3 mb-2">
         <input type="text" id="podInput" placeholder="Numéro de commande, ex : BT-2026-00458" autocomplete="off"
           class="flex-1 font-mono-num px-4 py-3.5 rounded-lg border border-slate-200 dark:border-white/15 bg-cream dark:bg-navy focus:outline-none focus:border-amber">
@@ -885,6 +924,7 @@
           <li><a href="#devis" class="hover:text-amber">Devis</a></li>
           <li><a href="#suivi" class="hover:text-amber">Suivi de colis</a></li>
           <li><a href="#avis" class="hover:text-amber">Avis clients</a></li>
+          <li><a href="#departs" class="hover:text-amber">Prochains départs</a></li>
           <li><a href="#eco" class="hover:text-amber">Éco-Transport</a></li>
           <li><a href="#espace-client-pod" class="hover:text-amber">Documents (POD)</a></li>
           <li><a href="#faq" class="hover:text-amber">FAQ</a></li>
@@ -994,6 +1034,7 @@
       <button class="admin-tab" data-collection="candidatures">Candidatures</button>
       <button class="admin-tab" data-collection="commandes">Commandes / Suivi</button>
       <button class="admin-tab" data-collection="fret">Bourse de fret</button>
+      <button class="admin-tab" data-collection="departs">Départs</button>
       <button class="admin-tab" data-collection="partenaires">Partenaires</button>
     </div>
   </div>
@@ -1091,7 +1132,7 @@
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
   import {
     getFirestore, collection, addDoc, getDocs, getDoc, serverTimestamp,
-    query, orderBy, limit, startAfter, doc, updateDoc, deleteDoc, onSnapshot
+    query, orderBy, limit, startAfter, doc, updateDoc, deleteDoc, onSnapshot, where
   } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
   import { getStorage, ref, uploadBytes, getDownloadURL }
     from "https://www.gstatic.com/firebasejs/10.13.0/firebase-storage.js";
@@ -1118,7 +1159,7 @@
   window._db = db;
   window._storage = storage;
   window._auth = auth;
-  window._firestore = { collection, addDoc, getDocs, getDoc, serverTimestamp, query, orderBy, limit, startAfter, doc, updateDoc, deleteDoc, onSnapshot };
+  window._firestore = { collection, addDoc, getDocs, getDoc, serverTimestamp, query, orderBy, limit, startAfter, doc, updateDoc, deleteDoc, onSnapshot, where };
   window._storageFns = { ref, uploadBytes, getDownloadURL };
   window._authFns = { signInWithEmailAndPassword, signOut, onAuthStateChanged };
 </script>
@@ -2294,14 +2335,31 @@ adminEditSave.addEventListener('click', async () => {
     return;
   }
 
-  const { collection, addDoc, doc, updateDoc, serverTimestamp } = window._firestore;
+  const { collection, addDoc, doc, updateDoc, getDoc, serverTimestamp } = window._firestore;
 
   try {
+    // Avant modification, on note l'ancien statut pour ne notifier
+    // le client QUE si le statut a réellement changé (pas à chaque
+    // clic sur "Enregistrer" même sans changement).
+    let ancienEtapeActuelle = null;
+    if(collectionActive === 'commandes' && idDocumentEnEdition){
+      const ancienSnap = await getDoc(doc(window._db, collectionActive, idDocumentEnEdition));
+      if(ancienSnap.exists()) ancienEtapeActuelle = ancienSnap.data().etapeActuelle;
+    }
+
     if(idDocumentEnEdition){
       await updateDoc(doc(window._db, collectionActive, idDocumentEnEdition), donnees);
     } else {
       await addDoc(collection(window._db, collectionActive), { ...donnees, dateCreation: serverTimestamp() });
     }
+
+    // Notification email automatique : seulement pour la collection
+    // "commandes", seulement si le statut a changé, et seulement si
+    // le document a un email de contact renseigné.
+    if(collectionActive === 'commandes' && donnees.email && donnees.etapeActuelle !== ancienEtapeActuelle){
+      envoyerNotificationStatutEmail(idDocumentEnEdition, donnees);
+    }
+
     fermerEditionDocument();
     chargerCollection(collectionActive, true); // recharge la liste depuis le début pour refléter le changement
   } catch (err) {
@@ -2310,6 +2368,48 @@ adminEditSave.addEventListener('click', async () => {
     adminEditError.classList.remove('hidden');
   }
 });
+
+/* ================================================================
+   NOTIFICATION EMAIL AUTOMATIQUE — via EmailJS (aucun backend requis)
+   ================================================================
+   ÉTAPES POUR ACTIVER (à faire une seule fois) :
+   1. Crée un compte gratuit sur https://www.emailjs.com
+   2. "Email Services" → connecte ta boîte bouayuncos@gmail.com
+      → note l'identifiant du service (ex : "service_xxxxxxx")
+   3. "Email Templates" → crée un template avec ces variables :
+      {{to_email}}, {{numero_commande}}, {{nouveau_statut}}
+      → note l'identifiant du template (ex : "template_xxxxxxx")
+   4. "Account" → copie ta "Public Key"
+   5. Remplace les 3 valeurs ci-dessous par les tiennes.
+   ================================================================ */
+const EMAILJS_SERVICE_ID = "VOTRE_SERVICE_ID";
+const EMAILJS_TEMPLATE_ID = "VOTRE_TEMPLATE_ID";
+const EMAILJS_PUBLIC_KEY = "VOTRE_PUBLIC_KEY";
+
+if(typeof emailjs !== 'undefined' && EMAILJS_PUBLIC_KEY !== "VOTRE_PUBLIC_KEY"){
+  emailjs.init({ publicKey: EMAILJS_PUBLIC_KEY });
+}
+
+const ETAPES_LIVRAISON_EMAIL = ["Commande reçue", "En transit", "En douane", "Livré"];
+
+function envoyerNotificationStatutEmail(numeroCommande, commande){
+  if(typeof emailjs === 'undefined' || EMAILJS_PUBLIC_KEY === "VOTRE_PUBLIC_KEY"){
+    console.warn("EmailJS non configuré — notification email ignorée. Voir le commentaire au-dessus de cette fonction.");
+    return;
+  }
+
+  const nouveauStatut = commande.statutLabel || ETAPES_LIVRAISON_EMAIL[commande.etapeActuelle] || '';
+
+  emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
+    to_email: commande.email,
+    numero_commande: numeroCommande,
+    nouveau_statut: nouveauStatut
+  }).then(() => {
+    console.log("Notification email envoyée au client pour", numeroCommande);
+  }).catch((err) => {
+    console.error("Échec de l'envoi de la notification email :", err);
+  });
+}
 
 adminEditDelete.addEventListener('click', async () => {
   if(!idDocumentEnEdition) return;
@@ -2325,6 +2425,94 @@ adminEditDelete.addEventListener('click', async () => {
     alert("Échec de la suppression (vérifie tes règles Firestore).");
   }
 });
+
+/* ================================================================
+   PROCHAINS DÉPARTS — temps réel (Firestore, collection "departs")
+   ================================================================
+   Chaque document : { destination, dateDepart, placesRestantes }
+   Ajoute/modifie depuis le tableau de bord admin, onglet "Départs".
+   ================================================================ */
+const departsListEl = document.getElementById('departsList');
+const departsEmptyEl = document.getElementById('departsEmpty');
+
+function renderDeparts(liste){
+  if(liste.length === 0){
+    departsListEl.innerHTML = '';
+    departsEmptyEl.classList.remove('hidden');
+    return;
+  }
+  departsEmptyEl.classList.add('hidden');
+  departsListEl.innerHTML = liste.map(depart => `
+    <div class="bg-white dark:bg-navylight border border-slate-200 dark:border-white/10 rounded-xl p-6">
+      <span class="text-xs font-bold uppercase tracking-wide bg-teal/15 text-teal px-2.5 py-1 rounded-full">${depart.dateDepart || ''}</span>
+      <h3 class="text-lg font-bold text-navy dark:text-white mt-3 mb-1.5">Vers ${depart.destination || ''}</h3>
+      <p class="text-sm text-slate-500 dark:text-cream/60">${depart.placesRestantes != null ? depart.placesRestantes + ' places restantes' : ''}</p>
+      <a href="#devis" class="inline-block mt-4 text-sm font-semibold text-amberdark hover:text-amber transition">Réserver →</a>
+    </div>
+  `).join('');
+}
+
+if(window._db){
+  const { collection, onSnapshot } = window._firestore;
+  onSnapshot(collection(window._db, "departs"), (snapshot) => {
+    const departs = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+    renderDeparts(departs);
+  }, (err) => {
+    console.error("Erreur d'écoute temps réel sur 'departs' :", err);
+    departsEmptyEl.classList.remove('hidden');
+    departsEmptyEl.textContent = "Impossible de charger les départs (vérifie tes règles Firestore).";
+  });
+}
+
+/* ================================================================
+   HISTORIQUE CLIENT — recherche de toutes ses commandes par email
+   ================================================================
+   Complète le suivi par numéro de suivi : ici on retrouve TOUTES
+   les commandes liées à un email, pratique pour les clients réguliers.
+   Ajouté dans l'Espace Client, juste au-dessus des documents POD.
+   ================================================================ */
+const historiqueEmailInput = document.getElementById('historiqueEmailInput');
+const historiqueBtn = document.getElementById('historiqueBtn');
+const historiqueListEl = document.getElementById('historiqueList');
+const historiqueEmptyEl = document.getElementById('historiqueEmpty');
+
+async function chercherHistoriqueParEmail(){
+  const email = historiqueEmailInput.value.trim();
+  if(!email || !window._db) return;
+
+  const { collection, query, where, getDocs } = window._firestore;
+
+  try {
+    const q = query(collection(window._db, "commandes"), where("email", "==", email));
+    const snapshot = await getDocs(q);
+
+    if(snapshot.empty){
+      historiqueListEl.innerHTML = '';
+      historiqueEmptyEl.classList.remove('hidden');
+      historiqueEmptyEl.textContent = "Aucune commande trouvée pour cet email.";
+      return;
+    }
+
+    historiqueEmptyEl.classList.add('hidden');
+    historiqueListEl.innerHTML = snapshot.docs.map(docSnap => {
+      const c = docSnap.data();
+      const statut = c.statutLabel || ETAPES_LIVRAISON_EMAIL[c.etapeActuelle] || '—';
+      return `
+        <div class="flex items-center justify-between p-4 rounded-lg border border-slate-200 dark:border-white/10">
+          <span class="font-mono-num text-sm font-semibold text-navy dark:text-white">${docSnap.id}</span>
+          <span class="text-xs font-bold uppercase tracking-wide bg-teal/15 text-teal px-3 py-1 rounded-full">${statut}</span>
+        </div>
+      `;
+    }).join('');
+  } catch (err) {
+    console.error("Erreur de recherche historique :", err);
+    historiqueEmptyEl.classList.remove('hidden');
+    historiqueEmptyEl.textContent = "Impossible de charger l'historique (vérifie tes règles et index Firestore).";
+  }
+}
+
+historiqueBtn.addEventListener('click', chercherHistoriqueParEmail);
+historiqueEmailInput.addEventListener('keydown', (e) => { if(e.key === 'Enter') chercherHistoriqueParEmail(); });
 
 /* ================================================================
    ÉCO-TRANSPORT — Estimation de CO₂ économisé
