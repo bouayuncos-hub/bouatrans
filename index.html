@@ -186,6 +186,7 @@
       <li><a href="#suivi" class="hover:text-amber transition" data-i18n="nav.suivi">Suivi</a></li>
       <li><a href="#carrieres" class="hover:text-amber transition" data-i18n="nav.carrieres">Carrières</a></li>
       <li><a href="#fret" class="hover:text-amber transition" data-i18n="nav.fret">Transporteurs</a></li>
+      <li><a href="#galerie" class="hover:text-amber transition" data-i18n="nav.galerie">Galerie</a></li>
       <li><a href="#contact" class="hover:text-amber transition" data-i18n="nav.contact">Contact</a></li>
     </ul>
 
@@ -235,6 +236,7 @@
     <li><a href="#suivi" class="block py-2.5 border-b border-white/10" data-i18n="nav.suivi">Suivi</a></li>
     <li><a href="#carrieres" class="block py-2.5 border-b border-white/10" data-i18n="nav.carrieres">Carrières</a></li>
     <li><a href="#fret" class="block py-2.5 border-b border-white/10" data-i18n="nav.fret">Transporteurs</a></li>
+    <li><a href="#galerie" class="block py-2.5 border-b border-white/10" data-i18n="nav.galerie">Galerie</a></li>
     <li><a href="#contact" class="block py-2.5 border-b border-white/10" data-i18n="nav.contact">Contact</a></li>
     <li><button id="clientLoginBtnMobile" class="block w-full text-left py-2.5 border-b border-white/10" data-i18n="nav.login">Espace Client</button></li>
     <li><button id="chauffeurLoginBtnMobile" class="block w-full text-left py-2.5 border-b border-white/10">Espace Chauffeur</button></li>
@@ -846,6 +848,45 @@
 </section>
 
 <!-- ============================================================
+     GALERIE & RÉSEAUX SOCIAUX
+     ------------------------------------------------------------
+     Affiche en temps réel les photos et vidéos ajoutées depuis
+     l'admin (onglet "Médias") : photos, vidéos YouTube, publications
+     Facebook / Instagram / TikTok / Twitter (X). Chaque plateforme
+     n'est chargée (script d'intégration) que si un média de ce type
+     est réellement présent, pour ne pas ralentir le site inutilement.
+     ============================================================ -->
+<section id="galerie" class="py-20 md:py-24 bg-white dark:bg-navylight" data-reveal>
+  <div class="max-w-6xl mx-auto px-5">
+    <div class="max-w-xl mb-10">
+      <span class="font-mono-num text-xs tracking-widest uppercase text-amberdark block mb-2">En images</span>
+      <h2 class="text-3xl md:text-4xl font-bold text-navy dark:text-white">Galerie &amp; réseaux sociaux</h2>
+      <p class="text-slate-500 dark:text-cream/65 mt-3">Nos tournées, nos chauffeurs, nos clients — en photos et en vidéo.</p>
+    </div>
+
+    <!-- Filtres -->
+    <div class="flex flex-wrap gap-2 mb-8" id="galerieFiltres">
+      <button type="button" data-filtre="tout" class="galerie-filtre-btn is-active px-4 py-2 rounded-full text-sm font-semibold bg-amber text-navy transition">Tout</button>
+      <button type="button" data-filtre="photo" class="galerie-filtre-btn px-4 py-2 rounded-full text-sm font-semibold bg-cream dark:bg-navy text-navy dark:text-cream border border-slate-200 dark:border-white/15 transition">Photos</button>
+      <button type="button" data-filtre="youtube" class="galerie-filtre-btn px-4 py-2 rounded-full text-sm font-semibold bg-cream dark:bg-navy text-navy dark:text-cream border border-slate-200 dark:border-white/15 transition">YouTube</button>
+      <button type="button" data-filtre="facebook" class="galerie-filtre-btn px-4 py-2 rounded-full text-sm font-semibold bg-cream dark:bg-navy text-navy dark:text-cream border border-slate-200 dark:border-white/15 transition">Facebook</button>
+      <button type="button" data-filtre="instagram" class="galerie-filtre-btn px-4 py-2 rounded-full text-sm font-semibold bg-cream dark:bg-navy text-navy dark:text-cream border border-slate-200 dark:border-white/15 transition">Instagram</button>
+      <button type="button" data-filtre="tiktok" class="galerie-filtre-btn px-4 py-2 rounded-full text-sm font-semibold bg-cream dark:bg-navy text-navy dark:text-cream border border-slate-200 dark:border-white/15 transition">TikTok</button>
+      <button type="button" data-filtre="twitter" class="galerie-filtre-btn px-4 py-2 rounded-full text-sm font-semibold bg-cream dark:bg-navy text-navy dark:text-cream border border-slate-200 dark:border-white/15 transition">Twitter / X</button>
+    </div>
+
+    <div id="galerieGrid" class="grid sm:grid-cols-2 lg:grid-cols-3 gap-5"></div>
+    <p id="galerieEmpty" class="hidden text-slate-400 dark:text-cream/40 text-sm">Aucun média dans cette catégorie pour le moment.</p>
+  </div>
+</section>
+
+<!-- Visionneuse plein écran pour les photos de la galerie -->
+<div id="galerieLightbox" class="hidden fixed inset-0 z-[80] bg-black/90 items-center justify-center p-5">
+  <button id="galerieLightboxClose" aria-label="Fermer" class="absolute top-5 right-5 text-white text-3xl leading-none hover:text-amber">✕</button>
+  <img id="galerieLightboxImg" src="" alt="" class="max-w-full max-h-full rounded-lg">
+</div>
+
+<!-- ============================================================
      ÉCO-TRANSPORT — Estimation de CO₂ économisé
      ============================================================ -->
 <section id="eco" class="py-20 md:py-24 bg-teal/5" data-reveal>
@@ -946,6 +987,7 @@
           <li><a href="#suivi" class="hover:text-amber">Suivi de colis</a></li>
           <li><a href="#avis" class="hover:text-amber">Avis clients</a></li>
           <li><a href="#departs" class="hover:text-amber">Prochains départs</a></li>
+          <li><a href="#galerie" class="hover:text-amber">Galerie</a></li>
           <li><a href="#eco" class="hover:text-amber">Éco-Transport</a></li>
           <li><a href="#espace-client-pod" class="hover:text-amber">Documents (POD)</a></li>
           <li><a href="#faq" class="hover:text-amber">FAQ</a></li>
@@ -1060,6 +1102,7 @@
       <button class="admin-tab" data-collection="vehicules">Véhicules</button>
       <button class="admin-tab" data-collection="chauffeurs">Chauffeurs</button>
       <button class="admin-tab" data-collection="missions">Missions</button>
+      <button class="admin-tab" data-collection="medias">Médias</button>
     </div>
   </div>
 
@@ -1987,6 +2030,7 @@ const traductions = {
     "nav.suivi": "Suivi",
     "nav.carrieres": "Carrières",
     "nav.fret": "Transporteurs",
+    "nav.galerie": "Galerie",
     "nav.contact": "Contact",
     "nav.login": "Espace Client",
     "nav.install": "Télécharger l'app",
@@ -2007,6 +2051,7 @@ const traductions = {
     "nav.suivi": "Seguimiento",
     "nav.carrieres": "Empleo",
     "nav.fret": "Transportistas",
+    "nav.galerie": "Galería",
     "nav.contact": "Contacto",
     "nav.login": "Área Cliente",
     "nav.install": "Descargar la app",
@@ -2828,6 +2873,26 @@ const adminEditDelete = document.getElementById('adminEditDelete');
 
 let idDocumentEnEdition = null; // null = création d'un nouveau document
 
+// Modèle pré-rempli affiché quand on clique sur "+ Ajouter", pour guider
+// la saisie selon la collection active (au lieu d'un générique vide).
+// Pour "medias", le champ "type" accepte : photo, youtube, facebook,
+// instagram, tiktok, twitter. Pour "url" :
+//  - photo    : lien direct vers l'image (ex : depuis Firebase Storage ou imgur)
+//  - youtube  : lien complet de la vidéo (https://www.youtube.com/watch?v=...)
+//  - facebook : lien de la publication ou vidéo Facebook (doit être publique)
+//  - instagram: lien de la publication (https://www.instagram.com/p/...)
+//  - tiktok   : lien de la vidéo (https://www.tiktok.com/@compte/video/...)
+//  - twitter  : lien du tweet (https://x.com/compte/status/...)
+const MODELES_NOUVEAU_DOCUMENT = {
+  medias: {
+    type: "photo",
+    titre: "Titre du média",
+    url: "https://...",
+    visible: true,
+    ordre: 1
+  }
+};
+
 function ouvrirEditionDocument(id, donnees){
   idDocumentEnEdition = id;
   adminEditTitle.textContent = `Modifier — ${id}`;
@@ -2841,7 +2906,7 @@ function ouvrirEditionDocument(id, donnees){
 adminAddBtn.addEventListener('click', () => {
   idDocumentEnEdition = null;
   adminEditTitle.textContent = `Ajouter un document — ${collectionActive}`;
-  adminEditTextarea.value = JSON.stringify({ exemple: "valeur" }, null, 2);
+  adminEditTextarea.value = JSON.stringify(MODELES_NOUVEAU_DOCUMENT[collectionActive] || { exemple: "valeur" }, null, 2);
   adminEditError.classList.add('hidden');
   adminEditDelete.classList.add('hidden');
   adminEditModal.classList.remove('hidden');
@@ -2990,6 +3055,197 @@ if(window._db){
     console.error("Erreur d'écoute temps réel sur 'departs' :", err);
     departsEmptyEl.classList.remove('hidden');
     departsEmptyEl.textContent = "Impossible de charger les départs (vérifie tes règles Firestore).";
+  });
+}
+
+/* ================================================================
+   GALERIE & RÉSEAUX SOCIAUX — temps réel (Firestore, collection "medias")
+   ================================================================
+   Chaque document : { type, titre, url, visible, ordre }
+   type accepté : "photo", "youtube", "facebook", "instagram", "tiktok", "twitter"
+   Géré depuis le tableau de bord admin, onglet "Médias".
+
+   Choix technique : YouTube et Facebook s'affichent en simple <iframe>
+   (aucun script tiers nécessaire, donc zéro impact sur la vitesse du
+   site). Instagram, TikTok et Twitter/X utilisent leur "blockquote"
+   officiel + leur script d'intégration — mais ce script n'est chargé
+   QUE si un média de cette plateforme est réellement présent dans la
+   galerie, et une seule fois par visite.
+   ================================================================ */
+const galerieGridEl = document.getElementById('galerieGrid');
+const galerieEmptyEl = document.getElementById('galerieEmpty');
+const galerieLightboxEl = document.getElementById('galerieLightbox');
+const galerieLightboxImgEl = document.getElementById('galerieLightboxImg');
+
+let tousLesMedias = [];
+let filtreGalerieActif = 'tout';
+
+function extraireIdYouTube(url){
+  const m = (url || '').match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|shorts\/))([A-Za-z0-9_-]{6,})/);
+  return m ? m[1] : null;
+}
+function extraireIdTikTok(url){
+  const m = (url || '').match(/video\/(\d+)/);
+  return m ? m[1] : '';
+}
+
+function creerCarteMedia(m){
+  const titre = (m.titre || '').replace(/"/g, '&quot;');
+  const url = m.url || '';
+
+  if(m.type === 'photo'){
+    return `
+      <div class="galerie-carte bg-cream dark:bg-navy rounded-xl overflow-hidden border border-slate-200 dark:border-white/10 cursor-pointer" data-lightbox-src="${url}">
+        <img src="${url}" alt="${titre}" loading="lazy" class="w-full h-48 object-cover">
+        ${m.titre ? `<p class="text-xs text-slate-500 dark:text-cream/50 px-3 py-2 truncate">${titre}</p>` : ''}
+      </div>`;
+  }
+
+  if(m.type === 'youtube'){
+    const id = extraireIdYouTube(url);
+    if(!id) return '';
+    return `
+      <div class="galerie-carte bg-black rounded-xl overflow-hidden aspect-video relative cursor-pointer youtube-facade" data-video-id="${id}">
+        <img src="https://img.youtube.com/vi/${id}/hqdefault.jpg" alt="${titre}" loading="lazy" class="w-full h-full object-cover opacity-80">
+        <span class="absolute inset-0 flex items-center justify-center text-5xl drop-shadow-lg">▶️</span>
+      </div>`;
+  }
+
+  if(m.type === 'facebook'){
+    const estVideo = /\/videos\/|watch\/?\?v=/.test(url);
+    const src = estVideo
+      ? `https://www.facebook.com/plugins/video.php?href=${encodeURIComponent(url)}&show_text=false`
+      : `https://www.facebook.com/plugins/post.php?href=${encodeURIComponent(url)}&show_text=false`;
+    return `
+      <div class="galerie-carte bg-cream dark:bg-navy rounded-xl overflow-hidden border border-slate-200 dark:border-white/10">
+        <iframe src="${src}" class="w-full aspect-video" style="border:none;overflow:hidden" loading="lazy" scrolling="no" frameborder="0" allowfullscreen="true" allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share"></iframe>
+      </div>`;
+  }
+
+  if(m.type === 'instagram'){
+    return `
+      <div class="galerie-carte rounded-xl overflow-hidden flex justify-center bg-cream dark:bg-navy border border-slate-200 dark:border-white/10">
+        <blockquote class="instagram-media" data-instgrm-permalink="${url}" data-instgrm-version="14" style="width:100%; margin:0;"></blockquote>
+      </div>`;
+  }
+
+  if(m.type === 'tiktok'){
+    return `
+      <div class="galerie-carte rounded-xl overflow-hidden flex justify-center bg-cream dark:bg-navy border border-slate-200 dark:border-white/10">
+        <blockquote class="tiktok-embed" cite="${url}" data-video-id="${extraireIdTikTok(url)}" style="max-width:100%;min-width:280px;">
+          <section><a target="_blank" href="${url}">${m.titre || 'Voir sur TikTok'}</a></section>
+        </blockquote>
+      </div>`;
+  }
+
+  if(m.type === 'twitter'){
+    return `
+      <div class="galerie-carte rounded-xl overflow-hidden bg-cream dark:bg-navy border border-slate-200 dark:border-white/10 p-2">
+        <blockquote class="twitter-tweet"><a href="${url}"></a></blockquote>
+      </div>`;
+  }
+
+  return '';
+}
+
+// Charge un script d'intégration une seule fois (par son id), puis
+// redemande aux librairies déjà chargées de scanner les nouveaux blocs.
+function assurerScriptEmbed(id, src){
+  if(document.getElementById(id)) return;
+  const s = document.createElement('script');
+  s.id = id;
+  s.async = true;
+  s.src = src;
+  document.body.appendChild(s);
+}
+
+function chargerScriptsReseauxSociauxSiNecessaire(){
+  if(galerieGridEl.querySelector('.instagram-media')){
+    if(window.instgrm && window.instgrm.Embeds){
+      window.instgrm.Embeds.process();
+    } else {
+      assurerScriptEmbed('script-embed-instagram', 'https://www.instagram.com/embed.js');
+    }
+  }
+  if(galerieGridEl.querySelector('.twitter-tweet')){
+    if(window.twttr && window.twttr.widgets){
+      window.twttr.widgets.load();
+    } else {
+      assurerScriptEmbed('script-embed-twitter', 'https://platform.twitter.com/widgets.js');
+    }
+  }
+  // TikTok ne propose pas d'API de re-scan publique : on recharge son
+  // script à chaque rendu contenant du TikTok (sans effet sur les
+  // blockquotes déjà transformés, donc sans danger de double-affichage).
+  if(galerieGridEl.querySelector('.tiktok-embed')){
+    const ancienScript = document.getElementById('script-embed-tiktok');
+    if(ancienScript) ancienScript.remove();
+    assurerScriptEmbed('script-embed-tiktok', 'https://www.tiktok.com/embed.js');
+  }
+}
+
+function renderGalerie(){
+  const liste = tousLesMedias.filter(m => filtreGalerieActif === 'tout' || m.type === filtreGalerieActif);
+  if(liste.length === 0){
+    galerieGridEl.innerHTML = '';
+    galerieEmptyEl.classList.remove('hidden');
+    return;
+  }
+  galerieEmptyEl.classList.add('hidden');
+  galerieGridEl.innerHTML = liste.map(creerCarteMedia).join('');
+  chargerScriptsReseauxSociauxSiNecessaire();
+}
+
+// Clic sur une vignette YouTube → charge la vraie iframe (lecture différée,
+// meilleure performance) ; clic sur une photo → ouvre la visionneuse
+galerieGridEl.addEventListener('click', (e) => {
+  const facadeYoutube = e.target.closest('.youtube-facade');
+  if(facadeYoutube){
+    const id = facadeYoutube.dataset.videoId;
+    facadeYoutube.outerHTML = `<div class="galerie-carte rounded-xl overflow-hidden aspect-video"><iframe class="w-full h-full" src="https://www.youtube-nocookie.com/embed/${id}?autoplay=1" title="Vidéo YouTube" loading="lazy" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>`;
+    return;
+  }
+  const cartePhoto = e.target.closest('[data-lightbox-src]');
+  if(cartePhoto){
+    galerieLightboxImgEl.src = cartePhoto.dataset.lightboxSrc;
+    galerieLightboxEl.classList.remove('hidden');
+    galerieLightboxEl.classList.add('flex');
+  }
+});
+
+function fermerGalerieLightbox(){
+  galerieLightboxEl.classList.add('hidden');
+  galerieLightboxEl.classList.remove('flex');
+  galerieLightboxImgEl.src = '';
+}
+document.getElementById('galerieLightboxClose').addEventListener('click', fermerGalerieLightbox);
+galerieLightboxEl.addEventListener('click', (e) => { if(e.target === galerieLightboxEl) fermerGalerieLightbox(); });
+
+document.getElementById('galerieFiltres').addEventListener('click', (e) => {
+  const bouton = e.target.closest('.galerie-filtre-btn');
+  if(!bouton) return;
+  document.querySelectorAll('.galerie-filtre-btn').forEach(b => {
+    b.classList.remove('bg-amber', 'text-navy');
+    b.classList.add('bg-cream', 'dark:bg-navy', 'text-navy', 'dark:text-cream', 'border', 'border-slate-200', 'dark:border-white/15');
+  });
+  bouton.classList.add('bg-amber', 'text-navy');
+  bouton.classList.remove('bg-cream', 'dark:bg-navy', 'border', 'border-slate-200', 'dark:border-white/15');
+  filtreGalerieActif = bouton.dataset.filtre;
+  renderGalerie();
+});
+
+if(window._db){
+  const { collection, onSnapshot } = window._firestore;
+  onSnapshot(collection(window._db, "medias"), (snapshot) => {
+    tousLesMedias = snapshot.docs
+      .map(d => ({ id: d.id, ...d.data() }))
+      .filter(m => m.visible !== false)
+      .sort((a, b) => (a.ordre ?? 999) - (b.ordre ?? 999));
+    renderGalerie();
+  }, (err) => {
+    console.error("Erreur d'écoute temps réel sur 'medias' :", err);
+    galerieEmptyEl.classList.remove('hidden');
+    galerieEmptyEl.textContent = "Impossible de charger la galerie (vérifie tes règles Firestore).";
   });
 }
 
