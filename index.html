@@ -1125,8 +1125,16 @@
       — <span id="adminCount">0</span> document(s) chargé(s)
     </p>
 
-    <!-- Liste des documents (remplie dynamiquement, scroll infini) -->
-    <div id="adminDocList" class="space-y-3"></div>
+    <!-- Tableau éditable en ligne (façon tableur/Notion) : la première ligne
+         (bordée en orange) sert à l'ajout rapide, les suivantes sont les
+         documents existants — chaque cellule s'enregistre seule au blur /
+         Entrée / changement, sans formulaire ni fenêtre modale. -->
+    <div class="overflow-x-auto border border-slate-200 dark:border-white/10 rounded-xl">
+      <table class="w-full border-collapse">
+        <thead id="adminTableHead" class="bg-cream/60 dark:bg-white/5"></thead>
+        <tbody id="adminTableBody"></tbody>
+      </table>
+    </div>
 
     <!-- Sentinelle observée pour déclencher le chargement de la page suivante -->
     <div id="adminScrollSentinel" class="h-10 flex items-center justify-center">
@@ -1135,13 +1143,15 @@
   </div>
 </div>
 
-<!-- MODALE ÉDITION / AJOUT DE DOCUMENT (édition JSON = contrôle total sur n'importe quel champ) -->
+<!-- MODALE ÉDITION AVANCÉE (JSON) — réservée aux champs que le tableau ne
+     représente pas bien (ex : le tableau "dates" d'une commande). Ouverte
+     via le bouton "⋯" d'une ligne, jamais nécessaire pour l'usage courant. -->
 <div id="adminEditModal" class="hidden fixed inset-0 z-[80] flex items-center justify-center p-5">
   <div class="absolute inset-0 bg-navy/80 backdrop-blur-sm" id="adminEditOverlay"></div>
   <div class="relative bg-white dark:bg-navylight rounded-2xl shadow-2xl w-full max-w-lg p-7">
     <button id="adminEditClose" aria-label="Fermer" class="absolute top-4 right-4 text-slate-400 hover:text-amber">✕</button>
     <h3 id="adminEditTitle" class="text-xl font-bold text-navy dark:text-white mb-1.5">Modifier le document</h3>
-    <p class="text-xs text-slate-500 dark:text-cream/50 mb-4">Modifie les champs au format JSON, puis enregistre.</p>
+    <p class="text-xs text-slate-500 dark:text-cream/50 mb-4">Édition avancée : modifie les champs au format JSON, puis enregistre.</p>
     <textarea id="adminEditTextarea" rows="12"
       class="w-full font-mono-num text-xs px-3.5 py-3 rounded-lg border border-slate-200 dark:border-white/15 bg-cream dark:bg-navy focus:outline-none focus:border-amber"></textarea>
     <p id="adminEditError" class="hidden text-xs mt-2 text-red-500 font-medium">JSON invalide, vérifie la syntaxe.</p>
@@ -2804,11 +2814,100 @@ let dernierDocumentCharge = null;
 let chargementEnCours = false;
 let ilResteDesDocuments = true;
 
-const adminDocList = document.getElementById('adminDocList');
+const adminTableHead = document.getElementById('adminTableHead');
+const adminTableBody = document.getElementById('adminTableBody');
 const adminCollectionLabel = document.getElementById('adminCollectionLabel');
 const adminCount = document.getElementById('adminCount');
 const adminLoadingLabel = document.getElementById('adminLoadingLabel');
 const adminScrollSentinel = document.getElementById('adminScrollSentinel');
+
+/* ----------------------------------------------------------------
+   SCHÉMAS DES COLONNES — un tableau éditable par collection, au lieu
+   d'un éditeur JSON. Chaque entrée décrit une colonne :
+     champ  : nom du champ Firestore
+     label  : en-tête affiché
+     type   : "text" | "number" | "select" | "checkbox" | "id"
+     options / optionLabels : pour les listes déroulantes
+     defaut : valeur pré-remplie sur la ligne d'ajout rapide
+   "id" = identifiant du document lui-même (affiché en lecture seule
+   sur les lignes existantes ; saisissable sur la ligne d'ajout rapide
+   UNIQUEMENT pour "commandes", où le numéro de suivi doit être choisi
+   à la création plutôt que généré au hasard).
+   ---------------------------------------------------------------- */
+const SCHEMAS_ADMIN = {
+  devis: [
+    { champ: 'nomComplet', label: 'Client', type: 'text' },
+    { champ: 'telephone', label: 'Téléphone', type: 'text' },
+    { champ: 'villeDepart', label: 'Départ', type: 'text' },
+    { champ: 'villeArrivee', label: 'Arrivée', type: 'text' },
+    { champ: 'prixEstime', label: 'Prix (€)', type: 'number' },
+    { champ: 'statut', label: 'Statut', type: 'select', options: ['nouveau', 'traite', 'annule'] }
+  ],
+  candidatures: [
+    { champ: 'nom', label: 'Nom', type: 'text' },
+    { champ: 'telephone', label: 'Téléphone', type: 'text' },
+    { champ: 'permis', label: 'Permis', type: 'text' },
+    { champ: 'statut', label: 'Statut', type: 'select', options: ['nouvelle', 'contactee', 'retenue', 'rejetee'], defaut: 'nouvelle' }
+  ],
+  commandes: [
+    { champ: '__id__', label: 'N° de suivi', type: 'id' },
+    { champ: 'etapeActuelle', label: 'Étape', type: 'select', options: [0, 1, 2, 3], optionLabels: ETAPES_LIVRAISON, defaut: 0 },
+    { champ: 'statutLabel', label: 'Statut affiché', type: 'text' },
+    { champ: 'email', label: 'Email client', type: 'text' }
+  ],
+  fret: [
+    { champ: 'villeDepart', label: 'Départ', type: 'text' },
+    { champ: 'villeArrivee', label: 'Arrivée', type: 'text' },
+    { champ: 'poids', label: 'Poids (t)', type: 'number' },
+    { champ: 'vehicule', label: 'Véhicule', type: 'text' },
+    { champ: 'prix', label: 'Prix (€)', type: 'number' },
+    { champ: 'date', label: 'Date', type: 'text' }
+  ],
+  departs: [
+    { champ: 'destination', label: 'Destination', type: 'text' },
+    { champ: 'dateDepart', label: 'Date', type: 'text' },
+    { champ: 'placesRestantes', label: 'Places restantes', type: 'number' }
+  ],
+  partenaires: [
+    { champ: 'nomEntreprise', label: 'Entreprise', type: 'text' },
+    { champ: 'telephone', label: 'Téléphone', type: 'text' },
+    { champ: 'vehicules', label: 'Véhicules dispo', type: 'text' },
+    { champ: 'zone', label: 'Zone', type: 'text' }
+  ],
+  vehicules: [
+    { champ: 'type', label: 'Type', type: 'select', options: ['camion', 'remorque'] },
+    { champ: 'immatriculation', label: 'Immatriculation', type: 'text' },
+    { champ: 'marque', label: 'Marque', type: 'text' },
+    { champ: 'modele', label: 'Modèle', type: 'text' },
+    { champ: 'statut', label: 'Statut', type: 'select', options: ['actif', 'en_entretien', 'hors_service'], defaut: 'actif' }
+  ],
+  chauffeurs: [
+    { champ: 'nom', label: 'Nom', type: 'text' },
+    { champ: 'email', label: 'Email', type: 'text' },
+    { champ: 'telephone', label: 'Téléphone', type: 'text' },
+    { champ: 'statut', label: 'Statut', type: 'select', options: ['disponible', 'en_mission', 'conge'], defaut: 'disponible' }
+  ],
+  missions: [
+    { champ: 'villeDepart', label: 'Départ', type: 'text' },
+    { champ: 'villeArrivee', label: 'Arrivée', type: 'text' },
+    { champ: 'chauffeurEmail', label: 'Chauffeur (email)', type: 'text' },
+    { champ: 'etapeIndex', label: 'Étape', type: 'select', options: [0, 1, 2, 3, 4], optionLabels: ETAPES_MISSION, defaut: 0 },
+    { champ: 'statutVoyage', label: 'Statut voyage', type: 'select', options: ['planifie', 'en_cours', 'termine', 'annule'], defaut: 'planifie' }
+  ],
+  avis: [
+    { champ: 'nom', label: 'Client', type: 'text' },
+    { champ: 'note', label: 'Note', type: 'number' },
+    { champ: 'commentaire', label: 'Commentaire', type: 'text' },
+    { champ: 'statut', label: 'Modération', type: 'select', options: ['en_attente', 'approuve', 'rejete'], defaut: 'en_attente' }
+  ],
+  medias: [
+    { champ: 'type', label: 'Type', type: 'select', options: ['photo', 'youtube', 'facebook', 'instagram', 'tiktok', 'twitter'] },
+    { champ: 'titre', label: 'Titre', type: 'text' },
+    { champ: 'url', label: 'URL', type: 'text' },
+    { champ: 'ordre', label: 'Ordre', type: 'number', defaut: 1 },
+    { champ: 'visible', label: 'Visible', type: 'checkbox', defaut: true }
+  ]
+};
 
 document.querySelectorAll('.admin-tab').forEach((tab, index) => {
   if(index === 0) tab.classList.add('active');
@@ -2819,14 +2918,114 @@ document.querySelectorAll('.admin-tab').forEach((tab, index) => {
   });
 });
 
+function construireEnTeteTable(){
+  const schema = SCHEMAS_ADMIN[collectionActive] || [];
+  adminTableHead.innerHTML = `<tr>
+    ${schema.map(col => `<th class="text-left text-xs font-semibold uppercase tracking-wide text-slate-400 dark:text-cream/40 px-3 py-2.5 whitespace-nowrap">${col.label}</th>`).join('')}
+    <th class="px-3 py-2.5"></th>
+  </tr>`;
+}
+
+// Construit le HTML d'un champ éditable pour une colonne donnée.
+// "classe" permet de distinguer les cellules d'une ligne existante
+// (sauvegarde individuelle) de celles de la ligne d'ajout rapide.
+function construireChampColonne(col, valeur, classe){
+  const val = valeur ?? '';
+  if(col.type === 'select'){
+    const options = col.options.map((opt, i) => {
+      const label = col.optionLabels ? col.optionLabels[i] : opt;
+      const selectionne = String(val) === String(opt) ? 'selected' : '';
+      return `<option value="${opt}" ${selectionne}>${label}</option>`;
+    }).join('');
+    return `<select data-champ="${col.champ}" class="${classe} w-full bg-transparent px-2 py-1.5 rounded text-sm text-navy dark:text-cream focus:outline-none focus:ring-1 focus:ring-amber cursor-pointer">${options}</select>`;
+  }
+  if(col.type === 'checkbox'){
+    const coche = val === true || val === 'true' ? 'checked' : '';
+    return `<input type="checkbox" data-champ="${col.champ}" class="${classe} w-4 h-4 accent-amber" ${coche}>`;
+  }
+  if(col.type === 'number'){
+    return `<input type="number" data-champ="${col.champ}" value="${val}" class="${classe} w-full min-w-[90px] bg-transparent px-2 py-1.5 rounded text-sm text-navy dark:text-cream focus:outline-none focus:bg-cream dark:focus:bg-navy focus:ring-1 focus:ring-amber">`;
+  }
+  const valEchappee = String(val).replace(/"/g, '&quot;');
+  return `<input type="text" data-champ="${col.champ}" value="${valEchappee}" class="${classe} w-full min-w-[110px] bg-transparent px-2 py-1.5 rounded text-sm text-navy dark:text-cream focus:outline-none focus:bg-cream dark:focus:bg-navy focus:ring-1 focus:ring-amber">`;
+}
+
+function lireValeurChamp(champEl){
+  if(champEl.type === 'checkbox') return champEl.checked;
+  if(champEl.type === 'number') return champEl.value === '' ? null : parseFloat(champEl.value);
+  return champEl.value.trim();
+}
+
+// Ligne d'ajout rapide : toujours la première ligne du tableau. Une seule
+// touche Entrée (ou un clic sur "+ Ajouter") suffit à créer le document —
+// aucune fenêtre, aucun JSON à écrire à la main.
+function construireLigneRapide(){
+  const schema = SCHEMAS_ADMIN[collectionActive] || [];
+  const tr = document.createElement('tr');
+  tr.id = 'adminLigneRapide';
+  tr.className = "border-b-2 border-amber/50 bg-amber/5";
+
+  const cellules = schema.map(col => {
+    if(col.type === 'id'){
+      return `<td class="px-1 py-1"><input type="text" data-champ="__id__" placeholder="ex : BT-2026-00458" class="admin-cell-rapide w-full min-w-[130px] bg-white dark:bg-navy px-2 py-1.5 rounded border border-slate-200 dark:border-white/15 focus:outline-none focus:border-amber text-sm font-mono-num"></td>`;
+    }
+    return `<td class="px-1 py-1">${construireChampColonne(col, col.defaut, 'admin-cell-rapide')}</td>`;
+  }).join('');
+
+  tr.innerHTML = `
+    ${cellules}
+    <td class="px-1 py-1 text-right whitespace-nowrap">
+      <button id="adminValiderLigneRapide" class="text-xs font-semibold bg-amber hover:bg-amberdark text-navy px-3.5 py-1.5 rounded-full transition">+ Ajouter</button>
+    </td>`;
+
+  adminTableBody.appendChild(tr);
+
+  const champs = tr.querySelectorAll('[data-champ]');
+  const valider = () => validerLigneRapide(tr, champs);
+  tr.querySelector('#adminValiderLigneRapide').addEventListener('click', valider);
+  champs.forEach(champEl => {
+    if(champEl.tagName !== 'SELECT'){
+      champEl.addEventListener('keydown', (e) => { if(e.key === 'Enter'){ e.preventDefault(); valider(); } });
+    }
+  });
+}
+
+async function validerLigneRapide(tr, champs){
+  const donnees = {};
+  let idPersonnalise = null;
+  champs.forEach(champEl => {
+    const champ = champEl.dataset.champ;
+    const valeur = lireValeurChamp(champEl);
+    if(champ === '__id__'){ idPersonnalise = valeur || null; return; }
+    if(valeur !== '' && valeur !== null) donnees[champ] = valeur;
+  });
+
+  if(Object.keys(donnees).length === 0 && !idPersonnalise) return; // ligne vide, on ignore
+
+  const { collection, addDoc, doc, setDoc, serverTimestamp } = window._firestore;
+  try {
+    if(idPersonnalise){
+      await setDoc(doc(window._db, collectionActive, idPersonnalise), { ...donnees, dateCreation: serverTimestamp() });
+    } else {
+      await addDoc(collection(window._db, collectionActive), { ...donnees, dateCreation: serverTimestamp() });
+    }
+    chargerCollection(collectionActive, true); // relit tout : ligne rapide vidée + nouveau document visible
+  } catch (err) {
+    console.error("Erreur d'ajout rapide admin :", err);
+    alert("Échec de l'ajout (vérifie tes règles Firestore).");
+  }
+}
+
 async function chargerCollection(nomCollection, reinitialiser){
   if(reinitialiser){
     collectionActive = nomCollection;
     adminCollectionLabel.textContent = nomCollection;
-    adminDocList.innerHTML = '';
+    adminTableBody.innerHTML = '';
     dernierDocumentCharge = null;
     ilResteDesDocuments = true;
     adminCount.textContent = '0';
+    construireEnTeteTable();
+    construireLigneRapide();
   }
   await chargerPageSuivante();
 }
@@ -2844,19 +3043,20 @@ async function chargerPageSuivante(){
     }
 
     const snapshot = await getDocs(q);
+    const nombreLignesExistantes = adminTableBody.children.length - 1; // -1 pour la ligne d'ajout rapide
 
     if(snapshot.empty){
       ilResteDesDocuments = false;
-      adminLoadingLabel.textContent = adminDocList.children.length === 0
+      adminLoadingLabel.textContent = nombreLignesExistantes <= 0
         ? "Aucun document dans cette collection pour le moment."
         : "Fin de la liste.";
       chargementEnCours = false;
       return;
     }
 
-    snapshot.forEach(docSnap => afficherDocument(docSnap.id, docSnap.data()));
+    snapshot.forEach(docSnap => construireLigneDocument(docSnap.id, docSnap.data()));
     dernierDocumentCharge = snapshot.docs[snapshot.docs.length - 1];
-    adminCount.textContent = adminDocList.children.length;
+    adminCount.textContent = adminTableBody.children.length - 1;
 
     if(snapshot.docs.length < PAGE_SIZE){
       ilResteDesDocuments = false;
@@ -2880,26 +3080,82 @@ const observateurScrollInfini = new IntersectionObserver((entrees) => {
 }, { threshold: 0.1 });
 observateurScrollInfini.observe(adminScrollSentinel);
 
-function afficherDocument(id, donnees){
-  const carte = document.createElement('div');
-  carte.className = "bg-white dark:bg-navylight border border-slate-200 dark:border-white/10 rounded-xl p-4 flex items-start justify-between gap-4";
+// Une ligne de document existant : chaque cellule s'enregistre seule dans
+// Firestore (updateDoc) dès qu'on quitte le champ (texte) ou qu'on change
+// la valeur (select/case à cocher) — c'est l'édition "inline" façon tableur.
+function construireLigneDocument(id, donnees){
+  const schema = SCHEMAS_ADMIN[collectionActive] || [];
+  const tr = document.createElement('tr');
+  tr.className = "border-b border-slate-100 dark:border-white/5 hover:bg-cream/60 dark:hover:bg-white/5 transition-colors";
 
-  const apercu = Object.entries(donnees)
-    .filter(([cle]) => cle !== 'dateCreation' && cle !== 'dateCandidature')
-    .slice(0, 4)
-    .map(([cle, val]) => `<span class="text-xs text-slate-500 dark:text-cream/50">${cle} : <span class="text-navy dark:text-cream font-medium">${String(val).slice(0,60)}</span></span>`)
-    .join(' · ');
+  const cellules = schema.map(col => {
+    if(col.type === 'id'){
+      return `<td class="px-3 py-1"><span class="font-mono-num text-xs text-amberdark">${id}</span></td>`;
+    }
+    return `<td class="px-1 py-1">${construireChampColonne(col, donnees[col.champ], 'admin-cell')}</td>`;
+  }).join('');
 
-  carte.innerHTML = `
-    <div class="min-w-0">
-      <p class="font-mono-num text-xs text-amberdark mb-1.5">${id}</p>
-      <div class="flex flex-wrap gap-x-3 gap-y-1">${apercu}</div>
-    </div>
-    <button class="admin-edit-btn shrink-0 text-sm font-semibold text-teal hover:text-amber transition">Modifier</button>
-  `;
+  tr.innerHTML = `
+    ${cellules}
+    <td class="px-1 py-1 text-right whitespace-nowrap">
+      <button class="admin-json-btn text-xs text-slate-400 hover:text-teal px-1.5 py-1" title="Édition avancée (JSON)">⋯</button>
+      <button class="admin-delete-btn text-xs text-slate-400 hover:text-red-500 px-1.5 py-1" title="Supprimer">✕</button>
+    </td>`;
 
-  carte.querySelector('.admin-edit-btn').addEventListener('click', () => ouvrirEditionDocument(id, donnees));
-  adminDocList.appendChild(carte);
+  tr.querySelectorAll('.admin-cell').forEach(champEl => {
+    const evenement = (champEl.tagName === 'SELECT' || champEl.type === 'checkbox') ? 'change' : 'blur';
+    champEl.addEventListener(evenement, () => sauvegarderCelluleInline(id, champEl, donnees));
+    if(champEl.tagName !== 'SELECT' && champEl.type !== 'checkbox'){
+      champEl.addEventListener('keydown', (e) => { if(e.key === 'Enter'){ e.preventDefault(); champEl.blur(); } });
+    }
+  });
+
+  tr.querySelector('.admin-json-btn').addEventListener('click', () => ouvrirEditionDocument(id, donnees));
+  tr.querySelector('.admin-delete-btn').addEventListener('click', async () => {
+    if(!confirm("Supprimer définitivement ce document ?")) return;
+    const { doc, deleteDoc } = window._firestore;
+    try {
+      await deleteDoc(doc(window._db, collectionActive, id));
+      tr.remove();
+      adminCount.textContent = adminTableBody.children.length - 1;
+    } catch (err) {
+      console.error("Erreur de suppression admin :", err);
+      alert("Échec de la suppression (vérifie tes règles Firestore).");
+    }
+  });
+
+  adminTableBody.appendChild(tr);
+}
+
+// Enregistrement instantané d'une cellule modifiée (le coeur de l'édition
+// inline). "donneesConnues" est l'objet du document tel que chargé — on le
+// met à jour au fil de l'eau pour comparer les anciennes/nouvelles valeurs
+// sans re-télécharger le document à chaque frappe.
+async function sauvegarderCelluleInline(id, champEl, donneesConnues){
+  const champ = champEl.dataset.champ;
+  const valeur = lireValeurChamp(champEl);
+
+  const { doc, updateDoc } = window._firestore;
+  try {
+    await updateDoc(doc(window._db, collectionActive, id), { [champ]: valeur });
+
+    // Notification email automatique au client : uniquement quand on
+    // modifie l'étape d'une commande, que la valeur a réellement changé,
+    // et que le document a un email de contact renseigné.
+    if(collectionActive === 'commandes' && champ === 'etapeActuelle' && donneesConnues.email && valeur !== donneesConnues.etapeActuelle){
+      envoyerNotificationStatutEmail(id, { ...donneesConnues, etapeActuelle: valeur });
+    }
+
+    donneesConnues[champ] = valeur;
+
+    // Petit retour visuel vert = enregistré, sans bloquer l'utilisateur
+    champEl.classList.add('ring-1', 'ring-teal');
+    setTimeout(() => champEl.classList.remove('ring-1', 'ring-teal'), 700);
+  } catch (err) {
+    console.error("Erreur de sauvegarde admin :", err);
+    champEl.classList.add('ring-1', 'ring-red-500');
+    alert("Échec de l'enregistrement (vérifie tes règles Firestore).");
+  }
 }
 
 /* ----------------------------------------------------------------
@@ -2917,28 +3173,12 @@ const adminEditError = document.getElementById('adminEditError');
 const adminEditSave = document.getElementById('adminEditSave');
 const adminEditDelete = document.getElementById('adminEditDelete');
 
-let idDocumentEnEdition = null; // null = création d'un nouveau document
+let idDocumentEnEdition = null; // document actuellement ouvert dans la modale avancée (JSON)
 
-// Modèle pré-rempli affiché quand on clique sur "+ Ajouter", pour guider
-// la saisie selon la collection active (au lieu d'un générique vide).
-// Pour "medias", le champ "type" accepte : photo, youtube, facebook,
-// instagram, tiktok, twitter. Pour "url" :
-//  - photo    : lien direct vers l'image (ex : depuis Firebase Storage ou imgur)
-//  - youtube  : lien complet de la vidéo (https://www.youtube.com/watch?v=...)
-//  - facebook : lien de la publication ou vidéo Facebook (doit être publique)
-//  - instagram: lien de la publication (https://www.instagram.com/p/...)
-//  - tiktok   : lien de la vidéo (https://www.tiktok.com/@compte/video/...)
-//  - twitter  : lien du tweet (https://x.com/compte/status/...)
-const MODELES_NOUVEAU_DOCUMENT = {
-  medias: {
-    type: "photo",
-    titre: "Titre du média",
-    url: "https://...",
-    visible: true,
-    ordre: 1
-  }
-};
-
+// Ouvre la modale d'édition avancée pour un document existant (bouton "⋯"
+// d'une ligne). Sert pour les champs que le tableau ne représente pas bien
+// (ex : le tableau "dates" d'une commande) — l'ajout, lui, passe toujours
+// par la ligne rapide, jamais par cette modale.
 function ouvrirEditionDocument(id, donnees){
   idDocumentEnEdition = id;
   adminEditTitle.textContent = `Modifier — ${id}`;
@@ -2949,14 +3189,14 @@ function ouvrirEditionDocument(id, donnees){
   adminEditModal.classList.add('flex');
 }
 
+// Le bouton "+ Ajouter" de l'en-tête ramène simplement à la ligne rapide
+// et y place le curseur — plus besoin d'ouvrir quoi que ce soit.
 adminAddBtn.addEventListener('click', () => {
-  idDocumentEnEdition = null;
-  adminEditTitle.textContent = `Ajouter un document — ${collectionActive}`;
-  adminEditTextarea.value = JSON.stringify(MODELES_NOUVEAU_DOCUMENT[collectionActive] || { exemple: "valeur" }, null, 2);
-  adminEditError.classList.add('hidden');
-  adminEditDelete.classList.add('hidden');
-  adminEditModal.classList.remove('hidden');
-  adminEditModal.classList.add('flex');
+  const ligneRapide = document.getElementById('adminLigneRapide');
+  if(!ligneRapide) return;
+  ligneRapide.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  const premierChamp = ligneRapide.querySelector('[data-champ]');
+  if(premierChamp) premierChamp.focus();
 });
 
 function fermerEditionDocument(){
@@ -2975,23 +3215,19 @@ adminEditSave.addEventListener('click', async () => {
     return;
   }
 
-  const { collection, addDoc, doc, updateDoc, getDoc, serverTimestamp } = window._firestore;
+  const { doc, updateDoc, getDoc } = window._firestore;
 
   try {
     // Avant modification, on note l'ancien statut pour ne notifier
     // le client QUE si le statut a réellement changé (pas à chaque
     // clic sur "Enregistrer" même sans changement).
     let ancienEtapeActuelle = null;
-    if(collectionActive === 'commandes' && idDocumentEnEdition){
+    if(collectionActive === 'commandes'){
       const ancienSnap = await getDoc(doc(window._db, collectionActive, idDocumentEnEdition));
       if(ancienSnap.exists()) ancienEtapeActuelle = ancienSnap.data().etapeActuelle;
     }
 
-    if(idDocumentEnEdition){
-      await updateDoc(doc(window._db, collectionActive, idDocumentEnEdition), donnees);
-    } else {
-      await addDoc(collection(window._db, collectionActive), { ...donnees, dateCreation: serverTimestamp() });
-    }
+    await updateDoc(doc(window._db, collectionActive, idDocumentEnEdition), donnees);
 
     // Notification email automatique : seulement pour la collection
     // "commandes", seulement si le statut a changé, et seulement si
