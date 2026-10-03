@@ -881,6 +881,7 @@
     <div class="flex flex-wrap gap-2 mb-8" id="galerieFiltres">
       <button type="button" data-filtre="tout" class="galerie-filtre-btn is-active px-4 py-2 rounded-full text-sm font-semibold bg-amber text-navy transition">Tout</button>
       <button type="button" data-filtre="photo" class="galerie-filtre-btn px-4 py-2 rounded-full text-sm font-semibold bg-cream dark:bg-navy text-navy dark:text-cream border border-slate-200 dark:border-white/15 transition">Photos</button>
+      <button type="button" data-filtre="video" class="galerie-filtre-btn px-4 py-2 rounded-full text-sm font-semibold bg-cream dark:bg-navy text-navy dark:text-cream border border-slate-200 dark:border-white/15 transition">Vidéos</button>
       <button type="button" data-filtre="youtube" class="galerie-filtre-btn px-4 py-2 rounded-full text-sm font-semibold bg-cream dark:bg-navy text-navy dark:text-cream border border-slate-200 dark:border-white/15 transition">YouTube</button>
       <button type="button" data-filtre="facebook" class="galerie-filtre-btn px-4 py-2 rounded-full text-sm font-semibold bg-cream dark:bg-navy text-navy dark:text-cream border border-slate-200 dark:border-white/15 transition">Facebook</button>
       <button type="button" data-filtre="instagram" class="galerie-filtre-btn px-4 py-2 rounded-full text-sm font-semibold bg-cream dark:bg-navy text-navy dark:text-cream border border-slate-200 dark:border-white/15 transition">Instagram</button>
@@ -1117,6 +1118,7 @@
       <button class="admin-tab" data-collection="missions">Voyages</button>
       <button class="admin-tab" data-collection="rentabilite">Rentabilité</button>
       <button class="admin-tab" data-collection="factures">Factures</button>
+      <button class="admin-tab" data-collection="documents">Documents</button>
       <button class="admin-tab" data-collection="medias">Médias</button>
     </div>
   </div>
@@ -1129,6 +1131,14 @@
 
     <!-- Tuiles de synthèse (totaux) : affichées pour Rentabilité et Factures -->
     <div id="adminResume" class="hidden grid grid-cols-2 lg:grid-cols-5 gap-3 mb-5"></div>
+
+    <!-- Envoi de fichiers en lot (Médias, Documents) : on choisit les fichiers
+         sur l'appareil, chacun est envoyé puis ajouté au tableau tout seul. -->
+    <div id="adminTeleversement" class="hidden mb-5 flex flex-wrap items-center gap-3 bg-white dark:bg-navylight border border-dashed border-amber/60 rounded-xl px-4 py-3">
+      <button id="adminTeleversementBtn" type="button" class="bg-amber hover:bg-amberdark text-navy font-semibold text-sm px-4 py-2.5 rounded-full transition"></button>
+      <input id="adminTeleversementInput" type="file" multiple class="hidden">
+      <span id="adminTeleversementEtat" class="text-sm text-slate-500 dark:text-cream/60"></span>
+    </div>
 
     <!-- Tableau éditable en ligne (façon tableur/Notion) : la première ligne
          (bordée en orange) sert à l'ajout rapide, les suivantes sont les
@@ -1147,6 +1157,8 @@
     </div>
   </div>
 </div>
+
+<input id="adminFichierCelluleInput" type="file" class="hidden">
 
 <!-- MODALE ÉDITION AVANCÉE (JSON) — réservée aux champs que le tableau ne
      représente pas bien (ex : le tableau "dates" d'une commande). Ouverte
@@ -1357,7 +1369,7 @@
     getFirestore, collection, addDoc, getDocs, getDoc, serverTimestamp,
     query, orderBy, limit, startAfter, doc, setDoc, updateDoc, deleteDoc, onSnapshot, where
   } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
-  import { getStorage, ref, uploadBytes, getDownloadURL }
+  import { getStorage, ref, uploadBytes, uploadBytesResumable, getDownloadURL, deleteObject }
     from "https://www.gstatic.com/firebasejs/10.13.0/firebase-storage.js";
   import {
     getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword,
@@ -1386,7 +1398,7 @@
   window._storage = storage;
   window._auth = auth;
   window._firestore = { collection, addDoc, getDocs, getDoc, serverTimestamp, query, orderBy, limit, startAfter, doc, setDoc, updateDoc, deleteDoc, onSnapshot, where };
-  window._storageFns = { ref, uploadBytes, getDownloadURL };
+  window._storageFns = { ref, uploadBytes, uploadBytesResumable, getDownloadURL, deleteObject };
   window._authFns = {
     signInWithEmailAndPassword, createUserWithEmailAndPassword,
     signOut, onAuthStateChanged, deleteUser,
@@ -2893,7 +2905,9 @@ function libelleVoyage(m){
    SCHÉMAS DES COLONNES
      champ  : nom du champ Firestore
      label  : en-tête affiché
-     type   : "text" | "number" | "date" | "select" | "checkbox" | "id" | "calcul"
+     type   : "text" | "number" | "date" | "select" | "checkbox" | "id" | "calcul" | "fichier"
+              ("fichier" = un lien qu'on peut coller OU remplir en choisissant
+              un fichier sur l'appareil : il est envoyé dans Firebase Storage)
      options / optionLabels : valeurs d'une liste déroulante fixe
      source : liste déroulante alimentée par une autre collection
               { collection, valeur(doc), label(doc) }
@@ -2921,7 +2935,9 @@ const SCHEMAS_ADMIN = {
     { champ: '__id__', label: 'N° de suivi', type: 'id' },
     { champ: 'etapeActuelle', label: 'Étape', type: 'select', options: [0, 1, 2, 3], optionLabels: ETAPES_LIVRAISON, defaut: 0 },
     { champ: 'statutLabel', label: 'Statut affiché', type: 'text' },
-    { champ: 'email', label: 'Email client', type: 'text' }
+    { champ: 'email', label: 'Email client', type: 'text' },
+    { champ: 'cmrUrl', label: 'CMR', type: 'fichier', dossier: 'commandes' },
+    { champ: 'factureUrl', label: 'Facture', type: 'fichier', dossier: 'commandes' }
   ],
   fret: [
     { champ: 'villeDepart', label: 'Départ', type: 'text' },
@@ -2970,7 +2986,8 @@ const SCHEMAS_ADMIN = {
     { champ: 'dateArrivee', label: 'Arrivée le', type: 'date' },
     { champ: 'clientNom', label: 'Client', type: 'text' },
     { champ: 'etapeIndex', label: 'Avancement', type: 'select', options: [0, 1, 2, 3, 4], optionLabels: ETAPES_MISSION, defaut: 0 },
-    { champ: 'statutVoyage', label: 'Statut', type: 'select', options: ['planifie', 'en_cours', 'termine', 'annule'], optionLabels: ['Planifié', 'En cours', 'Livré', 'Annulé'], defaut: 'planifie' }
+    { champ: 'statutVoyage', label: 'Statut', type: 'select', options: ['planifie', 'en_cours', 'termine', 'annule'], optionLabels: ['Planifié', 'En cours', 'Livré', 'Annulé'], defaut: 'planifie' },
+    { champ: 'documentUrl', label: 'Document (CMR…)', type: 'fichier', dossier: 'voyages' }
   ],
 
   // MODULE 3 — Rentabilité (mêmes voyages, colonnes financières)
@@ -3010,10 +3027,18 @@ const SCHEMAS_ADMIN = {
     { champ: 'commentaire', label: 'Commentaire', type: 'text' },
     { champ: 'statut', label: 'Modération', type: 'select', options: ['en_attente', 'approuve', 'rejete'], defaut: 'en_attente' }
   ],
+  // Archive interne (jamais affichée sur le site public)
+  documents: [
+    { champ: 'nom', label: 'Nom', type: 'text' },
+    { champ: 'url', label: 'Fichier', type: 'fichier', dossier: 'documents' },
+    { champ: 'categorie', label: 'Catégorie', type: 'select', options: ['cmr', 'facture', 'contrat', 'assurance', 'vehicule', 'autre'], optionLabels: ['CMR', 'Facture', 'Contrat', 'Assurance', 'Véhicule', 'Autre'], defaut: 'autre' },
+    { champ: 'missionId', label: 'Voyage lié', type: 'select', source: { collection: 'missions', valeur: m => m.id, label: libelleVoyage } },
+    { champ: 'dateAjout', label: 'Ajouté le', type: 'date', defaut: () => aujourdHuiISO() }
+  ],
   medias: [
-    { champ: 'type', label: 'Type', type: 'select', options: ['photo', 'youtube', 'facebook', 'instagram', 'tiktok', 'twitter'] },
+    { champ: 'type', label: 'Type', type: 'select', options: ['photo', 'video', 'youtube', 'facebook', 'instagram', 'tiktok', 'twitter'], optionLabels: ['Photo', 'Vidéo (fichier)', 'YouTube', 'Facebook', 'Instagram', 'TikTok', 'Twitter / X'] },
     { champ: 'titre', label: 'Titre', type: 'text' },
-    { champ: 'url', label: 'URL', type: 'text' },
+    { champ: 'url', label: 'Fichier ou lien', type: 'fichier', dossier: 'medias', accept: 'image/*,video/*' },
     { champ: 'ordre', label: 'Ordre', type: 'number', defaut: 1 },
     { champ: 'visible', label: 'Visible', type: 'checkbox', defaut: true }
   ]
@@ -3026,9 +3051,32 @@ const SCHEMAS_ADMIN = {
      complet    : charge tous les documents d'un coup (totaux exacts)
      tri        : ordre d'affichage des lignes
      resume     : tuiles de synthèse affichées au-dessus du tableau
+     televersement : bouton "choisir des fichiers" — chaque fichier choisi
+                  est envoyé puis devient une ligne du tableau
    ---------------------------------------------------------------- */
 const VUES_ADMIN = {
   missions: { references: ['vehicules', 'chauffeurs'] },
+  documents: {
+    references: ['missions'],
+    complet: true,
+    tri: (a, b) => String(b.dateAjout || '').localeCompare(String(a.dateAjout || '')),
+    televersement: {
+      libelle: '📎 Choisir des documents',
+      dossier: 'documents',
+      creer: (fichier, url) => ({ nom: nomSansExtension(fichier.name), url, categorie: 'autre', dateAjout: aujourdHuiISO() })
+    }
+  },
+  medias: {
+    complet: true,
+    tri: (a, b) => (a.ordre ?? 999) - (b.ordre ?? 999),
+    televersement: {
+      libelle: '📎 Choisir des photos / vidéos',
+      dossier: 'medias',
+      accept: 'image/*,video/*',
+      accepter: (fichier) => fichier.type.startsWith('image/') || fichier.type.startsWith('video/'),
+      creer: (fichier, url, rang) => ({ type: fichier.type.startsWith('video/') ? 'video' : 'photo', titre: nomSansExtension(fichier.name), url, visible: true, ordre: rang })
+    }
+  },
   rentabilite: {
     collection: 'missions',
     complet: true,
@@ -3116,6 +3164,14 @@ function construireChampColonne(col, valeur, classe){
   if(col.type === 'number'){
     return `<input type="number" step="any" data-champ="${col.champ}" value="${echapperHtmlAdmin(val)}" class="${classe} w-full min-w-[90px] bg-transparent px-2 py-1.5 rounded text-sm text-navy dark:text-cream focus:outline-none focus:bg-cream dark:focus:bg-navy focus:ring-1 focus:ring-amber">`;
   }
+  if(col.type === 'fichier'){
+    const lien = val ? `<a href="${echapperHtmlAdmin(val)}" target="_blank" rel="noopener" class="admin-fichier-lien text-teal hover:text-amber text-sm px-1" title="Ouvrir le fichier">↗</a>` : '';
+    return `<div class="flex items-center gap-1 min-w-[190px]">
+      <input type="text" data-champ="${col.champ}" value="${echapperHtmlAdmin(val)}" placeholder="lien ou 📎" class="${classe} flex-1 min-w-0 bg-transparent px-2 py-1.5 rounded text-sm text-navy dark:text-cream focus:outline-none focus:bg-cream dark:focus:bg-navy focus:ring-1 focus:ring-amber">
+      <button type="button" class="admin-fichier-btn shrink-0 text-sm px-1.5 py-1 rounded hover:bg-amber/20" data-dossier="${col.dossier || 'divers'}" data-accept="${col.accept || ''}" title="Choisir un fichier sur l'appareil">📎</button>
+      ${lien}
+    </div>`;
+  }
   if(col.type === 'date'){
     return `<input type="date" data-champ="${col.champ}" value="${echapperHtmlAdmin(val)}" class="${classe} w-full min-w-[130px] bg-transparent px-2 py-1.5 rounded text-sm text-navy dark:text-cream focus:outline-none focus:bg-cream dark:focus:bg-navy focus:ring-1 focus:ring-amber">`;
   }
@@ -3144,6 +3200,168 @@ function remplirCalculsLigne(tr, donnees){
     span.classList.toggle('text-red-500', !!resultat.negatif);
   });
 }
+
+/* ----------------------------------------------------------------
+   ENVOI DE FICHIERS (Firebase Storage)
+   Photos, vidéos et documents choisis sur l'appareil sont envoyés dans
+   le dossier "admin/…" du stockage Firebase ; c'est le lien obtenu qui
+   est enregistré dans Firestore. Limites : 200 Mo pour une vidéo,
+   25 Mo pour les autres fichiers.
+   ---------------------------------------------------------------- */
+const TAILLE_MAX_VIDEO_MO = 200;
+const TAILLE_MAX_FICHIER_MO = 25;
+
+function nomSansExtension(nomFichier){
+  return String(nomFichier).replace(/\.[^.]+$/, '');
+}
+
+function verifierTailleFichier(fichier){
+  const limite = fichier.type.startsWith('video/') ? TAILLE_MAX_VIDEO_MO : TAILLE_MAX_FICHIER_MO;
+  if(fichier.size > limite * 1024 * 1024){
+    throw new Error(`fichier trop lourd (${Math.round(fichier.size / 1024 / 1024)} Mo, maximum ${limite} Mo)`);
+  }
+}
+
+// Envoie un fichier et renvoie son lien. surProgression(pourcentage) est facultatif.
+function envoyerFichierStorage(fichier, dossier, surProgression){
+  return new Promise((resoudre, rejeter) => {
+    if(!window._storage) return rejeter(new Error("Firebase Storage n'est pas initialisé"));
+    try { verifierTailleFichier(fichier); } catch (err) { return rejeter(err); }
+    const { ref, uploadBytesResumable, getDownloadURL } = window._storageFns;
+    const nomPropre = fichier.name.replace(/[^a-zA-Z0-9._-]/g, '_');
+    const fichierRef = ref(window._storage, `admin/${dossier}/${Date.now()}_${nomPropre}`);
+    const tache = uploadBytesResumable(fichierRef, fichier);
+    tache.on('state_changed',
+      (etat) => { if(surProgression && etat.totalBytes) surProgression(Math.round(etat.bytesTransferred / etat.totalBytes * 100)); },
+      rejeter,
+      () => getDownloadURL(fichierRef).then(resoudre, rejeter)
+    );
+  });
+}
+
+// Supprime du stockage les fichiers d'une ligne qu'on efface (sans bloquer
+// la suppression si le fichier n'existe plus ou n'est pas dans notre stockage).
+function supprimerFichiersDeLigne(donnees){
+  const { ref, deleteObject } = window._storageFns;
+  (SCHEMAS_ADMIN[vueActive] || []).filter(col => col.type === 'fichier').forEach(col => {
+    const url = donnees[col.champ];
+    if(typeof url === 'string' && url.startsWith('https://firebasestorage.googleapis.com/')){
+      try { deleteObject(ref(window._storage, url)).catch(() => {}); } catch (err) { /* lien non reconnu : on ignore */ }
+    }
+  });
+}
+
+// Met à jour le petit lien "↗" d'une cellule fichier après un changement.
+function rafraichirLienFichier(champEl){
+  const cellule = champEl.parentElement;
+  if(!cellule || !cellule.querySelector('.admin-fichier-btn')) return;
+  let lien = cellule.querySelector('.admin-fichier-lien');
+  if(!champEl.value){ if(lien) lien.remove(); return; }
+  if(!lien){
+    lien = document.createElement('a');
+    lien.className = "admin-fichier-lien text-teal hover:text-amber text-sm px-1";
+    lien.target = "_blank"; lien.rel = "noopener"; lien.title = "Ouvrir le fichier"; lien.textContent = "↗";
+    cellule.appendChild(lien);
+  }
+  lien.href = champEl.value;
+}
+
+// --- Bouton 📎 d'une cellule : choisir un fichier remplit le lien de la cellule
+const adminFichierCelluleInput = document.getElementById('adminFichierCelluleInput');
+let boutonFichierActif = null;
+
+adminTableBody.addEventListener('click', (e) => {
+  const bouton = e.target.closest('.admin-fichier-btn');
+  if(!bouton || bouton.disabled) return;
+  boutonFichierActif = bouton;
+  adminFichierCelluleInput.accept = bouton.dataset.accept || '';
+  adminFichierCelluleInput.value = '';
+  adminFichierCelluleInput.click();
+});
+
+adminFichierCelluleInput.addEventListener('change', async () => {
+  const fichier = adminFichierCelluleInput.files[0];
+  const bouton = boutonFichierActif;
+  if(!fichier || !bouton) return;
+  const champEl = bouton.parentElement.querySelector('[data-champ]');
+  bouton.disabled = true;
+  try {
+    const url = await envoyerFichierStorage(fichier, bouton.dataset.dossier, (p) => { bouton.textContent = p + ' %'; });
+    champEl.value = url;
+    rafraichirLienFichier(champEl);
+    champEl.dispatchEvent(new Event('televerse')); // ligne existante : enregistre aussitôt
+
+    // Médias : le type (photo ou vidéo) se règle tout seul d'après le fichier choisi
+    const selectType = bouton.closest('tr').querySelector('select[data-champ="type"]');
+    if(vueActive === 'medias' && selectType && (fichier.type.startsWith('image/') || fichier.type.startsWith('video/'))){
+      selectType.value = fichier.type.startsWith('video/') ? 'video' : 'photo';
+      selectType.dispatchEvent(new Event('change'));
+    }
+  } catch (err) {
+    console.error("Erreur d'envoi de fichier :", err);
+    alert(`Envoi impossible : ${err.message || err}`);
+  } finally {
+    bouton.disabled = false;
+    bouton.textContent = '📎';
+  }
+});
+
+// --- Envoi en lot (Médias, Documents) : chaque fichier choisi devient une ligne
+const adminTeleversement = document.getElementById('adminTeleversement');
+const adminTeleversementBtn = document.getElementById('adminTeleversementBtn');
+const adminTeleversementInput = document.getElementById('adminTeleversementInput');
+const adminTeleversementEtat = document.getElementById('adminTeleversementEtat');
+
+function preparerBarreTeleversement(){
+  const config = (VUES_ADMIN[vueActive] || {}).televersement;
+  adminTeleversement.classList.toggle('hidden', !config);
+  if(!config) return;
+  adminTeleversementBtn.textContent = config.libelle;
+  adminTeleversementInput.accept = config.accept || '';
+  if(!adminTeleversementBtn.disabled) adminTeleversementEtat.textContent = "Tu peux en sélectionner plusieurs à la fois.";
+}
+
+adminTeleversementBtn.addEventListener('click', () => {
+  adminTeleversementInput.value = '';
+  adminTeleversementInput.click();
+});
+
+adminTeleversementInput.addEventListener('change', async () => {
+  const fichiers = Array.from(adminTeleversementInput.files);
+  const vueDeDepart = vueActive;
+  const collectionDeDepart = collectionActive;
+  const config = (VUES_ADMIN[vueDeDepart] || {}).televersement;
+  if(!fichiers.length || !config) return;
+
+  // Les nouveaux fichiers se placent à la suite des lignes existantes
+  let rang = 0;
+  donneesChargees.forEach(d => { if(Number(d.ordre) > rang) rang = Number(d.ordre); });
+
+  const { collection, addDoc, serverTimestamp } = window._firestore;
+  const echecs = [];
+  let reussis = 0;
+  adminTeleversementBtn.disabled = true;
+
+  for(let i = 0; i < fichiers.length; i++){
+    const fichier = fichiers[i];
+    const avancement = `Envoi ${i + 1}/${fichiers.length} — ${fichier.name}`;
+    adminTeleversementEtat.textContent = avancement;
+    try {
+      if(config.accepter && !config.accepter(fichier)) throw new Error("type de fichier non accepté ici");
+      const url = await envoyerFichierStorage(fichier, config.dossier, (p) => { adminTeleversementEtat.textContent = `${avancement} (${p} %)`; });
+      await addDoc(collection(window._db, collectionDeDepart), { ...config.creer(fichier, url, ++rang), dateCreation: serverTimestamp() });
+      reussis++;
+    } catch (err) {
+      console.error("Erreur d'envoi de fichier :", err);
+      echecs.push(`${fichier.name} : ${err.message || err}`);
+    }
+  }
+
+  adminTeleversementBtn.disabled = false;
+  adminTeleversementEtat.textContent = `${reussis} fichier(s) ajouté(s)` + (echecs.length ? ` — ${echecs.length} échec(s)` : '');
+  if(echecs.length) alert("Certains fichiers n'ont pas pu être envoyés :\n\n" + echecs.join('\n'));
+  if(vueActive === vueDeDepart) chargerCollection(vueDeDepart, true);
+});
 
 // Tuiles de synthèse au-dessus du tableau (vues de gestion uniquement).
 function mettreAJourResume(){
@@ -3281,6 +3499,7 @@ async function chargerCollection(nomVue, reinitialiser){
     chargementEnCours = false;
     mettreAJourCompteur();
     mettreAJourResume();
+    preparerBarreTeleversement();
 
     // Collections liées (véhicules, chauffeurs, voyages) pour les listes déroulantes
     referencesAdmin = {};
@@ -3394,6 +3613,7 @@ function construireLigneDocument(id, donnees){
   tr.querySelectorAll('.admin-cell').forEach(champEl => {
     const immediat = champEl.tagName === 'SELECT' || champEl.type === 'checkbox' || champEl.type === 'date';
     champEl.addEventListener(immediat ? 'change' : 'blur', () => sauvegarderCelluleInline(id, champEl, donnees, tr));
+    champEl.addEventListener('televerse', () => sauvegarderCelluleInline(id, champEl, donnees, tr)); // fichier choisi via 📎
     if(!immediat){
       champEl.addEventListener('keydown', (e) => { if(e.key === 'Enter'){ e.preventDefault(); champEl.blur(); } });
     }
@@ -3406,6 +3626,7 @@ function construireLigneDocument(id, donnees){
     const { doc, deleteDoc } = window._firestore;
     try {
       await deleteDoc(doc(window._db, collectionActive, id));
+      supprimerFichiersDeLigne(donnees);
       tr.remove();
       donneesChargees.delete(id);
       mettreAJourCompteur();
@@ -3441,6 +3662,7 @@ async function sauvegarderCelluleInline(id, champEl, donneesConnues, tr){
     }
 
     donneesConnues[champ] = valeur;
+    rafraichirLienFichier(champEl);
     remplirCalculsLigne(tr, donneesConnues);
     mettreAJourResume();
 
@@ -3762,6 +3984,14 @@ function creerCarteMedia(m){
       <div class="galerie-carte bg-cream dark:bg-navy rounded-xl overflow-hidden border border-slate-200 dark:border-white/10 cursor-pointer" data-lightbox-src="${url}">
         <img src="${url}" alt="${titre}" loading="lazy" class="w-full h-48 object-cover">
         ${m.titre ? `<p class="text-xs text-slate-500 dark:text-cream/50 px-3 py-2 truncate">${titre}</p>` : ''}
+      </div>`;
+  }
+
+  if(m.type === 'video'){
+    return `
+      <div class="galerie-carte bg-black rounded-xl overflow-hidden border border-slate-200 dark:border-white/10">
+        <video src="${url}" controls preload="metadata" playsinline class="w-full aspect-video bg-black"></video>
+        ${m.titre ? `<p class="text-xs text-cream/60 px-3 py-2 truncate">${titre}</p>` : ''}
       </div>`;
   }
 
