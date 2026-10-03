@@ -1114,16 +1114,21 @@
       <button class="admin-tab" data-collection="partenaires">Partenaires</button>
       <button class="admin-tab" data-collection="vehicules">Véhicules</button>
       <button class="admin-tab" data-collection="chauffeurs">Chauffeurs</button>
-      <button class="admin-tab" data-collection="missions">Missions</button>
+      <button class="admin-tab" data-collection="missions">Voyages</button>
+      <button class="admin-tab" data-collection="rentabilite">Rentabilité</button>
+      <button class="admin-tab" data-collection="factures">Factures</button>
       <button class="admin-tab" data-collection="medias">Médias</button>
     </div>
   </div>
 
   <div class="max-w-6xl mx-auto px-5 py-8">
     <p class="text-sm text-slate-500 dark:text-cream/50 mb-5">
-      Collection active : <span id="adminCollectionLabel" class="font-mono-num font-semibold text-navy dark:text-cream">devis</span>
-      — <span id="adminCount">0</span> document(s) chargé(s)
+      Onglet actif : <span id="adminCollectionLabel" class="font-mono-num font-semibold text-navy dark:text-cream">devis</span>
+      — <span id="adminCount">0</span> ligne(s) chargée(s)
     </p>
+
+    <!-- Tuiles de synthèse (totaux) : affichées pour Rentabilité et Factures -->
+    <div id="adminResume" class="hidden grid grid-cols-2 lg:grid-cols-5 gap-3 mb-5"></div>
 
     <!-- Tableau éditable en ligne (façon tableur/Notion) : la première ligne
          (bordée en orange) sert à l'ajout rapide, les suivantes sont les
@@ -1350,7 +1355,7 @@
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
   import {
     getFirestore, collection, addDoc, getDocs, getDoc, serverTimestamp,
-    query, orderBy, limit, startAfter, doc, updateDoc, deleteDoc, onSnapshot, where
+    query, orderBy, limit, startAfter, doc, setDoc, updateDoc, deleteDoc, onSnapshot, where
   } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
   import { getStorage, ref, uploadBytes, getDownloadURL }
     from "https://www.gstatic.com/firebasejs/10.13.0/firebase-storage.js";
@@ -1380,19 +1385,35 @@
   window._db = db;
   window._storage = storage;
   window._auth = auth;
-  window._firestore = { collection, addDoc, getDocs, getDoc, serverTimestamp, query, orderBy, limit, startAfter, doc, updateDoc, deleteDoc, onSnapshot, where };
+  window._firestore = { collection, addDoc, getDocs, getDoc, serverTimestamp, query, orderBy, limit, startAfter, doc, setDoc, updateDoc, deleteDoc, onSnapshot, where };
   window._storageFns = { ref, uploadBytes, getDownloadURL };
   window._authFns = {
     signInWithEmailAndPassword, createUserWithEmailAndPassword,
     signOut, onAuthStateChanged, deleteUser,
     EmailAuthProvider, reauthenticateWithCredential
   };
+
+  // Ce module s'exécute APRÈS le script classique plus bas (les modules sont
+  // toujours différés) : on prévient donc le reste du site que Firebase est prêt.
+  window.dispatchEvent(new Event('firebase-pret'));
 </script>
 
 <!-- ============================================================
      LOGIQUE DU SITE (thème, menu, devis, suivi)
      ============================================================ -->
 <script>
+/* ------------------------------------------------------------
+   ATTENTE DE FIREBASE
+   Le module Firebase (au-dessus) est chargé en différé : il s'exécute
+   après ce script. Tout ce qui doit lire Firestore dès l'ouverture de
+   la page (bourse de fret, départs, galerie) passe donc par cette
+   fonction, qui lance le code dès que Firebase est disponible.
+   ------------------------------------------------------------ */
+function quandFirebasePret(action){
+  if(window._db) action();
+  else window.addEventListener('firebase-pret', action, { once: true });
+}
+
 /* ------------------------------------------------------------
    THÈME CLAIR / SOMBRE
    Préférence sauvegardée dans localStorage pour être mémorisée
@@ -1963,7 +1984,7 @@ function renderFretOffres(liste){
 
 // Écoute en direct de la collection "fret". Se déclenche une première fois
 // immédiatement (chargement initial), puis à chaque changement côté serveur.
-if(window._db){
+quandFirebasePret(() => {
   const { collection, onSnapshot } = window._firestore;
   onSnapshot(collection(window._db, "fret"), (snapshot) => {
     fretDataActuelle = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
@@ -1973,7 +1994,7 @@ if(window._db){
     fretEmptyEl.classList.remove('hidden');
     fretEmptyEl.textContent = "Impossible de charger les offres (vérifie tes règles Firestore).";
   });
-}
+});
 
 /* ================================================================
    ASSISTANT DE RECHERCHE IA
@@ -2803,36 +2824,83 @@ adminLogoutBtn.addEventListener('click', () => {
 });
 
 /* ----------------------------------------------------------------
-   Chargement des documents + SCROLL INFINI
-   Principe : on charge 10 documents, puis dès que la sentinelle en
-   bas de liste devient visible à l'écran, on charge les 10 suivants
-   et on les ajoute à la suite (sans jamais tout recharger).
+   TABLEAU DE BORD — tableaux éditables + modules de gestion
+   Chaque onglet est une "vue" : un schéma de colonnes appliqué à une
+   collection Firestore. La plupart des vues portent le nom de leur
+   collection ; "rentabilite" est une seconde vue sur la collection
+   "missions" (mêmes voyages, colonnes financières).
+   Les vues courantes se chargent 10 par 10 (scroll infini) ; les vues
+   de gestion (rentabilité, factures) se chargent en entier pour que
+   les totaux affichés au-dessus du tableau soient exacts.
    ---------------------------------------------------------------- */
 const PAGE_SIZE = 10;
-let collectionActive = 'devis';
+const PAGE_SIZE_VUE_COMPLETE = 500;
+let vueActive = 'devis';        // onglet affiché (clé de SCHEMAS_ADMIN)
+let collectionActive = 'devis'; // collection Firestore lue et écrite
 let dernierDocumentCharge = null;
 let chargementEnCours = false;
 let ilResteDesDocuments = true;
 
 const adminTableHead = document.getElementById('adminTableHead');
 const adminTableBody = document.getElementById('adminTableBody');
+const adminResume = document.getElementById('adminResume');
 const adminCollectionLabel = document.getElementById('adminCollectionLabel');
 const adminCount = document.getElementById('adminCount');
 const adminLoadingLabel = document.getElementById('adminLoadingLabel');
 const adminScrollSentinel = document.getElementById('adminScrollSentinel');
 
+const donneesChargees = new Map(); // id → données de chaque ligne affichée (sert aux totaux)
+let referencesAdmin = {};          // collections liées chargées pour les listes déroulantes
+
+function echapperHtmlAdmin(valeur){
+  return String(valeur ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+const formatEuros = new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' });
+function aujourdHuiISO(){ return new Date().toISOString().split('T')[0]; }
+
 /* ----------------------------------------------------------------
-   SCHÉMAS DES COLONNES — un tableau éditable par collection, au lieu
-   d'un éditeur JSON. Chaque entrée décrit une colonne :
+   CALCULS FINANCIERS
+   Rentabilité d'un voyage :
+     carburant  = km × (L/100 km) ÷ 100 × prix du litre
+     coût total = carburant + péages + chauffeur + autres frais
+     marge      = prix facturé HT − coût total
+     marge %    = marge ÷ prix facturé HT
+   La consommation et le prix du gazole sont saisis par voyage (valeurs
+   de départ : 32 L/100 km et 1,50 €/L, à ajuster à ta flotte et au
+   prix du jour). Le poids est enregistré mais n'entre pas dans la
+   formule : c'est la consommation saisie qui doit refléter la charge.
+   ---------------------------------------------------------------- */
+function calculerRentabilite(d){
+  const km = Number(d.distanceKm) || 0;
+  const carburant = km * (Number(d.consoL100) || 0) / 100 * (Number(d.prixCarburant) || 0);
+  const cout = carburant + (Number(d.peages) || 0) + (Number(d.coutChauffeur) || 0) + (Number(d.autresFrais) || 0);
+  const prix = Number(d.prixFacture) || 0;
+  const marge = prix - cout;
+  return { carburant, cout, prix, marge, tauxMarge: prix > 0 ? (marge / prix) * 100 : null };
+}
+function calculerFacture(f){
+  const ht = Number(f.montantHT) || 0;
+  const tva = ht * (Number(f.tauxTVA) || 0) / 100;
+  return { ht, tva, ttc: ht + tva };
+}
+
+function libelleVoyage(m){
+  const trajet = `${m.villeDepart || '?'} → ${m.villeArrivee || '?'}`;
+  return m.dateDepart ? `${trajet} (${m.dateDepart})` : trajet;
+}
+
+/* ----------------------------------------------------------------
+   SCHÉMAS DES COLONNES
      champ  : nom du champ Firestore
      label  : en-tête affiché
-     type   : "text" | "number" | "select" | "checkbox" | "id"
-     options / optionLabels : pour les listes déroulantes
+     type   : "text" | "number" | "date" | "select" | "checkbox" | "id" | "calcul"
+     options / optionLabels : valeurs d'une liste déroulante fixe
+     source : liste déroulante alimentée par une autre collection
+              { collection, valeur(doc), label(doc) }
+     calcul : pour une colonne calculée, fonction(données) → { texte, negatif }
      defaut : valeur pré-remplie sur la ligne d'ajout rapide
-   "id" = identifiant du document lui-même (affiché en lecture seule
-   sur les lignes existantes ; saisissable sur la ligne d'ajout rapide
-   UNIQUEMENT pour "commandes", où le numéro de suivi doit être choisi
-   à la création plutôt que généré au hasard).
+   "id" = identifiant du document (lecture seule sur les lignes existantes,
+   saisissable sur la ligne d'ajout rapide : sert au numéro de suivi).
    ---------------------------------------------------------------- */
 const SCHEMAS_ADMIN = {
   devis: [
@@ -2874,26 +2942,68 @@ const SCHEMAS_ADMIN = {
     { champ: 'vehicules', label: 'Véhicules dispo', type: 'text' },
     { champ: 'zone', label: 'Zone', type: 'text' }
   ],
+
+  // MODULE 1 — Flotte
   vehicules: [
-    { champ: 'type', label: 'Type', type: 'select', options: ['camion', 'remorque'] },
     { champ: 'immatriculation', label: 'Immatriculation', type: 'text' },
-    { champ: 'marque', label: 'Marque', type: 'text' },
-    { champ: 'modele', label: 'Modèle', type: 'text' },
-    { champ: 'statut', label: 'Statut', type: 'select', options: ['actif', 'en_entretien', 'hors_service'], defaut: 'actif' }
+    { champ: 'type', label: 'Type', type: 'select', options: ['tracteur', 'porteur', 'semi-remorque', 'remorque', 'fourgon'], optionLabels: ['Tracteur', 'Porteur', 'Semi-remorque', 'Remorque', 'Fourgon'] },
+    { champ: 'marque', label: 'Marque / modèle', type: 'text' },
+    { champ: 'capaciteKg', label: 'Capacité (kg)', type: 'number' },
+    { champ: 'statut', label: 'Statut', type: 'select', options: ['actif', 'en_entretien', 'hors_service'], optionLabels: ['Actif', 'En entretien', 'Hors service'], defaut: 'actif' },
+    { champ: 'dateLivraison', label: 'Date de livraison', type: 'date' },
+    { champ: 'dateProchainEntretien', label: 'Prochain entretien', type: 'date' }
   ],
   chauffeurs: [
     { champ: 'nom', label: 'Nom', type: 'text' },
     { champ: 'email', label: 'Email', type: 'text' },
     { champ: 'telephone', label: 'Téléphone', type: 'text' },
-    { champ: 'statut', label: 'Statut', type: 'select', options: ['disponible', 'en_mission', 'conge'], defaut: 'disponible' }
+    { champ: 'statut', label: 'Statut', type: 'select', options: ['disponible', 'en_mission', 'conge'], optionLabels: ['Disponible', 'En mission', 'Congé'], defaut: 'disponible' }
   ],
+
+  // MODULE 2 — Voyages (collection "missions", aussi lue par l'Espace Chauffeur)
   missions: [
     { champ: 'villeDepart', label: 'Départ', type: 'text' },
     { champ: 'villeArrivee', label: 'Arrivée', type: 'text' },
-    { champ: 'chauffeurEmail', label: 'Chauffeur (email)', type: 'text' },
-    { champ: 'etapeIndex', label: 'Étape', type: 'select', options: [0, 1, 2, 3, 4], optionLabels: ETAPES_MISSION, defaut: 0 },
-    { champ: 'statutVoyage', label: 'Statut voyage', type: 'select', options: ['planifie', 'en_cours', 'termine', 'annule'], defaut: 'planifie' }
+    { champ: 'vehicule', label: 'Véhicule', type: 'select', source: { collection: 'vehicules', valeur: v => v.immatriculation, label: v => v.immatriculation } },
+    { champ: 'chauffeurEmail', label: 'Chauffeur', type: 'select', source: { collection: 'chauffeurs', valeur: c => c.email, label: c => c.nom || c.email } },
+    { champ: 'dateDepart', label: 'Départ le', type: 'date' },
+    { champ: 'dateArrivee', label: 'Arrivée le', type: 'date' },
+    { champ: 'clientNom', label: 'Client', type: 'text' },
+    { champ: 'etapeIndex', label: 'Avancement', type: 'select', options: [0, 1, 2, 3, 4], optionLabels: ETAPES_MISSION, defaut: 0 },
+    { champ: 'statutVoyage', label: 'Statut', type: 'select', options: ['planifie', 'en_cours', 'termine', 'annule'], optionLabels: ['Planifié', 'En cours', 'Livré', 'Annulé'], defaut: 'planifie' }
   ],
+
+  // MODULE 3 — Rentabilité (mêmes voyages, colonnes financières)
+  rentabilite: [
+    { champ: 'villeDepart', label: 'Départ', type: 'text' },
+    { champ: 'villeArrivee', label: 'Arrivée', type: 'text' },
+    { champ: 'distanceKm', label: 'Km', type: 'number' },
+    { champ: 'poidsKg', label: 'Poids (kg)', type: 'number' },
+    { champ: 'consoL100', label: 'Conso (L/100)', type: 'number', defaut: 32 },
+    { champ: 'prixCarburant', label: 'Gazole (€/L)', type: 'number', defaut: 1.5 },
+    { champ: 'peages', label: 'Péages (€)', type: 'number' },
+    { champ: 'coutChauffeur', label: 'Chauffeur (€)', type: 'number' },
+    { champ: 'autresFrais', label: 'Autres frais (€)', type: 'number' },
+    { champ: 'prixFacture', label: 'Prix facturé HT (€)', type: 'number' },
+    { champ: '_carburant', label: 'Carburant', type: 'calcul', calcul: d => ({ texte: formatEuros.format(calculerRentabilite(d).carburant) }) },
+    { champ: '_cout', label: 'Coût total', type: 'calcul', calcul: d => ({ texte: formatEuros.format(calculerRentabilite(d).cout) }) },
+    { champ: '_marge', label: 'Marge', type: 'calcul', calcul: d => { const r = calculerRentabilite(d); return { texte: formatEuros.format(r.marge), negatif: r.marge < 0 }; } },
+    { champ: '_tauxMarge', label: 'Marge %', type: 'calcul', calcul: d => { const r = calculerRentabilite(d); return { texte: r.tauxMarge === null ? '—' : r.tauxMarge.toFixed(1).replace('.', ',') + ' %', negatif: r.marge < 0 }; } }
+  ],
+
+  // MODULE 4 — Facturation
+  factures: [
+    { champ: 'numero', label: 'N° facture', type: 'text' },
+    { champ: 'missionId', label: 'Voyage', type: 'select', source: { collection: 'missions', valeur: m => m.id, label: libelleVoyage } },
+    { champ: 'clientNom', label: 'Client', type: 'text' },
+    { champ: 'clientNif', label: 'NIF client', type: 'text' },
+    { champ: 'dateEmission', label: 'Émise le', type: 'date', defaut: () => aujourdHuiISO() },
+    { champ: 'montantHT', label: 'Montant HT (€)', type: 'number' },
+    { champ: 'tauxTVA', label: 'TVA %', type: 'number', defaut: 21 },
+    { champ: '_ttc', label: 'Total TTC', type: 'calcul', calcul: f => ({ texte: formatEuros.format(calculerFacture(f).ttc) }) },
+    { champ: 'statut', label: 'État', type: 'select', options: ['en_attente', 'payee', 'annulee'], optionLabels: ['En attente', 'Payée', 'Annulée'], defaut: 'en_attente' }
+  ],
+
   avis: [
     { champ: 'nom', label: 'Client', type: 'text' },
     { champ: 'note', label: 'Note', type: 'number' },
@@ -2909,6 +3019,52 @@ const SCHEMAS_ADMIN = {
   ]
 };
 
+/* ----------------------------------------------------------------
+   RÉGLAGES PAR VUE (facultatifs)
+     collection : collection Firestore si elle diffère du nom de la vue
+     references : collections à charger pour les listes déroulantes
+     complet    : charge tous les documents d'un coup (totaux exacts)
+     tri        : ordre d'affichage des lignes
+     resume     : tuiles de synthèse affichées au-dessus du tableau
+   ---------------------------------------------------------------- */
+const VUES_ADMIN = {
+  missions: { references: ['vehicules', 'chauffeurs'] },
+  rentabilite: {
+    collection: 'missions',
+    complet: true,
+    tri: (a, b) => String(b.dateDepart || '').localeCompare(String(a.dateDepart || '')),
+    resume: (lignes) => {
+      const total = lignes.reduce((acc, d) => {
+        const r = calculerRentabilite(d);
+        return { prix: acc.prix + r.prix, cout: acc.cout + r.cout, marge: acc.marge + r.marge };
+      }, { prix: 0, cout: 0, marge: 0 });
+      return [
+        { label: 'Voyages', valeur: String(lignes.length) },
+        { label: 'Facturé HT', valeur: formatEuros.format(total.prix) },
+        { label: 'Coûts', valeur: formatEuros.format(total.cout) },
+        { label: 'Marge', valeur: formatEuros.format(total.marge), negatif: total.marge < 0 },
+        { label: 'Marge moyenne', valeur: total.prix > 0 ? (total.marge / total.prix * 100).toFixed(1).replace('.', ',') + ' %' : '—', negatif: total.marge < 0 }
+      ];
+    }
+  },
+  factures: {
+    references: ['missions'],
+    complet: true,
+    tri: (a, b) => String(b.numero || '').localeCompare(String(a.numero || '')),
+    resume: (lignes) => {
+      const parEtat = (etat) => lignes.filter(f => (f.statut || 'en_attente') === etat);
+      const somme = (liste) => liste.reduce((acc, f) => acc + calculerFacture(f).ttc, 0);
+      const attente = parEtat('en_attente'), payees = parEtat('payee'), annulees = parEtat('annulee');
+      return [
+        { label: `En attente (${attente.length})`, valeur: formatEuros.format(somme(attente)) },
+        { label: `Payées (${payees.length})`, valeur: formatEuros.format(somme(payees)) },
+        { label: `Annulées (${annulees.length})`, valeur: formatEuros.format(somme(annulees)) },
+        { label: 'Total hors annulées', valeur: formatEuros.format(somme(attente) + somme(payees)) }
+      ];
+    }
+  }
+};
+
 document.querySelectorAll('.admin-tab').forEach((tab, index) => {
   if(index === 0) tab.classList.add('active');
   tab.addEventListener('click', () => {
@@ -2919,48 +3075,116 @@ document.querySelectorAll('.admin-tab').forEach((tab, index) => {
 });
 
 function construireEnTeteTable(){
-  const schema = SCHEMAS_ADMIN[collectionActive] || [];
+  const schema = SCHEMAS_ADMIN[vueActive] || [];
   adminTableHead.innerHTML = `<tr>
     ${schema.map(col => `<th class="text-left text-xs font-semibold uppercase tracking-wide text-slate-400 dark:text-cream/40 px-3 py-2.5 whitespace-nowrap">${col.label}</th>`).join('')}
     <th class="px-3 py-2.5"></th>
   </tr>`;
 }
 
+// Options d'une liste déroulante : fixes, ou tirées d'une collection liée.
+function optionsDeColonne(col){
+  if(col.source){
+    return (referencesAdmin[col.source.collection] || [])
+      .map(d => ({ valeur: col.source.valeur(d), label: col.source.label(d) }))
+      .filter(o => o.valeur !== undefined && o.valeur !== null && o.valeur !== '');
+  }
+  return col.options.map((opt, i) => ({ valeur: opt, label: col.optionLabels ? col.optionLabels[i] : opt }));
+}
+
 // Construit le HTML d'un champ éditable pour une colonne donnée.
-// "classe" permet de distinguer les cellules d'une ligne existante
-// (sauvegarde individuelle) de celles de la ligne d'ajout rapide.
+// "classe" distingue les cellules d'une ligne existante (sauvegarde
+// individuelle) de celles de la ligne d'ajout rapide.
 function construireChampColonne(col, valeur, classe){
   const val = valeur ?? '';
   if(col.type === 'select'){
-    const options = col.options.map((opt, i) => {
-      const label = col.optionLabels ? col.optionLabels[i] : opt;
-      const selectionne = String(val) === String(opt) ? 'selected' : '';
-      return `<option value="${opt}" ${selectionne}>${label}</option>`;
-    }).join('');
-    return `<select data-champ="${col.champ}" class="${classe} w-full bg-transparent px-2 py-1.5 rounded text-sm text-navy dark:text-cream focus:outline-none focus:ring-1 focus:ring-amber cursor-pointer">${options}</select>`;
+    const options = optionsDeColonne(col);
+    const numerique = !col.source && col.options.every(o => typeof o === 'number');
+    const connue = options.some(o => String(o.valeur) === String(val));
+    let html = '';
+    // Valeur vide ou liste liée : une option "—" pour ne jamais afficher un choix qui n'est pas enregistré
+    if(val === '' || col.source) html += `<option value="" ${val === '' ? 'selected' : ''}>—</option>`;
+    // Valeur enregistrée absente de la liste (ancienne donnée) : on la garde visible
+    if(val !== '' && !connue) html += `<option value="${echapperHtmlAdmin(val)}" selected>${echapperHtmlAdmin(val)}</option>`;
+    html += options.map(o => `<option value="${echapperHtmlAdmin(o.valeur)}" ${String(val) === String(o.valeur) ? 'selected' : ''}>${echapperHtmlAdmin(o.label)}</option>`).join('');
+    return `<select data-champ="${col.champ}" ${numerique ? 'data-numerique="1"' : ''} class="${classe} w-full min-w-[110px] bg-transparent px-2 py-1.5 rounded text-sm text-navy dark:text-cream focus:outline-none focus:ring-1 focus:ring-amber cursor-pointer">${html}</select>`;
   }
   if(col.type === 'checkbox'){
     const coche = val === true || val === 'true' ? 'checked' : '';
     return `<input type="checkbox" data-champ="${col.champ}" class="${classe} w-4 h-4 accent-amber" ${coche}>`;
   }
   if(col.type === 'number'){
-    return `<input type="number" data-champ="${col.champ}" value="${val}" class="${classe} w-full min-w-[90px] bg-transparent px-2 py-1.5 rounded text-sm text-navy dark:text-cream focus:outline-none focus:bg-cream dark:focus:bg-navy focus:ring-1 focus:ring-amber">`;
+    return `<input type="number" step="any" data-champ="${col.champ}" value="${echapperHtmlAdmin(val)}" class="${classe} w-full min-w-[90px] bg-transparent px-2 py-1.5 rounded text-sm text-navy dark:text-cream focus:outline-none focus:bg-cream dark:focus:bg-navy focus:ring-1 focus:ring-amber">`;
   }
-  const valEchappee = String(val).replace(/"/g, '&quot;');
-  return `<input type="text" data-champ="${col.champ}" value="${valEchappee}" class="${classe} w-full min-w-[110px] bg-transparent px-2 py-1.5 rounded text-sm text-navy dark:text-cream focus:outline-none focus:bg-cream dark:focus:bg-navy focus:ring-1 focus:ring-amber">`;
+  if(col.type === 'date'){
+    return `<input type="date" data-champ="${col.champ}" value="${echapperHtmlAdmin(val)}" class="${classe} w-full min-w-[130px] bg-transparent px-2 py-1.5 rounded text-sm text-navy dark:text-cream focus:outline-none focus:bg-cream dark:focus:bg-navy focus:ring-1 focus:ring-amber">`;
+  }
+  return `<input type="text" data-champ="${col.champ}" value="${echapperHtmlAdmin(val)}" class="${classe} w-full min-w-[110px] bg-transparent px-2 py-1.5 rounded text-sm text-navy dark:text-cream focus:outline-none focus:bg-cream dark:focus:bg-navy focus:ring-1 focus:ring-amber">`;
 }
 
 function lireValeurChamp(champEl){
   if(champEl.type === 'checkbox') return champEl.checked;
   if(champEl.type === 'number') return champEl.value === '' ? null : parseFloat(champEl.value);
+  // Liste de valeurs numériques (étapes) : on enregistre un nombre, pas le texte "2"
+  if(champEl.dataset.numerique && champEl.value !== '') return Number(champEl.value);
   return champEl.value.trim();
 }
 
+// Cellule calculée (lecture seule) : remplie par remplirCalculsLigne.
+function construireCelluleCalcul(col){
+  return `<td class="px-3 py-1 whitespace-nowrap"><span data-calcul="${col.champ}" class="font-mono-num text-sm font-semibold text-navy dark:text-cream">—</span></td>`;
+}
+function remplirCalculsLigne(tr, donnees){
+  const schema = SCHEMAS_ADMIN[vueActive] || [];
+  schema.filter(col => col.type === 'calcul').forEach(col => {
+    const span = tr.querySelector(`[data-calcul="${col.champ}"]`);
+    if(!span) return;
+    const resultat = col.calcul(donnees);
+    span.textContent = resultat.texte;
+    span.classList.toggle('text-red-500', !!resultat.negatif);
+  });
+}
+
+// Tuiles de synthèse au-dessus du tableau (vues de gestion uniquement).
+function mettreAJourResume(){
+  const vue = VUES_ADMIN[vueActive];
+  if(!vue || !vue.resume){
+    adminResume.classList.add('hidden');
+    adminResume.innerHTML = '';
+    return;
+  }
+  const tuiles = vue.resume(Array.from(donneesChargees.values()));
+  adminResume.innerHTML = tuiles.map(t => `
+    <div class="bg-white dark:bg-navylight border border-slate-200 dark:border-white/10 rounded-xl px-4 py-3">
+      <p class="text-xs uppercase tracking-wide text-slate-400 dark:text-cream/40">${echapperHtmlAdmin(t.label)}</p>
+      <p class="font-mono-num text-xl font-bold ${t.negatif ? 'text-red-500' : 'text-navy dark:text-white'}">${echapperHtmlAdmin(t.valeur)}</p>
+    </div>`).join('');
+  adminResume.classList.remove('hidden');
+}
+
+function mettreAJourCompteur(){
+  adminCount.textContent = donneesChargees.size;
+}
+
+// Prochain numéro de facture de l'année : BT-2026-0001, BT-2026-0002...
+// (plus grand numéro existant + 1, pour ne jamais réutiliser un numéro).
+function prochainNumeroFacture(){
+  const prefixe = `BT-${new Date().getFullYear()}-`;
+  let plusGrand = 0;
+  donneesChargees.forEach(f => {
+    const numero = String(f.numero || '');
+    if(numero.startsWith(prefixe)){
+      const n = parseInt(numero.slice(prefixe.length), 10);
+      if(!isNaN(n) && n > plusGrand) plusGrand = n;
+    }
+  });
+  return prefixe + String(plusGrand + 1).padStart(4, '0');
+}
+
 // Ligne d'ajout rapide : toujours la première ligne du tableau. Une seule
-// touche Entrée (ou un clic sur "+ Ajouter") suffit à créer le document —
-// aucune fenêtre, aucun JSON à écrire à la main.
+// touche Entrée (ou un clic sur "+ Ajouter") suffit à créer le document.
 function construireLigneRapide(){
-  const schema = SCHEMAS_ADMIN[collectionActive] || [];
+  const schema = SCHEMAS_ADMIN[vueActive] || [];
   const tr = document.createElement('tr');
   tr.id = 'adminLigneRapide';
   tr.className = "border-b-2 border-amber/50 bg-amber/5";
@@ -2969,7 +3193,9 @@ function construireLigneRapide(){
     if(col.type === 'id'){
       return `<td class="px-1 py-1"><input type="text" data-champ="__id__" placeholder="ex : BT-2026-00458" class="admin-cell-rapide w-full min-w-[130px] bg-white dark:bg-navy px-2 py-1.5 rounded border border-slate-200 dark:border-white/15 focus:outline-none focus:border-amber text-sm font-mono-num"></td>`;
     }
-    return `<td class="px-1 py-1">${construireChampColonne(col, col.defaut, 'admin-cell-rapide')}</td>`;
+    if(col.type === 'calcul') return construireCelluleCalcul(col);
+    const defaut = typeof col.defaut === 'function' ? col.defaut() : col.defaut;
+    return `<td class="px-1 py-1">${construireChampColonne(col, defaut, 'admin-cell-rapide')}</td>`;
   }).join('');
 
   tr.innerHTML = `
@@ -2981,26 +3207,48 @@ function construireLigneRapide(){
   adminTableBody.appendChild(tr);
 
   const champs = tr.querySelectorAll('[data-champ]');
-  const valider = () => validerLigneRapide(tr, champs);
+  const valider = () => validerLigneRapide(champs);
   tr.querySelector('#adminValiderLigneRapide').addEventListener('click', valider);
   champs.forEach(champEl => {
     if(champEl.tagName !== 'SELECT'){
       champEl.addEventListener('keydown', (e) => { if(e.key === 'Enter'){ e.preventDefault(); valider(); } });
     }
   });
+
+  // Facture : choisir un voyage pré-remplit le client et le montant HT
+  // (repris du prix facturé saisi dans l'onglet Rentabilité), s'ils sont vides.
+  if(vueActive === 'factures'){
+    const selectVoyage = tr.querySelector('[data-champ="missionId"]');
+    selectVoyage.addEventListener('change', () => {
+      const voyage = (referencesAdmin.missions || []).find(m => m.id === selectVoyage.value);
+      if(!voyage) return;
+      const champClient = tr.querySelector('[data-champ="clientNom"]');
+      const champMontant = tr.querySelector('[data-champ="montantHT"]');
+      if(champClient.value === '' && voyage.clientNom) champClient.value = voyage.clientNom;
+      if(champMontant.value === '' && voyage.prixFacture != null) champMontant.value = voyage.prixFacture;
+    });
+  }
 }
 
-async function validerLigneRapide(tr, champs){
+async function validerLigneRapide(champs){
   const donnees = {};
   let idPersonnalise = null;
+  let aSaisi = false; // vrai dès qu'un champ diffère de sa valeur pré-remplie
+  const schema = SCHEMAS_ADMIN[vueActive] || [];
   champs.forEach(champEl => {
     const champ = champEl.dataset.champ;
     const valeur = lireValeurChamp(champEl);
-    if(champ === '__id__'){ idPersonnalise = valeur || null; return; }
-    if(valeur !== '' && valeur !== null) donnees[champ] = valeur;
+    if(champ === '__id__'){ idPersonnalise = valeur || null; if(valeur) aSaisi = true; return; }
+    if(valeur === '' || valeur === null) return;
+    donnees[champ] = valeur;
+    const col = schema.find(c => c.champ === champ);
+    const defaut = col && (typeof col.defaut === 'function' ? col.defaut() : col.defaut);
+    if(col && String(valeur) !== String(defaut ?? (col.type === 'checkbox' ? false : ''))) aSaisi = true;
   });
 
-  if(Object.keys(donnees).length === 0 && !idPersonnalise) return; // ligne vide, on ignore
+  if(!aSaisi) return; // rien de saisi : on ne crée pas une ligne faite uniquement de valeurs par défaut
+
+  if(vueActive === 'factures' && !donnees.numero) donnees.numero = prochainNumeroFacture();
 
   const { collection, addDoc, doc, setDoc, serverTimestamp } = window._firestore;
   try {
@@ -3009,21 +3257,46 @@ async function validerLigneRapide(tr, champs){
     } else {
       await addDoc(collection(window._db, collectionActive), { ...donnees, dateCreation: serverTimestamp() });
     }
-    chargerCollection(collectionActive, true); // relit tout : ligne rapide vidée + nouveau document visible
+    chargerCollection(vueActive, true); // relit tout : ligne rapide vidée + nouveau document visible
   } catch (err) {
     console.error("Erreur d'ajout rapide admin :", err);
     alert("Échec de l'ajout (vérifie tes règles Firestore).");
   }
 }
 
-async function chargerCollection(nomCollection, reinitialiser){
+let numeroChargement = 0; // évite qu'un chargement lent d'un ancien onglet s'affiche dans le nouveau
+
+async function chargerCollection(nomVue, reinitialiser){
   if(reinitialiser){
-    collectionActive = nomCollection;
-    adminCollectionLabel.textContent = nomCollection;
+    const monChargement = ++numeroChargement;
+    const vue = VUES_ADMIN[nomVue] || {};
+    vueActive = nomVue;
+    collectionActive = vue.collection || nomVue;
+    adminCollectionLabel.textContent = nomVue;
     adminTableBody.innerHTML = '';
+    adminTableHead.innerHTML = '';
+    donneesChargees.clear();
     dernierDocumentCharge = null;
     ilResteDesDocuments = true;
-    adminCount.textContent = '0';
+    chargementEnCours = false;
+    mettreAJourCompteur();
+    mettreAJourResume();
+
+    // Collections liées (véhicules, chauffeurs, voyages) pour les listes déroulantes
+    referencesAdmin = {};
+    if(vue.references && window._db){
+      adminLoadingLabel.textContent = "Chargement...";
+      const { collection, getDocs } = window._firestore;
+      try {
+        const resultats = await Promise.all(vue.references.map(nom => getDocs(collection(window._db, nom))));
+        if(monChargement !== numeroChargement) return;
+        vue.references.forEach((nom, i) => {
+          referencesAdmin[nom] = resultats[i].docs.map(d => ({ id: d.id, ...d.data() }));
+        });
+      } catch (err) {
+        console.error("Erreur de chargement des listes liées :", err);
+      }
+    }
     construireEnTeteTable();
     construireLigneRapide();
   }
@@ -3033,32 +3306,39 @@ async function chargerCollection(nomCollection, reinitialiser){
 async function chargerPageSuivante(){
   if(chargementEnCours || !ilResteDesDocuments || !window._db) return;
   chargementEnCours = true;
+  const monChargement = numeroChargement;
   adminLoadingLabel.textContent = "Chargement...";
+
+  const vue = VUES_ADMIN[vueActive] || {};
+  const taillePage = vue.complet ? PAGE_SIZE_VUE_COMPLETE : PAGE_SIZE;
 
   try {
     const { collection, query, orderBy, limit, startAfter, getDocs } = window._firestore;
-    let q = query(collection(window._db, collectionActive), orderBy('__name__'), limit(PAGE_SIZE));
+    let q = query(collection(window._db, collectionActive), orderBy('__name__'), limit(taillePage));
     if(dernierDocumentCharge){
-      q = query(collection(window._db, collectionActive), orderBy('__name__'), startAfter(dernierDocumentCharge), limit(PAGE_SIZE));
+      q = query(collection(window._db, collectionActive), orderBy('__name__'), startAfter(dernierDocumentCharge), limit(taillePage));
     }
 
     const snapshot = await getDocs(q);
-    const nombreLignesExistantes = adminTableBody.children.length - 1; // -1 pour la ligne d'ajout rapide
+    if(monChargement !== numeroChargement) return; // l'onglet a changé entre-temps
 
     if(snapshot.empty){
       ilResteDesDocuments = false;
-      adminLoadingLabel.textContent = nombreLignesExistantes <= 0
-        ? "Aucun document dans cette collection pour le moment."
+      adminLoadingLabel.textContent = donneesChargees.size === 0
+        ? "Aucun document pour le moment — utilise la première ligne pour en ajouter un."
         : "Fin de la liste.";
-      chargementEnCours = false;
       return;
     }
 
-    snapshot.forEach(docSnap => construireLigneDocument(docSnap.id, docSnap.data()));
-    dernierDocumentCharge = snapshot.docs[snapshot.docs.length - 1];
-    adminCount.textContent = adminTableBody.children.length - 1;
+    let lignes = snapshot.docs.map(docSnap => ({ id: docSnap.id, donnees: docSnap.data() }));
+    if(vue.tri) lignes.sort((a, b) => vue.tri(a.donnees, b.donnees));
+    lignes.forEach(ligne => construireLigneDocument(ligne.id, ligne.donnees));
 
-    if(snapshot.docs.length < PAGE_SIZE){
+    dernierDocumentCharge = snapshot.docs[snapshot.docs.length - 1];
+    mettreAJourCompteur();
+    mettreAJourResume();
+
+    if(snapshot.docs.length < taillePage){
       ilResteDesDocuments = false;
       adminLoadingLabel.textContent = "Fin de la liste.";
     } else {
@@ -3068,48 +3348,58 @@ async function chargerPageSuivante(){
     console.error("Erreur de chargement admin :", err);
     adminLoadingLabel.textContent = "Erreur de chargement (vérifie ta configuration Firebase et tes règles Firestore).";
   } finally {
-    chargementEnCours = false;
+    if(monChargement === numeroChargement) chargementEnCours = false;
   }
 }
 
 // Observe la sentinelle en bas de liste : dès qu'elle apparaît à l'écran, on charge la suite
 const observateurScrollInfini = new IntersectionObserver((entrees) => {
   entrees.forEach(entree => {
-    if(entree.isIntersecting) chargerPageSuivante();
+    if(entree.isIntersecting && !adminDashboard.classList.contains('hidden')) chargerPageSuivante();
   });
 }, { threshold: 0.1 });
 observateurScrollInfini.observe(adminScrollSentinel);
 
 // Une ligne de document existant : chaque cellule s'enregistre seule dans
-// Firestore (updateDoc) dès qu'on quitte le champ (texte) ou qu'on change
-// la valeur (select/case à cocher) — c'est l'édition "inline" façon tableur.
+// Firestore dès qu'on quitte le champ (texte, nombre) ou qu'on change la
+// valeur (liste, date, case à cocher).
 function construireLigneDocument(id, donnees){
-  const schema = SCHEMAS_ADMIN[collectionActive] || [];
+  const schema = SCHEMAS_ADMIN[vueActive] || [];
   const tr = document.createElement('tr');
   tr.className = "border-b border-slate-100 dark:border-white/5 hover:bg-cream/60 dark:hover:bg-white/5 transition-colors";
+  donneesChargees.set(id, donnees);
 
   const cellules = schema.map(col => {
     if(col.type === 'id'){
-      return `<td class="px-3 py-1"><span class="font-mono-num text-xs text-amberdark">${id}</span></td>`;
+      return `<td class="px-3 py-1"><span class="font-mono-num text-xs text-amberdark">${echapperHtmlAdmin(id)}</span></td>`;
     }
+    if(col.type === 'calcul') return construireCelluleCalcul(col);
     return `<td class="px-1 py-1">${construireChampColonne(col, donnees[col.champ], 'admin-cell')}</td>`;
   }).join('');
+
+  const boutonFacture = vueActive === 'factures'
+    ? `<button class="admin-pdf-btn text-xs font-semibold text-teal hover:text-amber px-1.5 py-1" title="Imprimer / enregistrer en PDF">PDF</button>`
+    : '';
 
   tr.innerHTML = `
     ${cellules}
     <td class="px-1 py-1 text-right whitespace-nowrap">
+      ${boutonFacture}
       <button class="admin-json-btn text-xs text-slate-400 hover:text-teal px-1.5 py-1" title="Édition avancée (JSON)">⋯</button>
       <button class="admin-delete-btn text-xs text-slate-400 hover:text-red-500 px-1.5 py-1" title="Supprimer">✕</button>
     </td>`;
 
+  remplirCalculsLigne(tr, donnees);
+
   tr.querySelectorAll('.admin-cell').forEach(champEl => {
-    const evenement = (champEl.tagName === 'SELECT' || champEl.type === 'checkbox') ? 'change' : 'blur';
-    champEl.addEventListener(evenement, () => sauvegarderCelluleInline(id, champEl, donnees));
-    if(champEl.tagName !== 'SELECT' && champEl.type !== 'checkbox'){
+    const immediat = champEl.tagName === 'SELECT' || champEl.type === 'checkbox' || champEl.type === 'date';
+    champEl.addEventListener(immediat ? 'change' : 'blur', () => sauvegarderCelluleInline(id, champEl, donnees, tr));
+    if(!immediat){
       champEl.addEventListener('keydown', (e) => { if(e.key === 'Enter'){ e.preventDefault(); champEl.blur(); } });
     }
   });
 
+  if(boutonFacture) tr.querySelector('.admin-pdf-btn').addEventListener('click', () => imprimerFacture(donnees));
   tr.querySelector('.admin-json-btn').addEventListener('click', () => ouvrirEditionDocument(id, donnees));
   tr.querySelector('.admin-delete-btn').addEventListener('click', async () => {
     if(!confirm("Supprimer définitivement ce document ?")) return;
@@ -3117,7 +3407,9 @@ function construireLigneDocument(id, donnees){
     try {
       await deleteDoc(doc(window._db, collectionActive, id));
       tr.remove();
-      adminCount.textContent = adminTableBody.children.length - 1;
+      donneesChargees.delete(id);
+      mettreAJourCompteur();
+      mettreAJourResume();
     } catch (err) {
       console.error("Erreur de suppression admin :", err);
       alert("Échec de la suppression (vérifie tes règles Firestore).");
@@ -3127,28 +3419,33 @@ function construireLigneDocument(id, donnees){
   adminTableBody.appendChild(tr);
 }
 
-// Enregistrement instantané d'une cellule modifiée (le coeur de l'édition
-// inline). "donneesConnues" est l'objet du document tel que chargé — on le
-// met à jour au fil de l'eau pour comparer les anciennes/nouvelles valeurs
-// sans re-télécharger le document à chaque frappe.
-async function sauvegarderCelluleInline(id, champEl, donneesConnues){
+// Enregistrement instantané d'une cellule modifiée. "donneesConnues" est
+// l'objet du document tel que chargé : on le met à jour au fil de l'eau,
+// ce qui tient aussi à jour les colonnes calculées et les totaux.
+async function sauvegarderCelluleInline(id, champEl, donneesConnues, tr){
   const champ = champEl.dataset.champ;
   const valeur = lireValeurChamp(champEl);
+
+  // Rien n'a changé (simple passage dans la cellule) : pas d'écriture inutile
+  const ancienne = donneesConnues[champ];
+  if(valeur === ancienne || ((valeur === '' || valeur === null) && (ancienne === undefined || ancienne === null || ancienne === ''))) return;
 
   const { doc, updateDoc } = window._firestore;
   try {
     await updateDoc(doc(window._db, collectionActive, id), { [champ]: valeur });
 
     // Notification email automatique au client : uniquement quand on
-    // modifie l'étape d'une commande, que la valeur a réellement changé,
-    // et que le document a un email de contact renseigné.
-    if(collectionActive === 'commandes' && champ === 'etapeActuelle' && donneesConnues.email && valeur !== donneesConnues.etapeActuelle){
+    // modifie l'étape d'une commande et que le document a un email.
+    if(collectionActive === 'commandes' && champ === 'etapeActuelle' && donneesConnues.email){
       envoyerNotificationStatutEmail(id, { ...donneesConnues, etapeActuelle: valeur });
     }
 
     donneesConnues[champ] = valeur;
+    remplirCalculsLigne(tr, donneesConnues);
+    mettreAJourResume();
 
     // Petit retour visuel vert = enregistré, sans bloquer l'utilisateur
+    champEl.classList.remove('ring-red-500');
     champEl.classList.add('ring-1', 'ring-teal');
     setTimeout(() => champEl.classList.remove('ring-1', 'ring-teal'), 700);
   } catch (err) {
@@ -3156,6 +3453,91 @@ async function sauvegarderCelluleInline(id, champEl, donneesConnues){
     champEl.classList.add('ring-1', 'ring-red-500');
     alert("Échec de l'enregistrement (vérifie tes règles Firestore).");
   }
+}
+
+/* ----------------------------------------------------------------
+   FACTURE IMPRIMABLE — ouvre la facture dans un nouvel onglet et lance
+   l'impression : "Enregistrer au format PDF" dans la fenêtre d'impression
+   donne le fichier PDF, sans bibliothèque ni serveur.
+   ⚠️ Renseigne ton NIF ci-dessous : une facture sans NIF de l'émetteur
+   n'est pas valable.
+   ---------------------------------------------------------------- */
+const EMETTEUR_FACTURE = {
+  nom: "BOUA Trans",
+  adresse: "Avenida Castilla-La Mancha 122, 45210 Yuncos (Toledo), España",
+  email: "bouayuncos@gmail.com",
+  nif: "" // ex : "B12345678"
+};
+
+function imprimerFacture(facture){
+  const e = echapperHtmlAdmin;
+  const montants = calculerFacture(facture);
+  const voyage = (referencesAdmin.missions || []).find(m => m.id === facture.missionId);
+  const etats = { en_attente: 'Pendiente / En attente', payee: 'Pagada / Payée', annulee: 'Anulada / Annulée' };
+  const logo = document.querySelector('img[alt="Logo BOUA Trans"]');
+
+  const fenetre = window.open('', '_blank');
+  if(!fenetre){
+    alert("Autorise les fenêtres pop-up pour ce site afin d'imprimer la facture.");
+    return;
+  }
+  fenetre.document.write(`<!DOCTYPE html>
+<html lang="es"><head><meta charset="UTF-8"><title>Factura ${e(facture.numero)}</title>
+<style>
+  body{ font-family: Arial, Helvetica, sans-serif; color:#0F1F38; margin:40px; font-size:14px; }
+  .entete{ display:flex; justify-content:space-between; align-items:flex-start; border-bottom:3px solid #E8A33D; padding-bottom:20px; margin-bottom:28px; }
+  .entete img{ height:90px; }
+  h1{ font-size:26px; margin:0 0 6px; }
+  .muted{ color:#6B7280; font-size:12px; }
+  .blocs{ display:flex; justify-content:space-between; gap:40px; margin-bottom:28px; }
+  .blocs h2{ font-size:11px; text-transform:uppercase; letter-spacing:1px; color:#6B7280; margin:0 0 6px; }
+  table{ width:100%; border-collapse:collapse; margin-bottom:24px; }
+  th{ text-align:left; background:#0F1F38; color:#fff; padding:10px; font-size:12px; }
+  td{ padding:10px; border-bottom:1px solid #E5E7EB; }
+  .droite{ text-align:right; }
+  .totaux{ margin-left:auto; width:300px; }
+  .totaux td{ border:none; padding:6px 10px; }
+  .totaux .total td{ border-top:2px solid #0F1F38; font-weight:bold; font-size:16px; }
+</style></head><body>
+  <div class="entete">
+    <div>
+      <h1>FACTURA / FACTURE</h1>
+      <div>N° <strong>${e(facture.numero)}</strong></div>
+      <div class="muted">Fecha / Date : ${e(facture.dateEmission)}</div>
+      <div class="muted">Estado / État : ${e(etats[facture.statut] || etats.en_attente)}</div>
+    </div>
+    ${logo ? `<img src="${logo.src}" alt="">` : ''}
+  </div>
+  <div class="blocs">
+    <div>
+      <h2>Emisor / Émetteur</h2>
+      <strong>${e(EMETTEUR_FACTURE.nom)}</strong><br>
+      ${e(EMETTEUR_FACTURE.adresse)}<br>
+      ${e(EMETTEUR_FACTURE.email)}
+      ${EMETTEUR_FACTURE.nif ? `<br>NIF : ${e(EMETTEUR_FACTURE.nif)}` : ''}
+    </div>
+    <div>
+      <h2>Cliente / Client</h2>
+      <strong>${e(facture.clientNom)}</strong>
+      ${facture.clientNif ? `<br>NIF : ${e(facture.clientNif)}` : ''}
+    </div>
+  </div>
+  <table>
+    <tr><th>Concepto / Désignation</th><th class="droite">Importe / Montant</th></tr>
+    <tr>
+      <td>Transporte de mercancías / Transport de marchandises${voyage ? `<br><span class="muted">${e(libelleVoyage(voyage))}${voyage.vehicule ? ' — ' + e(voyage.vehicule) : ''}</span>` : ''}</td>
+      <td class="droite">${formatEuros.format(montants.ht)}</td>
+    </tr>
+  </table>
+  <table class="totaux">
+    <tr><td>Base imponible / HT</td><td class="droite">${formatEuros.format(montants.ht)}</td></tr>
+    <tr><td>IVA / TVA (${e(Number(facture.tauxTVA) || 0)} %)</td><td class="droite">${formatEuros.format(montants.tva)}</td></tr>
+    <tr class="total"><td>Total</td><td class="droite">${formatEuros.format(montants.ttc)}</td></tr>
+  </table>
+</body></html>`);
+  fenetre.document.close();
+  fenetre.focus();
+  setTimeout(() => fenetre.print(), 400); // laisse le temps au logo de s'afficher
 }
 
 /* ----------------------------------------------------------------
@@ -3237,7 +3619,7 @@ adminEditSave.addEventListener('click', async () => {
     }
 
     fermerEditionDocument();
-    chargerCollection(collectionActive, true); // recharge la liste depuis le début pour refléter le changement
+    chargerCollection(vueActive, true); // recharge la liste depuis le début pour refléter le changement
   } catch (err) {
     console.error("Erreur d'enregistrement admin :", err);
     adminEditError.textContent = "Échec de l'enregistrement (vérifie tes règles Firestore).";
@@ -3295,7 +3677,7 @@ adminEditDelete.addEventListener('click', async () => {
   try {
     await deleteDoc(doc(window._db, collectionActive, idDocumentEnEdition));
     fermerEditionDocument();
-    chargerCollection(collectionActive, true);
+    chargerCollection(vueActive, true);
   } catch (err) {
     console.error("Erreur de suppression admin :", err);
     alert("Échec de la suppression (vérifie tes règles Firestore).");
@@ -3328,7 +3710,7 @@ function renderDeparts(liste){
   `).join('');
 }
 
-if(window._db){
+quandFirebasePret(() => {
   const { collection, onSnapshot } = window._firestore;
   onSnapshot(collection(window._db, "departs"), (snapshot) => {
     const departs = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
@@ -3338,7 +3720,7 @@ if(window._db){
     departsEmptyEl.classList.remove('hidden');
     departsEmptyEl.textContent = "Impossible de charger les départs (vérifie tes règles Firestore).";
   });
-}
+});
 
 /* ================================================================
    GALERIE & RÉSEAUX SOCIAUX — temps réel (Firestore, collection "medias")
@@ -3516,7 +3898,7 @@ document.getElementById('galerieFiltres').addEventListener('click', (e) => {
   renderGalerie();
 });
 
-if(window._db){
+quandFirebasePret(() => {
   const { collection, onSnapshot } = window._firestore;
   onSnapshot(collection(window._db, "medias"), (snapshot) => {
     tousLesMedias = snapshot.docs
@@ -3529,7 +3911,7 @@ if(window._db){
     galerieEmptyEl.classList.remove('hidden');
     galerieEmptyEl.textContent = "Impossible de charger la galerie (vérifie tes règles Firestore).";
   });
-}
+});
 
 /* ================================================================
    HISTORIQUE CLIENT — recherche de toutes ses commandes par email
