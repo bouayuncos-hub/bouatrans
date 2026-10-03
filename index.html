@@ -187,6 +187,7 @@
       <li><a href="#carrieres" class="hover:text-amber transition" data-i18n="nav.carrieres">Carrières</a></li>
       <li><a href="#fret" class="hover:text-amber transition" data-i18n="nav.fret">Transporteurs</a></li>
       <li><a href="#galerie" class="hover:text-amber transition" data-i18n="nav.galerie">Galerie</a></li>
+      <li><a href="#actualites" class="hover:text-amber transition" data-i18n="nav.actualites">Actualités</a></li>
       <li><a href="#contact" class="hover:text-amber transition" data-i18n="nav.contact">Contact</a></li>
     </ul>
 
@@ -237,6 +238,7 @@
     <li><a href="#carrieres" class="block py-2.5 border-b border-white/10" data-i18n="nav.carrieres">Carrières</a></li>
     <li><a href="#fret" class="block py-2.5 border-b border-white/10" data-i18n="nav.fret">Transporteurs</a></li>
     <li><a href="#galerie" class="block py-2.5 border-b border-white/10" data-i18n="nav.galerie">Galerie</a></li>
+    <li><a href="#actualites" class="block py-2.5 border-b border-white/10" data-i18n="nav.actualites">Actualités</a></li>
     <li><a href="#contact" class="block py-2.5 border-b border-white/10" data-i18n="nav.contact">Contact</a></li>
     <li><button id="clientLoginBtnMobile" class="block w-full text-left py-2.5 border-b border-white/10" data-i18n="nav.login">Espace Client</button></li>
     <li><button id="chauffeurLoginBtnMobile" class="block w-full text-left py-2.5 border-b border-white/10">Espace Chauffeur</button></li>
@@ -527,7 +529,7 @@
           class="flex-1 font-mono-num px-4 py-3.5 rounded-lg border border-slate-200 dark:border-white/15 bg-cream dark:bg-navy focus:outline-none focus:border-amber">
         <button id="trackingBtn" class="bg-amber hover:bg-amberdark text-navy font-semibold px-7 py-3.5 rounded-lg transition">Rechercher</button>
       </div>
-      <p class="text-xs text-slate-500 dark:text-cream/50 mb-7">Le numéro correspond exactement à l'identifiant du document créé dans Firestore (collection <code class="font-mono-num bg-cream dark:bg-navy px-1.5 py-0.5 rounded">commandes</code>).</p>
+      <p class="text-xs text-slate-500 dark:text-cream/50 mb-7">Votre numéro de suivi vous est communiqué à la prise en charge de votre envoi (exemple : BT-2026-00458).</p>
 
       <p id="trackingError" class="hidden text-red-500 text-sm font-semibold -mt-4 mb-6">Aucune expédition trouvée avec ce numéro. Vérifiez la saisie ou contactez-nous.</p>
 
@@ -849,23 +851,51 @@
     <div class="max-w-xl mb-10">
       <span class="font-mono-num text-xs tracking-widest uppercase text-amberdark block mb-2">En images</span>
       <h2 class="text-3xl md:text-4xl font-bold text-navy dark:text-white">Galerie &amp; réseaux sociaux</h2>
-      <p class="text-slate-500 dark:text-cream/65 mt-3">Nos tournées, nos chauffeurs, nos clients — en photos et en vidéo.</p>
+      <p class="text-slate-500 dark:text-cream/65 mt-3">Nos camions, nos voyages, nos chauffeurs — en photos et en vidéo.</p>
     </div>
 
     <!-- Filtres -->
     <div class="flex flex-wrap gap-2 mb-8" id="galerieFiltres">
       <button type="button" data-filtre="tout" class="galerie-filtre-btn is-active px-4 py-2 rounded-full text-sm font-semibold bg-amber text-navy transition">Tout</button>
+      <button type="button" data-filtre="camions" class="galerie-filtre-btn px-4 py-2 rounded-full text-sm font-semibold bg-cream dark:bg-navy text-navy dark:text-cream border border-slate-200 dark:border-white/15 transition">Camions</button>
+      <button type="button" data-filtre="voyages" class="galerie-filtre-btn px-4 py-2 rounded-full text-sm font-semibold bg-cream dark:bg-navy text-navy dark:text-cream border border-slate-200 dark:border-white/15 transition">Voyages</button>
+      <button type="button" data-filtre="chauffeurs" class="galerie-filtre-btn px-4 py-2 rounded-full text-sm font-semibold bg-cream dark:bg-navy text-navy dark:text-cream border border-slate-200 dark:border-white/15 transition">Chauffeurs</button>
       <button type="button" data-filtre="photo" class="galerie-filtre-btn px-4 py-2 rounded-full text-sm font-semibold bg-cream dark:bg-navy text-navy dark:text-cream border border-slate-200 dark:border-white/15 transition">Photos</button>
       <button type="button" data-filtre="video" class="galerie-filtre-btn px-4 py-2 rounded-full text-sm font-semibold bg-cream dark:bg-navy text-navy dark:text-cream border border-slate-200 dark:border-white/15 transition">Vidéos</button>
-      <button type="button" data-filtre="youtube" class="galerie-filtre-btn px-4 py-2 rounded-full text-sm font-semibold bg-cream dark:bg-navy text-navy dark:text-cream border border-slate-200 dark:border-white/15 transition">YouTube</button>
-      <button type="button" data-filtre="facebook" class="galerie-filtre-btn px-4 py-2 rounded-full text-sm font-semibold bg-cream dark:bg-navy text-navy dark:text-cream border border-slate-200 dark:border-white/15 transition">Facebook</button>
-      <button type="button" data-filtre="instagram" class="galerie-filtre-btn px-4 py-2 rounded-full text-sm font-semibold bg-cream dark:bg-navy text-navy dark:text-cream border border-slate-200 dark:border-white/15 transition">Instagram</button>
-      <button type="button" data-filtre="tiktok" class="galerie-filtre-btn px-4 py-2 rounded-full text-sm font-semibold bg-cream dark:bg-navy text-navy dark:text-cream border border-slate-200 dark:border-white/15 transition">TikTok</button>
-      <button type="button" data-filtre="twitter" class="galerie-filtre-btn px-4 py-2 rounded-full text-sm font-semibold bg-cream dark:bg-navy text-navy dark:text-cream border border-slate-200 dark:border-white/15 transition">Twitter / X</button>
+      <button type="button" data-filtre="reseaux" class="galerie-filtre-btn px-4 py-2 rounded-full text-sm font-semibold bg-cream dark:bg-navy text-navy dark:text-cream border border-slate-200 dark:border-white/15 transition">Réseaux sociaux</button>
     </div>
 
     <div id="galerieGrid" class="grid sm:grid-cols-2 lg:grid-cols-3 gap-5"></div>
     <p id="galerieEmpty" class="hidden text-slate-400 dark:text-cream/40 text-sm">Aucun média dans cette catégorie pour le moment.</p>
+  </div>
+</section>
+
+<!-- ============================================================
+     ACTUALITÉS & INFOS
+     Deux rubriques rédigées depuis l'admin (écran Publier, ou onglets
+     "Actualités" et "Infos") et affichées ici en temps réel :
+       - actualités : titre, texte, photo facultative, date
+       - infos pratiques : messages courts, mis en avant si "important"
+     ============================================================ -->
+<section id="actualites" class="py-20 md:py-24" data-reveal>
+  <div class="max-w-6xl mx-auto px-5">
+    <div class="max-w-xl mb-10">
+      <span class="font-mono-num text-xs tracking-widest uppercase text-amberdark block mb-2">À la une</span>
+      <h2 class="text-3xl md:text-4xl font-bold text-navy dark:text-white">Actualités &amp; infos</h2>
+      <p class="text-slate-500 dark:text-cream/65 mt-3">Les nouvelles de l'entreprise et les informations utiles à nos clients.</p>
+    </div>
+
+    <div class="grid lg:grid-cols-3 gap-8">
+      <div class="lg:col-span-2">
+        <div id="actualitesList" class="grid sm:grid-cols-2 gap-5"></div>
+        <p id="actualitesEmpty" class="hidden text-slate-400 dark:text-cream/40 text-sm">Aucune actualité pour le moment.</p>
+      </div>
+      <aside>
+        <h3 class="text-lg font-bold text-navy dark:text-white mb-4">Infos pratiques</h3>
+        <div id="infosList" class="space-y-3"></div>
+        <p id="infosEmpty" class="hidden text-slate-400 dark:text-cream/40 text-sm">Aucune info pour le moment.</p>
+      </aside>
+    </div>
   </div>
 </section>
 
@@ -977,6 +1007,7 @@
           <li><a href="#avis" class="hover:text-amber">Avis clients</a></li>
           <li><a href="#departs" class="hover:text-amber">Prochains départs</a></li>
           <li><a href="#galerie" class="hover:text-amber">Galerie</a></li>
+          <li><a href="#actualites" class="hover:text-amber">Actualités &amp; infos</a></li>
           <li><a href="#eco" class="hover:text-amber">Éco-Transport</a></li>
           <li><a href="#espace-client-pod" class="hover:text-amber">Documents (POD)</a></li>
           <li><a href="#faq" class="hover:text-amber">FAQ</a></li>
@@ -1096,46 +1127,111 @@
       <button class="admin-tab" data-collection="factures">Factures</button>
       <button class="admin-tab" data-collection="documents">Documents</button>
       <button class="admin-tab" data-collection="medias">Médias</button>
+      <button class="admin-tab" data-collection="actualites">Actualités</button>
+      <button class="admin-tab" data-collection="infos">Infos</button>
+      <button class="admin-tab" data-collection="textes">Textes du site</button>
     </div>
   </div>
 
-  <!-- ÉCRAN "PUBLIER" : l'accueil du tableau de bord. Une tuile = un type de
-       fichier ; un clic ouvre le choix des fichiers sur l'appareil. -->
+  <!-- ÉCRAN "PUBLIER" : l'accueil du tableau de bord.
+       Première rangée : ce qui s'affiche sur le site public.
+       Seconde rangée : les documents internes, jamais affichés sur le site. -->
   <div id="adminPublier" class="hidden max-w-6xl mx-auto px-5 py-8">
     <h2 class="text-2xl font-bold text-navy dark:text-white mb-1.5">Que veux-tu publier ?</h2>
     <p class="text-sm text-slate-500 dark:text-cream/60 mb-6">Clique sur une case, choisis tes fichiers (plusieurs à la fois si tu veux) : ils sont mis en ligne et rangés tout seuls.</p>
 
-    <div class="grid grid-cols-2 lg:grid-cols-5 gap-4">
+    <h3 class="text-xs font-bold uppercase tracking-widest text-teal mb-3">Sur le site — visible par tous</h3>
+    <div class="grid grid-cols-2 lg:grid-cols-6 gap-4 mb-8">
       <button type="button" data-cible="medias" class="text-left bg-white dark:bg-navylight border-2 border-amber/60 hover:border-amber rounded-2xl p-5 transition">
         <span class="text-4xl block mb-3">📷</span>
         <span class="block font-bold text-navy dark:text-white">Photos et vidéos</span>
-        <span class="block text-xs text-teal font-semibold mt-1">Visibles dans la galerie du site</span>
+        <span class="block text-xs text-teal font-semibold mt-1">Galerie du site</span>
       </button>
+      <button type="button" data-cible="albumCamions" class="text-left bg-white dark:bg-navylight border-2 border-amber/60 hover:border-amber rounded-2xl p-5 transition">
+        <span class="text-4xl block mb-3">🚛</span>
+        <span class="block font-bold text-navy dark:text-white">Camions</span>
+        <span class="block text-xs text-teal font-semibold mt-1">Album « Camions » de la galerie</span>
+      </button>
+      <button type="button" data-cible="albumVoyages" class="text-left bg-white dark:bg-navylight border-2 border-amber/60 hover:border-amber rounded-2xl p-5 transition">
+        <span class="text-4xl block mb-3">🚚</span>
+        <span class="block font-bold text-navy dark:text-white">Voyages</span>
+        <span class="block text-xs text-teal font-semibold mt-1">Album « Voyages » de la galerie</span>
+      </button>
+      <button type="button" data-cible="albumChauffeurs" class="text-left bg-white dark:bg-navylight border-2 border-amber/60 hover:border-amber rounded-2xl p-5 transition">
+        <span class="text-4xl block mb-3">👷</span>
+        <span class="block font-bold text-navy dark:text-white">Chauffeurs</span>
+        <span class="block text-xs text-teal font-semibold mt-1">Album « Chauffeurs » de la galerie</span>
+      </button>
+      <button type="button" data-rediger="actualite" class="text-left bg-white dark:bg-navylight border-2 border-amber/60 hover:border-amber rounded-2xl p-5 transition">
+        <span class="text-4xl block mb-3">📰</span>
+        <span class="block font-bold text-navy dark:text-white">Actualité</span>
+        <span class="block text-xs text-teal font-semibold mt-1">Un article, avec ou sans photo</span>
+      </button>
+      <button type="button" data-rediger="info" class="text-left bg-white dark:bg-navylight border-2 border-amber/60 hover:border-amber rounded-2xl p-5 transition">
+        <span class="text-4xl block mb-3">ℹ️</span>
+        <span class="block font-bold text-navy dark:text-white">Info</span>
+        <span class="block text-xs text-teal font-semibold mt-1">Un message court (horaires, annonce…)</span>
+      </button>
+    </div>
+
+    <!-- Rédaction d'une actualité ou d'une info (ouvert par les deux cases ci-dessus) -->
+    <form id="adminRediger" class="hidden bg-white dark:bg-navylight border border-slate-200 dark:border-white/10 rounded-2xl p-5 mb-8 max-w-2xl" novalidate>
+      <h3 id="adminRedigerTitre" class="text-lg font-bold text-navy dark:text-white mb-4">Nouvelle actualité</h3>
+      <input id="redigerTitre" type="text" placeholder="Titre" maxlength="140"
+        class="w-full px-3.5 py-3 mb-3 rounded-lg border border-slate-200 dark:border-white/15 bg-cream dark:bg-navy text-slate-700 dark:text-cream focus:outline-none focus:border-amber">
+      <textarea id="redigerTexte" rows="5" placeholder="Texte"
+        class="w-full px-3.5 py-3 mb-3 rounded-lg border border-slate-200 dark:border-white/15 bg-cream dark:bg-navy text-slate-700 dark:text-cream focus:outline-none focus:border-amber"></textarea>
+      <label id="redigerPhotoLigne" class="flex items-center gap-3 text-sm text-slate-600 dark:text-cream/70 mb-3">
+        <span>Photo (facultative) :</span>
+        <input id="redigerPhoto" type="file" accept="image/*" class="text-sm">
+      </label>
+      <label id="redigerImportantLigne" class="hidden flex items-center gap-2 text-sm text-slate-600 dark:text-cream/70 mb-3">
+        <input id="redigerImportant" type="checkbox" class="w-4 h-4 accent-amber">
+        <span>Important (mis en avant, affiché en premier)</span>
+      </label>
+      <div class="flex items-center gap-4">
+        <button id="redigerEnvoyer" type="submit" class="bg-amber hover:bg-amberdark text-navy font-semibold px-6 py-2.5 rounded-full transition">Publier sur le site</button>
+        <button id="redigerAnnuler" type="button" class="text-sm text-slate-500 dark:text-cream/60 hover:text-navy dark:hover:text-white">Annuler</button>
+      </div>
+      <p id="redigerEtat" class="hidden text-sm mt-3"></p>
+    </form>
+
+    <h3 class="text-xs font-bold uppercase tracking-widest text-slate-500 dark:text-cream/50 mb-3">Documents internes — jamais affichés sur le site</h3>
+    <div class="grid grid-cols-2 lg:grid-cols-6 gap-4">
       <button type="button" data-cible="factures" class="text-left bg-white dark:bg-navylight border-2 border-slate-200 dark:border-white/15 hover:border-amber rounded-2xl p-5 transition">
         <span class="text-4xl block mb-3">🧾</span>
         <span class="block font-bold text-navy dark:text-white">Factures</span>
-        <span class="block text-xs text-slate-500 dark:text-cream/50 mt-1">Non affichées sur le site</span>
+        <span class="block text-xs text-slate-500 dark:text-cream/50 mt-1">Onglet Factures</span>
       </button>
       <button type="button" data-cible="voyages" class="text-left bg-white dark:bg-navylight border-2 border-slate-200 dark:border-white/15 hover:border-amber rounded-2xl p-5 transition">
-        <span class="text-4xl block mb-3">🚚</span>
-        <span class="block font-bold text-navy dark:text-white">Voyages</span>
-        <span class="block text-xs text-slate-500 dark:text-cream/50 mt-1">CMR, bons de livraison — non affichés sur le site</span>
+        <span class="text-4xl block mb-3">📄</span>
+        <span class="block font-bold text-navy dark:text-white">Documents de voyage</span>
+        <span class="block text-xs text-slate-500 dark:text-cream/50 mt-1">CMR, bons de livraison</span>
       </button>
       <button type="button" data-cible="camions" class="text-left bg-white dark:bg-navylight border-2 border-slate-200 dark:border-white/15 hover:border-amber rounded-2xl p-5 transition">
-        <span class="text-4xl block mb-3">🚛</span>
-        <span class="block font-bold text-navy dark:text-white">Camions</span>
-        <span class="block text-xs text-slate-500 dark:text-cream/50 mt-1">Carte grise, assurance, contrôle — non affichés sur le site</span>
+        <span class="text-4xl block mb-3">📄</span>
+        <span class="block font-bold text-navy dark:text-white">Documents de camion</span>
+        <span class="block text-xs text-slate-500 dark:text-cream/50 mt-1">Carte grise, assurance, contrôle</span>
       </button>
       <button type="button" data-cible="autres" class="text-left bg-white dark:bg-navylight border-2 border-slate-200 dark:border-white/15 hover:border-amber rounded-2xl p-5 transition">
         <span class="text-4xl block mb-3">📎</span>
         <span class="block font-bold text-navy dark:text-white">Autres fichiers</span>
-        <span class="block text-xs text-slate-500 dark:text-cream/50 mt-1">Non affichés sur le site</span>
+        <span class="block text-xs text-slate-500 dark:text-cream/50 mt-1">Onglet Documents</span>
       </button>
     </div>
 
     <input id="adminPublierInput" type="file" multiple class="hidden">
     <p id="adminPublierEtat" class="hidden mt-6 text-sm font-semibold text-navy dark:text-cream"></p>
     <ul id="adminPublierResultats" class="mt-2 max-w-2xl"></ul>
+  </div>
+
+  <!-- ÉCRAN "TEXTES DU SITE" : tous les textes des pages publiques, modifiables -->
+  <div id="adminTextes" class="hidden max-w-4xl mx-auto px-5 py-8">
+    <h2 class="text-2xl font-bold text-navy dark:text-white mb-1.5">Textes du site</h2>
+    <p class="text-sm text-slate-500 dark:text-cream/60 mb-5">Modifie un texte puis clique ailleurs : il est enregistré et change aussitôt sur le site, pour tous les visiteurs. Ce sont les textes de la version française.</p>
+    <input id="adminTextesRecherche" type="search" placeholder="Chercher un texte…"
+      class="w-full px-3.5 py-3 mb-6 rounded-lg border border-slate-200 dark:border-white/15 bg-white dark:bg-navylight text-slate-700 dark:text-cream focus:outline-none focus:border-amber">
+    <div id="adminTextesListe"></div>
   </div>
 
   <div id="adminZoneTableau" class="max-w-6xl mx-auto px-5 py-8">
@@ -1443,6 +1539,25 @@
 function quandFirebasePret(action){
   if(window._db) action();
   else window.addEventListener('firebase-pret', action, { once: true });
+}
+
+/* ------------------------------------------------------------
+   AFFICHAGE SÛR DES CONTENUS
+   Tout ce qui vient de la base (titres, textes, villes, liens…) passe
+   par ces fonctions avant d'être inséré dans la page : un contenu
+   n'est jamais interprété comme du code.
+   ------------------------------------------------------------ */
+function echapperHtml(valeur){
+  return String(valeur ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+// N'accepte que les adresses web, les fichiers du site et les images intégrées
+function urlSure(valeur){
+  const url = String(valeur ?? '').trim();
+  return /^(https?:\/\/|fs:|blob:|data:image\/)/i.test(url) ? url : '';
+}
+function formaterDateLongue(dateISO){
+  const date = new Date(dateISO + 'T12:00:00');
+  return isNaN(date) ? String(dateISO || '') : date.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
 }
 
 /* ------------------------------------------------------------
@@ -2111,13 +2226,13 @@ function renderFretOffres(liste){
   fretListEl.innerHTML = liste.map(offre => `
     <div class="bg-white/[0.06] border border-white/10 rounded-xl p-6">
       <div class="flex items-center justify-between mb-3">
-        <span class="font-mono-num text-xs text-amber">${offre.date || ''}</span>
-        <span class="text-xs font-semibold bg-teal/20 text-teal px-2.5 py-1 rounded-full">${offre.vehicule || ''}</span>
+        <span class="font-mono-num text-xs text-amber">${echapperHtml(offre.date)}</span>
+        <span class="text-xs font-semibold bg-teal/20 text-teal px-2.5 py-1 rounded-full">${echapperHtml(offre.vehicule)}</span>
       </div>
-      <h3 class="font-semibold text-white mb-1">${offre.villeDepart || '—'} → ${offre.villeArrivee || '—'}</h3>
-      <p class="text-sm text-cream/60 mb-4">${offre.poids != null && offre.poids !== '' ? `${offre.poids} ${offre.unite || 't'} de marchandise` : 'Poids à préciser'}</p>
+      <h3 class="font-semibold text-white mb-1">${echapperHtml(offre.villeDepart || '—')} → ${echapperHtml(offre.villeArrivee || '—')}</h3>
+      <p class="text-sm text-cream/60 mb-4">${offre.poids != null && offre.poids !== '' ? `${echapperHtml(offre.poids)} ${echapperHtml(offre.unite || 't')} de marchandise` : 'Poids à préciser'}</p>
       <div class="flex items-center justify-between">
-        <span class="font-mono-num text-xl font-bold text-amber">${offre.prix != null && offre.prix !== '' ? offre.prix + ' €' : 'Prix sur demande'}</span>
+        <span class="font-mono-num text-xl font-bold text-amber">${offre.prix != null && offre.prix !== '' ? echapperHtml(offre.prix) + ' €' : 'Prix sur demande'}</span>
         <button class="text-sm font-semibold text-cream hover:text-amber transition">Contacter →</button>
       </div>
     </div>
@@ -2257,6 +2372,7 @@ const traductions = {
     "nav.carrieres": "Carrières",
     "nav.fret": "Transporteurs",
     "nav.galerie": "Galerie",
+    "nav.actualites": "Actualités",
     "nav.contact": "Contact",
     "nav.login": "Espace Client",
     "nav.install": "Télécharger l'app",
@@ -2278,6 +2394,7 @@ const traductions = {
     "nav.carrieres": "Empleo",
     "nav.fret": "Transportistas",
     "nav.galerie": "Galería",
+    "nav.actualites": "Noticias",
     "nav.contact": "Contacto",
     "nav.login": "Área Cliente",
     "nav.install": "Descargar la app",
@@ -2321,6 +2438,102 @@ document.addEventListener('click', (e) => {
 });
 
 appliquerLangue(localStorage.getItem('boua-lang') || 'fr');
+
+/* ================================================================
+   TEXTES DU SITE MODIFIABLES DEPUIS L'ADMIN
+   ================================================================
+   Chaque texte des sections publiques (titres, paragraphes, libellés,
+   boutons) est recensé au chargement et reçoit une clé "section:rang".
+   L'admin (onglet "Textes du site") enregistre ses modifications dans
+   le document Firestore contenus/textes, sous la forme
+       { "services:3": { t: "nouveau texte", o: "texte d'origine" } }
+   et la page les applique à chaque visiteur, en temps réel.
+   Le texte d'origine est conservé avec la modification : si la page
+   change plus tard, une modification n'est appliquée que là où le
+   texte d'origine correspond toujours (jamais au mauvais endroit).
+   Les textes sont écrits comme du texte brut, jamais comme du code.
+   Les zones remplies par le site lui-même (listes, résultats) sont
+   exclues : elles se gèrent dans leurs onglets.
+   ================================================================ */
+const ZONES_SANS_TEXTE_MODIFIABLE = ['fretList', 'departsList', 'galerieGrid', 'stepperSteps', 'historiqueList', 'actualitesList', 'infosList'];
+const BOUTONS_AU_TEXTE_VARIABLE = ['devisSubmitBtn'];
+const blocsTexte = []; // { cle, zone, defaut, noeud | element + i18n }
+const traductionsFrOrigine = { ...traductions.fr };
+let surchargesTextes = {};
+
+function recenserTextesDuSite(){
+  const zones = [...document.querySelectorAll('section[id]'), document.querySelector('footer')].filter(Boolean);
+  zones.forEach(zone => {
+    const nomZone = zone.tagName === 'FOOTER' ? 'pied' : zone.id;
+    let rang = 0;
+    const parcours = document.createTreeWalker(zone, NodeFilter.SHOW_TEXT);
+    const dejaVus = new Set();
+    while(parcours.nextNode()){
+      const noeud = parcours.currentNode;
+      const parent = noeud.parentElement;
+      if(!parent || parent.closest('svg, select, script, style, textarea, code')) continue;
+      if(ZONES_SANS_TEXTE_MODIFIABLE.some(id => parent.closest('#' + id))) continue;
+      // Un élément identifié est en général rempli par le site (résultat, message) ; seuls ses boutons ont un texte fixe
+      if(parent.id && (parent.tagName !== 'BUTTON' || BOUTONS_AU_TEXTE_VARIABLE.includes(parent.id))) continue;
+      const texte = noeud.nodeValue.trim();
+      if(texte.length < 2 || !/[A-Za-zÀ-ÿ0-9]/.test(texte)) continue;
+
+      const cleI18n = parent.getAttribute('data-i18n');
+      if(cleI18n){
+        // Texte traduit : c'est la version française qui est modifiable
+        if(dejaVus.has(parent)) continue;
+        dejaVus.add(parent);
+        blocsTexte.push({ cle: `${nomZone}:${rang++}`, zone: nomZone, defaut: traductionsFrOrigine[cleI18n] || texte, element: parent, i18n: cleI18n });
+      } else {
+        blocsTexte.push({ cle: `${nomZone}:${rang++}`, zone: nomZone, defaut: texte, noeud });
+      }
+    }
+  });
+}
+
+function ecrireBlocTexte(bloc, texte){
+  if(bloc.i18n){
+    traductions.fr[bloc.i18n] = texte;
+    if((document.documentElement.getAttribute('lang') || 'fr') === 'fr') bloc.element.textContent = texte;
+    return;
+  }
+  // On garde les espaces qui entouraient le texte d'origine dans la page
+  const brut = bloc.noeud.nodeValue;
+  const debut = brut.match(/^\s*/)[0], fin = brut.match(/\s*$/)[0];
+  bloc.noeud.nodeValue = debut + texte + fin;
+}
+
+function appliquerTextesDuSite(surcharges){
+  surchargesTextes = (surcharges && typeof surcharges === 'object') ? surcharges : {};
+  // Secours si les rangs ont bougé : retrouver une modification par son texte d'origine
+  const parOrigine = {};
+  Object.entries(surchargesTextes).forEach(([cle, s]) => {
+    if(s && typeof s.t === 'string' && typeof s.o === 'string') parOrigine[cle.split(':')[0] + '|' + s.o] = s.t;
+  });
+  blocsTexte.forEach(bloc => {
+    const s = surchargesTextes[bloc.cle];
+    let texte = bloc.defaut;
+    if(s && typeof s.t === 'string' && s.o === bloc.defaut) texte = s.t;
+    else if(parOrigine[bloc.zone + '|' + bloc.defaut] !== undefined) texte = parOrigine[bloc.zone + '|' + bloc.defaut];
+    bloc.valeur = texte;
+    ecrireBlocTexte(bloc, texte);
+  });
+}
+
+recenserTextesDuSite();
+
+// Application immédiate depuis la copie gardée par le navigateur (pas de
+// "saut" de texte à l'ouverture), puis mise à jour en temps réel.
+try { appliquerTextesDuSite(JSON.parse(localStorage.getItem('boua-textes') || '{}')); } catch (err) { appliquerTextesDuSite({}); }
+
+quandFirebasePret(() => {
+  const { doc, onSnapshot } = window._firestore;
+  onSnapshot(doc(window._db, "contenus", "textes"), (snap) => {
+    const surcharges = snap.exists() ? snap.data() : {};
+    appliquerTextesDuSite(surcharges);
+    try { localStorage.setItem('boua-textes', JSON.stringify(surcharges)); } catch (err) { /* stockage local plein ou désactivé */ }
+  }, (err) => console.error("Erreur d'écoute des textes du site :", err));
+});
 
 /* ================================================================
    INSTALLATION PWA — COMPATIBLE TOUS LES APPAREILS
@@ -2789,13 +3002,13 @@ function construireCarteMission(id, mission){
   return `
     <div class="border border-slate-200 dark:border-white/10 rounded-xl p-4">
       <div class="flex justify-between items-center mb-2">
-        <span class="font-mono-num text-xs text-amberdark">${id}</span>
+        <span class="font-mono-num text-xs text-amberdark">${echapperHtml(id)}</span>
         <span class="text-xs font-bold uppercase tracking-wide bg-teal/15 text-teal px-2.5 py-1 rounded-full">${etapeLabel}</span>
       </div>
-      <p class="text-sm font-semibold text-navy dark:text-white mb-3">${mission.villeDepart || '?'} → ${mission.villeArrivee || '?'}</p>
+      <p class="text-sm font-semibold text-navy dark:text-white mb-3">${echapperHtml(mission.villeDepart || '?')} → ${echapperHtml(mission.villeArrivee || '?')}</p>
       ${estTerminee
         ? `<p class="text-xs text-teal font-medium">✓ Mission terminée</p>`
-        : `<button class="mission-avancer-btn w-full bg-amber hover:bg-amberdark text-navy font-semibold text-sm py-2.5 rounded-full transition" data-mission-id="${id}" data-etape-actuelle="${etapeIndex}">
+        : `<button class="mission-avancer-btn w-full bg-amber hover:bg-amberdark text-navy font-semibold text-sm py-2.5 rounded-full transition" data-mission-id="${echapperHtml(id)}" data-etape-actuelle="${etapeIndex}">
              ${libelleActionSuivante(etapeIndex)}
            </button>`
       }
@@ -3102,6 +3315,21 @@ function calculerFacture(f){
   return { ht, tva, ttc: ht + tva };
 }
 
+// Vignette affichée dans les tableaux de l'admin (photo publiée, ou icône)
+function htmlApercu(url, icone){
+  const adresse = urlSure(url);
+  if(!adresse) return `<span class="text-2xl">${icone || ''}</span>`;
+  return `<img ${estFichierBase(adresse) ? `data-fichier-base="${echapperHtml(adresse)}"` : `src="${echapperHtml(adresse)}"`} alt="" loading="lazy" class="w-16 h-11 object-cover rounded bg-slate-200 dark:bg-white/10">`;
+}
+function apercuMedia(m){
+  if(m.type === 'photo') return htmlApercu(m.url, '📷');
+  if(m.type === 'youtube'){
+    const id = extraireIdYouTube(m.url);
+    return htmlApercu(id ? `https://img.youtube.com/vi/${id}/default.jpg` : '', '▶️');
+  }
+  return `<span class="text-2xl">${m.type === 'video' ? '🎬' : '🔗'}</span>`;
+}
+
 function libelleVoyage(m){
   const trajet = `${m.villeDepart || '?'} → ${m.villeArrivee || '?'}`;
   return m.dateDepart ? `${trajet} (${m.dateDepart})` : trajet;
@@ -3111,13 +3339,14 @@ function libelleVoyage(m){
    SCHÉMAS DES COLONNES
      champ  : nom du champ Firestore
      label  : en-tête affiché
-     type   : "text" | "number" | "date" | "select" | "checkbox" | "id" | "calcul" | "fichier"
+     type   : "text" | "texte_long" | "number" | "date" | "select" | "checkbox" | "id" | "calcul" | "fichier"
               ("fichier" = un lien qu'on peut coller OU remplir en choisissant
               un fichier sur l'appareil : il est envoyé dans Firebase Storage)
      options / optionLabels : valeurs d'une liste déroulante fixe
      source : liste déroulante alimentée par une autre collection
               { collection, valeur(doc), label(doc) }
      calcul : pour une colonne calculée, fonction(données) → { texte, negatif }
+              ou { html } (aperçu d'une photo, par exemple)
      defaut : valeur pré-remplie sur la ligne d'ajout rapide
    "id" = identifiant du document (lecture seule sur les lignes existantes,
    saisissable sur la ligne d'ajout rapide : sert au numéro de suivi).
@@ -3243,8 +3472,26 @@ const SCHEMAS_ADMIN = {
     { champ: 'vehicule', label: 'Camion lié', type: 'select', source: { collection: 'vehicules', valeur: v => v.immatriculation, label: v => v.immatriculation } },
     { champ: 'dateAjout', label: 'Ajouté le', type: 'date', defaut: () => aujourdHuiISO() }
   ],
+  // Rubriques rédigées par l'admin, affichées dans "Actualités & infos" du site
+  actualites: [
+    { champ: '_apercu', label: 'Photo', type: 'calcul', calcul: a => ({ html: htmlApercu(a.imageUrl, '📰') }) },
+    { champ: 'titre', label: 'Titre', type: 'text' },
+    { champ: 'texte', label: 'Texte', type: 'texte_long' },
+    { champ: 'imageUrl', label: 'Photo (fichier ou lien)', type: 'fichier', dossier: 'actualites', accept: 'image/*' },
+    { champ: 'datePublication', label: 'Date', type: 'date', defaut: () => aujourdHuiISO() },
+    { champ: 'visible', label: 'Visible', type: 'checkbox', defaut: true }
+  ],
+  infos: [
+    { champ: 'titre', label: 'Titre', type: 'text' },
+    { champ: 'texte', label: 'Texte', type: 'texte_long' },
+    { champ: 'important', label: 'Important', type: 'checkbox' },
+    { champ: 'datePublication', label: 'Date', type: 'date', defaut: () => aujourdHuiISO() },
+    { champ: 'visible', label: 'Visible', type: 'checkbox', defaut: true }
+  ],
   medias: [
+    { champ: '_apercu', label: 'Aperçu', type: 'calcul', calcul: m => ({ html: apercuMedia(m) }) },
     { champ: 'type', label: 'Type', type: 'select', options: ['photo', 'video', 'youtube', 'facebook', 'instagram', 'tiktok', 'twitter'], optionLabels: ['Photo', 'Vidéo (fichier)', 'YouTube', 'Facebook', 'Instagram', 'TikTok', 'Twitter / X'] },
+    { champ: 'album', label: 'Album', type: 'select', options: ['general', 'camions', 'voyages', 'chauffeurs'], optionLabels: ['Général', 'Camions', 'Voyages', 'Chauffeurs'], defaut: 'general' },
     { champ: 'titre', label: 'Titre', type: 'text' },
     { champ: 'url', label: 'Fichier ou lien', type: 'fichier', dossier: 'medias', accept: 'image/*,video/*' },
     { champ: 'ordre', label: 'Ordre', type: 'number', defaut: 1 },
@@ -3265,6 +3512,14 @@ const SCHEMAS_ADMIN = {
    ---------------------------------------------------------------- */
 const VUES_ADMIN = {
   missions: { references: ['vehicules', 'chauffeurs'] },
+  actualites: {
+    complet: true,
+    tri: (a, b) => String(b.datePublication || '').localeCompare(String(a.datePublication || ''))
+  },
+  infos: {
+    complet: true,
+    tri: (a, b) => (b.important ? 1 : 0) - (a.important ? 1 : 0) || String(b.datePublication || '').localeCompare(String(a.datePublication || ''))
+  },
   documents: {
     references: ['missions', 'vehicules'],
     complet: true,
@@ -3374,6 +3629,9 @@ function construireChampColonne(col, valeur, classe){
       ${val ? `<button type="button" class="admin-fichier-lien shrink-0 text-teal hover:text-amber text-sm px-1" title="Ouvrir le fichier">↗</button>` : ''}
     </div>`;
   }
+  if(col.type === 'texte_long'){
+    return `<textarea data-champ="${col.champ}" rows="2" class="${classe} w-full min-w-[280px] bg-transparent px-2 py-1.5 rounded text-sm text-navy dark:text-cream focus:outline-none focus:bg-cream dark:focus:bg-navy focus:ring-1 focus:ring-amber">${echapperHtmlAdmin(val)}</textarea>`;
+  }
   if(col.type === 'date'){
     return `<input type="date" data-champ="${col.champ}" value="${echapperHtmlAdmin(val)}" class="${classe} w-full min-w-[130px] bg-transparent px-2 py-1.5 rounded text-sm text-navy dark:text-cream focus:outline-none focus:bg-cream dark:focus:bg-navy focus:ring-1 focus:ring-amber">`;
   }
@@ -3401,8 +3659,13 @@ function remplirCalculsLigne(tr, donnees){
     const span = tr.querySelector(`[data-calcul="${col.champ}"]`);
     if(!span) return;
     const resultat = col.calcul(donnees);
-    span.textContent = resultat.texte;
-    span.classList.toggle('text-red-500', !!resultat.negatif);
+    if(resultat.html !== undefined){
+      span.innerHTML = resultat.html;
+      activerPhotosBase(span);
+    } else {
+      span.textContent = resultat.texte;
+      span.classList.toggle('text-red-500', !!resultat.negatif);
+    }
   });
 }
 
@@ -3622,8 +3885,9 @@ function messageErreurPublication(err){
      preparer   : lecture préalable (rang d'affichage, numéros de facture)
      creer      : la ligne créée pour un fichier donné
    ---------------------------------------------------------------- */
-const CIBLES_PUBLICATION = {
-  medias: {
+// Photos et vidéos de la galerie publique, rangées dans un album
+function ciblePourAlbum(album){
+  return {
     collection: 'medias', dossier: 'medias', onglet: 'medias', pourLeSite: true,
     accept: 'image/*,video/*',
     accepter: (f) => f.type.startsWith('image/') || f.type.startsWith('video/'),
@@ -3632,8 +3896,15 @@ const CIBLES_PUBLICATION = {
       const existants = await getDocs(collection(window._db, 'medias'));
       return { rang: existants.docs.reduce((max, d) => Math.max(max, Number(d.data().ordre) || 0), 0) };
     },
-    creer: (f, valeur, contexte) => ({ type: f.type.startsWith('video/') ? 'video' : 'photo', titre: nomSansExtension(f.name), url: valeur, visible: true, ordre: ++contexte.rang })
-  },
+    creer: (f, valeur, contexte) => ({ type: f.type.startsWith('video/') ? 'video' : 'photo', album, titre: nomSansExtension(f.name), url: valeur, visible: true, ordre: ++contexte.rang })
+  };
+}
+
+const CIBLES_PUBLICATION = {
+  medias: ciblePourAlbum('general'),
+  albumCamions: ciblePourAlbum('camions'),
+  albumVoyages: ciblePourAlbum('voyages'),
+  albumChauffeurs: ciblePourAlbum('chauffeurs'),
   factures: {
     collection: 'factures', dossier: 'factures', onglet: 'factures',
     preparer: async () => {
@@ -3823,14 +4094,19 @@ const adminZoneTableau = document.getElementById('adminZoneTableau');
 const adminPublierInput = document.getElementById('adminPublierInput');
 const adminPublierEtat = document.getElementById('adminPublierEtat');
 const adminPublierResultats = document.getElementById('adminPublierResultats');
-const NOMS_ONGLETS_PUBLICATION = { medias: 'Médias', factures: 'Factures', documents: 'Documents' };
+const NOMS_ONGLETS_PUBLICATION = { medias: 'Médias', factures: 'Factures', documents: 'Documents', actualites: 'Actualités', infos: 'Infos' };
 let ciblePublierActive = null;
 let publicationEnCours = false;
 
-function afficherEcranPublier(visible){
-  adminPublier.classList.toggle('hidden', !visible);
-  adminZoneTableau.classList.toggle('hidden', visible);
-  document.getElementById('adminAddBtn').classList.toggle('hidden', visible); // "+ Ajouter" n'a de sens que sur un tableau
+// Deux onglets ne sont pas des tableaux : "publier" et "textes"
+const ECRANS_SPECIAUX = ['publier', 'textes'];
+function afficherEcranAdmin(nomVue){
+  const special = ECRANS_SPECIAUX.includes(nomVue);
+  adminPublier.classList.toggle('hidden', nomVue !== 'publier');
+  document.getElementById('adminTextes').classList.toggle('hidden', nomVue !== 'textes');
+  adminZoneTableau.classList.toggle('hidden', special);
+  document.getElementById('adminAddBtn').classList.toggle('hidden', special); // "+ Ajouter" n'a de sens que sur un tableau
+  if(nomVue === 'textes') afficherEditeurTextes();
 }
 
 function allerSurOnglet(nomVue){
@@ -3873,6 +4149,158 @@ adminPublierInput.addEventListener('change', async () => {
       <span class="text-navy dark:text-cream">${echapperHtmlAdmin(r.nom)}${r.ok ? '' : ` <span class="text-red-500">— ${echapperHtmlAdmin(r.raison)}</span>`}</span>
     </li>`).join('')
     + (bilan.reussis ? `<li class="pt-3"><button type="button" data-vers-onglet="${cible.onglet}" class="text-sm font-semibold text-amberdark hover:text-amber underline">Voir dans l'onglet ${NOMS_ONGLETS_PUBLICATION[cible.onglet]} →</button></li>` : '');
+});
+
+// --- Rédaction d'une actualité ou d'une info depuis l'écran Publier
+const adminRediger = document.getElementById('adminRediger');
+const redigerEtat = document.getElementById('redigerEtat');
+let typeRedaction = 'actualite';
+
+function ouvrirRedaction(type){
+  typeRedaction = type;
+  const estActualite = type === 'actualite';
+  document.getElementById('adminRedigerTitre').textContent = estActualite ? 'Nouvelle actualité' : 'Nouvelle info';
+  document.getElementById('redigerPhotoLigne').classList.toggle('hidden', !estActualite);
+  document.getElementById('redigerImportantLigne').classList.toggle('hidden', estActualite);
+  redigerEtat.classList.add('hidden');
+  adminRediger.classList.remove('hidden');
+  adminRediger.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  document.getElementById('redigerTitre').focus();
+}
+
+adminPublier.addEventListener('click', (e) => {
+  const tuile = e.target.closest('[data-rediger]');
+  if(tuile) ouvrirRedaction(tuile.dataset.rediger);
+});
+document.getElementById('redigerAnnuler').addEventListener('click', () => {
+  adminRediger.reset();
+  adminRediger.classList.add('hidden');
+});
+
+adminRediger.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const titre = document.getElementById('redigerTitre').value.trim();
+  const texte = document.getElementById('redigerTexte').value.trim();
+  const bouton = document.getElementById('redigerEnvoyer');
+  const dire = (message, classes) => { redigerEtat.textContent = message; redigerEtat.className = `text-sm mt-3 ${classes}`; };
+
+  if(!titre){
+    dire("Ajoute au moins un titre.", 'text-red-500 font-medium');
+    document.getElementById('redigerTitre').focus();
+    return;
+  }
+
+  const estActualite = typeRedaction === 'actualite';
+  const photo = estActualite ? document.getElementById('redigerPhoto').files[0] : null;
+  bouton.disabled = true;
+  dire("Publication en cours…", 'text-slate-500 dark:text-cream/60');
+  let imageUrl = '';
+  try {
+    if(photo){
+      if(!photo.type.startsWith('image/')) throw new Error("la photo doit être une image");
+      imageUrl = await publierFichier(photo, 'actualites', (p) => dire(`Envoi de la photo (${p} %)…`, 'text-slate-500 dark:text-cream/60'), true);
+    }
+    const { collection, addDoc, serverTimestamp } = window._firestore;
+    const commun = { titre, texte, datePublication: aujourdHuiISO(), visible: true, dateCreation: serverTimestamp() };
+    if(estActualite) await addDoc(collection(window._db, 'actualites'), { ...commun, imageUrl });
+    else await addDoc(collection(window._db, 'infos'), { ...commun, important: document.getElementById('redigerImportant').checked });
+
+    adminRediger.reset();
+    const onglet = estActualite ? 'actualites' : 'infos';
+    redigerEtat.className = 'text-sm mt-3 text-teal font-medium';
+    redigerEtat.innerHTML = `✓ Publié sur le site. <button type="button" data-vers-onglet="${onglet}" class="font-semibold text-amberdark hover:text-amber underline">Voir ou modifier dans l'onglet ${NOMS_ONGLETS_PUBLICATION[onglet]} →</button>`;
+  } catch (err) {
+    console.error("Erreur de publication :", err);
+    if(imageUrl) supprimerFichier(imageUrl); // photo envoyée mais article non créé
+    dire(`Publication impossible : ${messageErreurPublication(err)}`, 'text-red-500 font-medium');
+  } finally {
+    bouton.disabled = false;
+  }
+});
+
+/* ----------------------------------------------------------------
+   ÉCRAN "TEXTES DU SITE"
+   Liste tous les textes recensés sur les pages publiques (voir
+   "TEXTES DU SITE MODIFIABLES"), section par section. Un texte se
+   modifie sur place et s'enregistre en quittant le champ ; "↺" remet
+   le texte d'origine.
+   ---------------------------------------------------------------- */
+const adminTextesListe = document.getElementById('adminTextesListe');
+const adminTextesRecherche = document.getElementById('adminTextesRecherche');
+const NOMS_ZONES_TEXTE = {
+  top: 'Haut de page (accueil)', services: 'Services', devis: 'Devis', suivi: 'Suivi', carrieres: 'Carrières',
+  fret: 'Bourse de fret', avis: 'Avis clients', faq: 'Questions fréquentes', departs: 'Prochains départs',
+  galerie: 'Galerie', actualites: 'Actualités & infos', eco: 'Éco-transport', 'espace-client-pod': 'Espace client',
+  pied: 'Pied de page (contact)'
+};
+
+function afficherEditeurTextes(){
+  const recherche = adminTextesRecherche.value.trim().toLowerCase();
+  const zones = [];
+  blocsTexte.forEach(bloc => { if(!zones.includes(bloc.zone)) zones.push(bloc.zone); });
+
+  adminTextesListe.innerHTML = zones.map(zone => {
+    const blocs = blocsTexte.filter(b => b.zone === zone && (!recherche || b.valeur.toLowerCase().includes(recherche) || b.defaut.toLowerCase().includes(recherche)));
+    if(!blocs.length) return '';
+    return `
+      <h3 class="text-sm font-bold uppercase tracking-wide text-amberdark mt-6 mb-2">${echapperHtml(NOMS_ZONES_TEXTE[zone] || zone)}</h3>
+      ${blocs.map(b => {
+        const modifie = b.valeur !== b.defaut;
+        return `
+        <div class="flex items-start gap-2 mb-2">
+          <textarea data-cle="${echapperHtml(b.cle)}" rows="${Math.min(6, Math.max(1, Math.ceil(b.valeur.length / 85)))}"
+            class="admin-texte flex-1 px-3 py-2 rounded-lg border ${modifie ? 'border-amber' : 'border-slate-200 dark:border-white/15'} bg-white dark:bg-navylight text-sm text-navy dark:text-cream focus:outline-none focus:border-amber">${echapperHtml(b.valeur)}</textarea>
+          <button type="button" data-retablir="${echapperHtml(b.cle)}" title="Remettre le texte d'origine" class="${modifie ? '' : 'invisible'} shrink-0 text-slate-400 hover:text-amber px-1.5 py-2">↺</button>
+        </div>`;
+      }).join('')}`;
+  }).join('') || `<p class="text-sm text-slate-400 dark:text-cream/40">Aucun texte ne correspond à cette recherche.</p>`;
+}
+
+adminTextesRecherche.addEventListener('input', afficherEditeurTextes);
+
+// Enregistre l'ensemble des modifications (un seul document Firestore)
+async function enregistrerTexteDuSite(cle, nouveauTexte){
+  const bloc = blocsTexte.find(b => b.cle === cle);
+  if(!bloc) return;
+  const surcharges = { ...surchargesTextes };
+  if(nouveauTexte === null || nouveauTexte === bloc.defaut) delete surcharges[cle];
+  else surcharges[cle] = { t: nouveauTexte, o: bloc.defaut };
+
+  const { doc, setDoc } = window._firestore;
+  await setDoc(doc(window._db, 'contenus', 'textes'), surcharges);
+  appliquerTextesDuSite(surcharges); // effet immédiat, sans attendre le retour de la base
+}
+
+adminTextesListe.addEventListener('focusout', async (e) => {
+  const champ = e.target.closest('.admin-texte');
+  if(!champ) return;
+  const bloc = blocsTexte.find(b => b.cle === champ.dataset.cle);
+  const texte = champ.value.trim();
+  if(!bloc || texte === bloc.valeur) return;
+  if(!texte){ champ.value = bloc.valeur; return; } // un texte vide n'est pas enregistré
+  try {
+    await enregistrerTexteDuSite(bloc.cle, texte);
+    champ.classList.add('ring-1', 'ring-teal');
+    setTimeout(() => champ.classList.remove('ring-1', 'ring-teal'), 700);
+    champ.classList.toggle('border-amber', bloc.valeur !== bloc.defaut);
+    champ.parentElement.querySelector('[data-retablir]').classList.toggle('invisible', bloc.valeur === bloc.defaut);
+  } catch (err) {
+    console.error("Erreur d'enregistrement d'un texte :", err);
+    champ.classList.add('ring-1', 'ring-red-500');
+    alert(`Enregistrement impossible : ${messageErreurPublication(err)}`);
+  }
+});
+
+adminTextesListe.addEventListener('click', async (e) => {
+  const bouton = e.target.closest('[data-retablir]');
+  if(!bouton) return;
+  try {
+    await enregistrerTexteDuSite(bouton.dataset.retablir, null);
+    afficherEditeurTextes();
+  } catch (err) {
+    console.error("Erreur de rétablissement d'un texte :", err);
+    alert(`Rétablissement impossible : ${messageErreurPublication(err)}`);
+  }
 });
 
 // Tuiles de synthèse au-dessus du tableau (vues de gestion uniquement).
@@ -3940,7 +4368,7 @@ function construireLigneRapide(){
   const valider = () => validerLigneRapide(champs);
   tr.querySelector('#adminValiderLigneRapide').addEventListener('click', valider);
   champs.forEach(champEl => {
-    if(champEl.tagName !== 'SELECT'){
+    if(champEl.tagName !== 'SELECT' && champEl.tagName !== 'TEXTAREA'){
       champEl.addEventListener('keydown', (e) => { if(e.key === 'Enter'){ e.preventDefault(); valider(); } });
     }
   });
@@ -3998,11 +4426,11 @@ async function validerLigneRapide(champs){
 let numeroChargement = 0; // évite qu'un chargement lent d'un ancien onglet s'affiche dans le nouveau
 
 async function chargerCollection(nomVue, reinitialiser){
-  // L'écran "Publier" n'est pas un tableau : on l'affiche et on s'arrête là
-  if(reinitialiser) afficherEcranPublier(nomVue === 'publier');
-  if(nomVue === 'publier'){
+  // Les écrans "Publier" et "Textes du site" ne sont pas des tableaux : on les affiche et on s'arrête là
+  if(reinitialiser) afficherEcranAdmin(nomVue);
+  if(ECRANS_SPECIAUX.includes(nomVue)){
     numeroChargement++; // annule un éventuel chargement de tableau en cours
-    vueActive = 'publier';
+    vueActive = nomVue;
     return;
   }
   if(reinitialiser){
@@ -4138,7 +4566,7 @@ function construireLigneDocument(id, donnees){
     const immediat = champEl.tagName === 'SELECT' || champEl.type === 'checkbox' || champEl.type === 'date';
     champEl.addEventListener(immediat ? 'change' : 'blur', () => sauvegarderCelluleInline(id, champEl, donnees, tr));
     champEl.addEventListener('televerse', () => sauvegarderCelluleInline(id, champEl, donnees, tr)); // fichier choisi via 📎
-    if(!immediat){
+    if(!immediat && champEl.tagName !== 'TEXTAREA'){
       champEl.addEventListener('keydown', (e) => { if(e.key === 'Enter'){ e.preventDefault(); champEl.blur(); } });
     }
   });
@@ -4448,9 +4876,9 @@ function renderDeparts(liste){
   departsEmptyEl.classList.add('hidden');
   departsListEl.innerHTML = liste.map(depart => `
     <div class="bg-white dark:bg-navylight border border-slate-200 dark:border-white/10 rounded-xl p-6">
-      <span class="text-xs font-bold uppercase tracking-wide bg-teal/15 text-teal px-2.5 py-1 rounded-full">${depart.dateDepart || ''}</span>
-      <h3 class="text-lg font-bold text-navy dark:text-white mt-3 mb-1.5">Vers ${depart.destination || ''}</h3>
-      <p class="text-sm text-slate-500 dark:text-cream/60">${depart.placesRestantes != null ? depart.placesRestantes + ' places restantes' : ''}</p>
+      <span class="text-xs font-bold uppercase tracking-wide bg-teal/15 text-teal px-2.5 py-1 rounded-full">${echapperHtml(depart.dateDepart)}</span>
+      <h3 class="text-lg font-bold text-navy dark:text-white mt-3 mb-1.5">Vers ${echapperHtml(depart.destination)}</h3>
+      <p class="text-sm text-slate-500 dark:text-cream/60">${depart.placesRestantes != null && depart.placesRestantes !== '' ? echapperHtml(depart.placesRestantes) + ' places restantes' : ''}</p>
       <a href="#devis" class="inline-block mt-4 text-sm font-semibold text-amberdark hover:text-amber transition">Réserver →</a>
     </div>
   `).join('');
@@ -4500,8 +4928,12 @@ function extraireIdTikTok(url){
 }
 
 function creerCarteMedia(m){
-  const titre = (m.titre || '').replace(/"/g, '&quot;');
-  const url = m.url || '';
+  const titre = echapperHtml(m.titre || '');
+  const urlBrute = urlSure(m.url);
+  const url = echapperHtml(urlBrute);
+
+  // Une photo ou une vidéo sans adresse valide n'est pas affichée (pas de cadre vide)
+  if((m.type === 'photo' || m.type === 'video') && !url) return '';
 
   if(m.type === 'photo'){
     return `
@@ -4532,8 +4964,8 @@ function creerCarteMedia(m){
   if(m.type === 'facebook'){
     const estVideo = /\/videos\/|watch\/?\?v=/.test(url);
     const src = estVideo
-      ? `https://www.facebook.com/plugins/video.php?href=${encodeURIComponent(url)}&show_text=false`
-      : `https://www.facebook.com/plugins/post.php?href=${encodeURIComponent(url)}&show_text=false`;
+      ? `https://www.facebook.com/plugins/video.php?href=${encodeURIComponent(urlBrute)}&show_text=false`
+      : `https://www.facebook.com/plugins/post.php?href=${encodeURIComponent(urlBrute)}&show_text=false`;
     return `
       <div class="galerie-carte bg-cream dark:bg-navy rounded-xl overflow-hidden border border-slate-200 dark:border-white/10">
         <iframe src="${src}" class="w-full aspect-video" style="border:none;overflow:hidden" loading="lazy" scrolling="no" frameborder="0" allowfullscreen="true" allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share"></iframe>
@@ -4551,7 +4983,7 @@ function creerCarteMedia(m){
     return `
       <div class="galerie-carte rounded-xl overflow-hidden flex justify-center bg-cream dark:bg-navy border border-slate-200 dark:border-white/10">
         <blockquote class="tiktok-embed" cite="${url}" data-video-id="${extraireIdTikTok(url)}" style="max-width:100%;min-width:280px;">
-          <section><a target="_blank" href="${url}">${m.titre || 'Voir sur TikTok'}</a></section>
+          <section><a target="_blank" rel="noopener" href="${url}">${titre || 'Voir sur TikTok'}</a></section>
         </blockquote>
       </div>`;
   }
@@ -4602,8 +5034,17 @@ function chargerScriptsReseauxSociauxSiNecessaire(){
   }
 }
 
+// Filtres de la galerie : par album (camions, voyages, chauffeurs) ou par nature
+function mediaCorrespondAuFiltre(m, filtre){
+  if(filtre === 'tout') return true;
+  if(filtre === 'camions' || filtre === 'voyages' || filtre === 'chauffeurs') return m.album === filtre;
+  if(filtre === 'video') return m.type === 'video' || m.type === 'youtube';
+  if(filtre === 'reseaux') return ['facebook', 'instagram', 'tiktok', 'twitter'].includes(m.type);
+  return m.type === filtre;
+}
+
 function renderGalerie(){
-  const liste = tousLesMedias.filter(m => filtreGalerieActif === 'tout' || m.type === filtreGalerieActif);
+  const liste = tousLesMedias.filter(m => mediaCorrespondAuFiltre(m, filtreGalerieActif));
   if(liste.length === 0){
     galerieGridEl.innerHTML = '';
     galerieEmptyEl.classList.remove('hidden');
@@ -4669,6 +5110,79 @@ quandFirebasePret(() => {
 });
 
 /* ================================================================
+   ACTUALITÉS & INFOS — temps réel (collections "actualites" et "infos")
+   ================================================================
+   actualites : { titre, texte, imageUrl, datePublication, visible }
+   infos      : { titre, texte, important, datePublication, visible }
+   Rédigées depuis l'admin ; "visible" décoché = retiré du site sans
+   être supprimé.
+   ================================================================ */
+const actualitesListEl = document.getElementById('actualitesList');
+const actualitesEmptyEl = document.getElementById('actualitesEmpty');
+const infosListEl = document.getElementById('infosList');
+const infosEmptyEl = document.getElementById('infosEmpty');
+const LONGUEUR_EXTRAIT_ACTUALITE = 220;
+
+function renderActualites(liste){
+  actualitesEmptyEl.classList.toggle('hidden', liste.length > 0);
+  actualitesListEl.innerHTML = liste.map(a => {
+    const image = urlSure(a.imageUrl);
+    const texte = String(a.texte || '');
+    const long = texte.length > LONGUEUR_EXTRAIT_ACTUALITE;
+    return `
+      <article class="bg-white dark:bg-navylight border border-slate-200 dark:border-white/10 rounded-xl overflow-hidden">
+        ${image ? `<img ${estFichierBase(image) ? `data-fichier-base="${echapperHtml(image)}"` : `src="${echapperHtml(image)}"`} alt="" loading="lazy" class="w-full h-44 object-cover bg-slate-200 dark:bg-white/10">` : ''}
+        <div class="p-5">
+          ${a.datePublication ? `<span class="font-mono-num text-xs text-amberdark">${echapperHtml(formaterDateLongue(a.datePublication))}</span>` : ''}
+          <h3 class="text-lg font-bold text-navy dark:text-white mt-1 mb-2">${echapperHtml(a.titre)}</h3>
+          <p class="actu-texte text-sm text-slate-600 dark:text-cream/70 whitespace-pre-line ${long ? 'line-clamp-4' : ''}">${echapperHtml(texte)}</p>
+          ${long ? `<button type="button" class="actu-suite mt-2 text-sm font-semibold text-amberdark hover:text-amber">Lire la suite</button>` : ''}
+        </div>
+      </article>`;
+  }).join('');
+  activerPhotosBase(actualitesListEl);
+}
+
+// "Lire la suite" / "Réduire" sur une actualité longue
+actualitesListEl.addEventListener('click', (e) => {
+  const bouton = e.target.closest('.actu-suite');
+  if(!bouton) return;
+  const texte = bouton.parentElement.querySelector('.actu-texte');
+  const reduit = texte.classList.toggle('line-clamp-4');
+  bouton.textContent = reduit ? 'Lire la suite' : 'Réduire';
+});
+
+function renderInfos(liste){
+  infosEmptyEl.classList.toggle('hidden', liste.length > 0);
+  infosListEl.innerHTML = liste.map(info => `
+    <div class="rounded-xl border p-4 ${info.important ? 'border-amber bg-amber/10' : 'border-slate-200 dark:border-white/10 bg-white dark:bg-navylight'}">
+      ${info.important ? `<span class="inline-block text-[11px] font-bold uppercase tracking-wide bg-amber text-navy px-2 py-0.5 rounded-full mb-2">Important</span>` : ''}
+      <h4 class="font-bold text-navy dark:text-white">${echapperHtml(info.titre)}</h4>
+      ${info.texte ? `<p class="text-sm text-slate-600 dark:text-cream/70 whitespace-pre-line mt-1">${echapperHtml(info.texte)}</p>` : ''}
+    </div>`).join('');
+}
+
+quandFirebasePret(() => {
+  const { collection, onSnapshot } = window._firestore;
+  const plusRecentDAbord = (a, b) => String(b.datePublication || '').localeCompare(String(a.datePublication || ''));
+
+  onSnapshot(collection(window._db, "actualites"), (snapshot) => {
+    renderActualites(snapshot.docs.map(d => d.data()).filter(a => a.visible !== false && (a.titre || a.texte)).sort(plusRecentDAbord));
+  }, (err) => {
+    console.error("Erreur d'écoute temps réel sur 'actualites' :", err);
+    actualitesEmptyEl.classList.remove('hidden');
+  });
+
+  onSnapshot(collection(window._db, "infos"), (snapshot) => {
+    renderInfos(snapshot.docs.map(d => d.data()).filter(i => i.visible !== false && (i.titre || i.texte))
+      .sort((a, b) => (b.important ? 1 : 0) - (a.important ? 1 : 0) || plusRecentDAbord(a, b)));
+  }, (err) => {
+    console.error("Erreur d'écoute temps réel sur 'infos' :", err);
+    infosEmptyEl.classList.remove('hidden');
+  });
+});
+
+/* ================================================================
    HISTORIQUE CLIENT — recherche de toutes ses commandes par email
    ================================================================
    Complète le suivi par numéro de suivi : ici on retrouve TOUTES
@@ -4710,8 +5224,8 @@ async function chercherHistoriqueParEmail(){
       const statut = c.statutLabel || ETAPES_LIVRAISON_EMAIL[Number(c.etapeActuelle) || 0] || '—';
       return `
         <div class="flex items-center justify-between p-4 rounded-lg border border-slate-200 dark:border-white/10">
-          <span class="font-mono-num text-sm font-semibold text-navy dark:text-white">${docSnap.id}</span>
-          <span class="text-xs font-bold uppercase tracking-wide bg-teal/15 text-teal px-3 py-1 rounded-full">${statut}</span>
+          <span class="font-mono-num text-sm font-semibold text-navy dark:text-white">${echapperHtml(docSnap.id)}</span>
+          <span class="text-xs font-bold uppercase tracking-wide bg-teal/15 text-teal px-3 py-1 rounded-full">${echapperHtml(statut)}</span>
         </div>
       `;
     }).join('');
