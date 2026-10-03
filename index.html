@@ -369,7 +369,7 @@
       </div>
       <p class="px-7 md:px-10 pt-3 text-xs font-mono-num uppercase tracking-wide text-slate-400 dark:text-cream/40" id="devisStepLabel">Étape 1/3 — Trajet</p>
 
-      <form id="devisForm" class="p-7 md:p-10">
+      <form id="devisForm" class="p-7 md:p-10" novalidate>
 
         <!-- ÉTAPE 1 : TRAJET — Espagne (national) et Europe (international) uniquement -->
         <div class="devis-step" data-step="1">
@@ -461,7 +461,7 @@
             <div>
               <label for="telephone" class="block text-sm font-semibold text-navy dark:text-cream mb-2">Téléphone</label>
               <input type="tel" id="telephone" required placeholder="ex : +34 600 00 00 00 ou +33 6 00 00 00 00"
-                pattern="^\+?[0-9\s().-]{7,20}$" title="Numéro de téléphone avec indicatif européen (ex : +34, +33, +49...)"
+                pattern="^\+?[0-9\s\(\)\.\-]{7,20}$" title="Numéro de téléphone avec indicatif européen (ex : +34, +33, +49...)"
                 class="w-full px-3.5 py-3 rounded-lg border border-slate-200 dark:border-white/15 bg-cream dark:bg-navy text-slate-700 dark:text-cream focus:outline-none focus:border-amber">
             </div>
           </div>
@@ -489,6 +489,7 @@
               </button>
             </div>
             <p id="devisStatus" class="text-xs mt-3 hidden"></p>
+            <button type="button" id="devisNouvelleDemande" class="hidden mt-4 text-sm font-semibold text-amberdark hover:text-amber underline">Faire une nouvelle demande</button>
           </div>
         </div>
 
@@ -566,54 +567,28 @@
     </div>
 
     <!--
-      PANNEAU : SUIVI DE VÉHICULE (NOUVEAU — DÉMO UNIQUEMENT)
-      ⚠️ IMPORTANT : ceci est une maquette visuelle. La carte est une illustration
-      statique (SVG), pas un vrai plan interactif. Pour afficher la position réelle
-      d'un camion, il faut un boîtier GPS embarqué + une API de géolocalisation
-      flotte (ex : Traccar, Geotab, Webfleet) branchée côté serveur — un chantier
-      backend à part entière, qu'aucune IA ne peut deviner à ta place.
+      PANNEAU : ÉTAT D'UN VÉHICULE DE LA FLOTTE
+      Lit la collection "vehicules" (onglet Véhicules de l'admin) et affiche
+      l'état de service du véhicule. Pas de position sur une carte : il
+      faudrait un boîtier GPS embarqué et un service de géolocalisation.
     -->
     <div id="panelVehicule" class="hidden bg-white dark:bg-navylight text-slate-700 dark:text-cream rounded-2xl shadow-xl p-7 md:p-10">
       <div class="flex flex-col sm:flex-row gap-3 mb-1.5">
-        <input type="text" id="vehiculeInput" placeholder="Immatriculation, ex : 4521-BTX" autocomplete="off"
+        <input type="text" id="vehiculeInput" placeholder="Immatriculation, ex : 1234-ABC" autocomplete="off"
           class="flex-1 font-mono-num px-4 py-3.5 rounded-lg border border-slate-200 dark:border-white/15 bg-cream dark:bg-navy focus:outline-none focus:border-amber">
         <button id="vehiculeBtn" class="bg-amber hover:bg-amberdark text-navy font-semibold px-7 py-3.5 rounded-lg transition">Rechercher</button>
       </div>
-      <p class="text-xs text-slate-500 dark:text-cream/50 mb-7">Exemple pour tester la démo : <code class="font-mono-num bg-cream dark:bg-navy px-1.5 py-0.5 rounded">4521-BTX</code></p>
+      <p class="text-xs text-slate-500 dark:text-cream/50 mb-6">Saisis la plaque d'un véhicule de notre flotte pour connaître son état de service.</p>
+      <p id="vehiculeError" class="hidden text-red-500 text-sm font-semibold mb-2"></p>
 
-      <div id="vehiculeResult" class="hidden">
-        <div class="grid md:grid-cols-2 gap-6">
-          <!-- Carte statique illustrative (pas de vraie géolocalisation) -->
-          <div class="rounded-xl overflow-hidden border border-slate-200 dark:border-white/10">
-            <svg viewBox="0 0 300 200" class="w-full h-full bg-cream dark:bg-navy">
-              <path d="M0,150 Q80,100 150,120 T300,80" stroke="#E8A33D" stroke-width="3" fill="none" stroke-dasharray="6 8"/>
-              <line x1="0" y1="40" x2="300" y2="40" stroke="currentColor" stroke-opacity="0.08"/>
-              <line x1="0" y1="90" x2="300" y2="90" stroke="currentColor" stroke-opacity="0.08"/>
-              <line x1="0" y1="140" x2="300" y2="140" stroke="currentColor" stroke-opacity="0.08"/>
-              <circle cx="150" cy="118" r="8" fill="#1B7A72"/>
-              <circle cx="150" cy="118" r="14" fill="#1B7A72" opacity="0.25"/>
-              <text x="10" y="20" font-size="10" fill="currentColor" opacity="0.5" font-family="monospace">Carte illustrative — non connectée au GPS réel</text>
-            </svg>
-          </div>
-
-          <div>
-            <div class="flex justify-between items-center mb-4">
-              <span class="font-mono-num font-bold text-navy dark:text-white" id="vehiculeId">4521-BTX</span>
-              <span class="text-xs font-bold uppercase tracking-wide bg-teal/15 text-teal px-3.5 py-1.5 rounded-full">En route</span>
-            </div>
-            <p class="text-sm text-slate-500 dark:text-cream/60 mb-1">Conducteur : <span class="font-medium text-navy dark:text-cream">M. Diarra</span></p>
-            <p class="text-sm text-slate-500 dark:text-cream/60 mb-5">Trajet : <span class="font-medium text-navy dark:text-cream">Yuncos → Madrid</span></p>
-
-            <!-- Barre de progression de livraison -->
-            <div class="mb-2 flex justify-between text-xs text-slate-500 dark:text-cream/50">
-              <span>Départ</span><span>Arrivée estimée : 16h40</span>
-            </div>
-            <div class="w-full h-2.5 rounded-full bg-slate-200 dark:bg-white/10 overflow-hidden">
-              <div class="h-full bg-teal rounded-full" style="width: 62%"></div>
-            </div>
-            <p class="text-xs text-slate-500 dark:text-cream/50 mt-2">62% du trajet effectué</p>
-          </div>
+      <!-- Résultat : lu dans la flotte réelle (onglet "Véhicules" de l'admin).
+           Pas de position GPS : il faudrait un boîtier embarqué dans le camion. -->
+      <div id="vehiculeResult" class="hidden border border-slate-200 dark:border-white/10 rounded-xl p-5">
+        <div class="flex justify-between items-center gap-3 mb-3">
+          <span class="font-mono-num text-lg font-bold text-navy dark:text-white" id="vehiculeId"></span>
+          <span id="vehiculeStatut" class="text-xs font-bold uppercase tracking-wide px-3.5 py-1.5 rounded-full"></span>
         </div>
+        <p class="text-sm text-slate-500 dark:text-cream/60" id="vehiculeDetails"></p>
       </div>
     </div>
   </div>
@@ -1553,36 +1528,33 @@ function afficherEtape(etape){
   devisNavButtons.classList.toggle('hidden', etape === 'resultat');
 }
 
+// Vérifie les champs de l'étape affichée, avec les règles du navigateur
+// (champ obligatoire, format d'email, format de téléphone, date non passée).
+// Au premier champ incorrect, le navigateur affiche son message sous le
+// champ — ici, pendant qu'il est visible, et pas plus tard à l'envoi.
 function etapeEstValide(etape){
-  if(etape === 1){
-    return document.getElementById('villeDepart').value.trim()
-      && document.getElementById('villeArrivee').value.trim()
-      && document.getElementById('paysDepart').value
-      && document.getElementById('paysArrivee').value;
+  const champs = document.querySelectorAll(`.devis-step[data-step="${etape}"] input, .devis-step[data-step="${etape}"] select`);
+  for(const champ of champs){
+    if(!champ.checkValidity()){
+      champ.reportValidity();
+      return false;
+    }
   }
-  if(etape === 2){
-    return parseFloat(document.getElementById('poids').value) > 0;
-  }
-  if(etape === 3){
-    const emailValide = document.getElementById('email').value.trim().includes('@');
-    const dateRemplie = document.getElementById('dateSouhaitee').value.trim();
-    const nomRempli = document.getElementById('nomComplet').value.trim();
-    const telRempli = document.getElementById('telephone').value.trim();
-    return emailValide && dateRemplie && nomRempli && telRempli;
+  if(etape === 2 && !(parseFloat(document.getElementById('poids').value) > 0)){
+    document.getElementById('poids').focus();
+    return false;
   }
   return true;
 }
 
 devisNextBtn.addEventListener('click', () => {
-  if(!etapeEstValide(etapeActuelle)){
-    alert("Merci de compléter les champs de cette étape avant de continuer.");
-    return;
-  }
+  if(!etapeEstValide(etapeActuelle)) return;
   if(etapeActuelle < 3){
     etapeActuelle++;
     afficherEtape(etapeActuelle);
   } else {
     calculerPrixFinal();
+    reinitialiserEnvoiDevis();
     afficherEtape('resultat');
   }
 });
@@ -1654,9 +1626,34 @@ function resumerDemande(){
 }
 
 // Bouton 1 : enregistre la demande dans Firestore (parcours principal)
+// Remet le bouton d'envoi dans son état de départ (nouvelle estimation)
+let devisDejaEnvoye = false;
+function reinitialiserEnvoiDevis(){
+  devisDejaEnvoye = false;
+  devisSubmitBtn.disabled = false;
+  devisSubmitBtn.textContent = "Réserver cet envoi";
+  devisStatus.classList.add('hidden');
+  document.getElementById('devisNouvelleDemande').classList.add('hidden');
+}
+
+// "Nouvelle demande" : vide le formulaire et revient à l'étape 1
+document.getElementById('devisNouvelleDemande').addEventListener('click', () => {
+  devisForm.reset();
+  if(champPaysDepart && champPaysArrivee){ champPaysDepart.value = "Espagne"; champPaysArrivee.value = "Espagne"; }
+  dernierPrixCalcule = 0;
+  etapeActuelle = 1;
+  reinitialiserEnvoiDevis();
+  afficherEtape(1);
+});
+
 devisForm.addEventListener('submit', async function(e){
   e.preventDefault();
-  if(dernierPrixCalcule <= 0) return;
+  // Touche Entrée dans une étape du formulaire : équivaut à "Continuer"
+  if(!devisNavButtons.classList.contains('hidden')){
+    devisNextBtn.click();
+    return;
+  }
+  if(dernierPrixCalcule <= 0 || devisDejaEnvoye) return;
 
   const donnees = resumerDemande();
 
@@ -1667,13 +1664,15 @@ devisForm.addEventListener('submit', async function(e){
 
   try {
     await envoyerDevisFirestore(donnees);
+    devisDejaEnvoye = true; // un second clic ne crée pas de doublon
+    devisSubmitBtn.textContent = "Demande envoyée ✓";
     devisStatus.textContent = "Réservation envoyée. Un conseiller vous recontacte sous 24h.";
     devisStatus.className = "text-xs mt-3 text-teal font-medium";
+    document.getElementById('devisNouvelleDemande').classList.remove('hidden');
   } catch (err) {
     console.error("Erreur Firestore :", err);
-    devisStatus.textContent = "Estimation calculée, mais l'envoi a échoué (vérifie ta configuration Firebase).";
+    devisStatus.textContent = "L'envoi a échoué. Réessayez, ou utilisez « Envoyer par email ».";
     devisStatus.className = "text-xs mt-3 text-red-500 font-medium";
-  } finally {
     devisSubmitBtn.disabled = false;
   }
 });
@@ -1745,6 +1744,8 @@ let arreterEcouteColis = null; // permet de couper l'écoute précédente avant 
 
 // Construit le stepper (4 icônes + libellés) et anime la ligne de progression
 function construireStepper(colis){
+  // L'étape peut avoir été enregistrée comme texte ("2") : on la lit comme un nombre
+  colis = { ...colis, etapeActuelle: Number(colis.etapeActuelle) || 0 };
   stepperSteps.innerHTML = ETAPES_LIVRAISON.map((etape, index) => {
     const estFait = index < colis.etapeActuelle;
     const estActif = index === colis.etapeActuelle;
@@ -1808,7 +1809,7 @@ function chercherColis(){
     const colis = snap.data();
     trackingError.classList.add('hidden');
     timelineId.textContent = numero;
-    timelineStatutPill.textContent = colis.statutLabel || ETAPES_LIVRAISON[colis.etapeActuelle] || '';
+    timelineStatutPill.textContent = colis.statutLabel || ETAPES_LIVRAISON[Number(colis.etapeActuelle) || 0] || '';
     stepperProgress.style.width = '0%'; // réinitialise avant de relancer l'animation
 
     document.getElementById('trajetVilleDepart').textContent = colis.villeDepart || 'Départ';
@@ -1984,10 +1985,10 @@ function renderFretOffres(liste){
         <span class="font-mono-num text-xs text-amber">${offre.date || ''}</span>
         <span class="text-xs font-semibold bg-teal/20 text-teal px-2.5 py-1 rounded-full">${offre.vehicule || ''}</span>
       </div>
-      <h3 class="font-semibold text-white mb-1">${offre.villeDepart} → ${offre.villeArrivee}</h3>
-      <p class="text-sm text-cream/60 mb-4">${offre.poids} ${offre.unite || 't'} de marchandise</p>
+      <h3 class="font-semibold text-white mb-1">${offre.villeDepart || '—'} → ${offre.villeArrivee || '—'}</h3>
+      <p class="text-sm text-cream/60 mb-4">${offre.poids != null && offre.poids !== '' ? `${offre.poids} ${offre.unite || 't'} de marchandise` : 'Poids à préciser'}</p>
       <div class="flex items-center justify-between">
-        <span class="font-mono-num text-xl font-bold text-amber">${offre.prix} €</span>
+        <span class="font-mono-num text-xl font-bold text-amber">${offre.prix != null && offre.prix !== '' ? offre.prix + ' €' : 'Prix sur demande'}</span>
         <button class="text-sm font-semibold text-cream hover:text-amber transition">Contacter →</button>
       </div>
     </div>
@@ -2036,14 +2037,21 @@ iaSearchForm.addEventListener('submit', async function(e){
   iaSearchInterpretation.classList.remove('hidden');
   iaSearchInterpretation.textContent = "Analyse de votre demande...";
 
-  const criteres = await interpreterRechercheIA(question);
+  let criteres;
+  try {
+    criteres = await interpreterRechercheIA(question);
+  } catch (err) {
+    console.error("Erreur d'analyse de la recherche :", err);
+    criteres = {};
+  }
 
   // La recherche IA filtre désormais les offres réelles chargées en temps réel
   // (fretDataActuelle), et non plus un tableau de démonstration figé.
   const resultats = fretDataActuelle.filter(offre => {
-    const okDepart = !criteres.villeDepart || offre.villeDepart.toLowerCase().includes(criteres.villeDepart.toLowerCase());
-    const okArrivee = !criteres.villeArrivee || offre.villeArrivee.toLowerCase().includes(criteres.villeArrivee.toLowerCase());
-    const okPoids = !criteres.poids || Math.abs(offre.poids - criteres.poids) <= 5; // tolérance de +/- 5 tonnes
+    // Une offre peut être incomplète (saisie en cours dans l'admin) : champ manquant = pas de correspondance
+    const okDepart = !criteres.villeDepart || String(offre.villeDepart || '').toLowerCase().includes(String(criteres.villeDepart).toLowerCase());
+    const okArrivee = !criteres.villeArrivee || String(offre.villeArrivee || '').toLowerCase().includes(String(criteres.villeArrivee).toLowerCase());
+    const okPoids = !criteres.poids || Math.abs(Number(offre.poids) - criteres.poids) <= 5; // tolérance de +/- 5 tonnes
     return okDepart && okArrivee && okPoids;
   });
 
@@ -2294,6 +2302,18 @@ if('serviceWorker' in navigator){
   });
 }
 
+// Message clair selon la cause d'un échec de connexion Firebase : un souci
+// de réseau ne doit pas s'afficher comme "mot de passe incorrect".
+function messageErreurConnexion(err){
+  const code = err && err.code;
+  if(code === 'auth/network-request-failed') return "Pas de connexion internet. Vérifie ton réseau et réessaie.";
+  if(code === 'auth/too-many-requests') return "Trop de tentatives. Patiente quelques minutes avant de réessayer.";
+  if(code === 'auth/invalid-email') return "Adresse email invalide.";
+  if(code === 'auth/user-disabled') return "Ce compte a été désactivé.";
+  if(code === 'auth/operation-not-allowed') return "La connexion par email n'est pas activée sur ce site.";
+  return "Email ou mot de passe incorrect.";
+}
+
 /* ================================================================
    ESPACE CLIENT — vraie authentification Firebase
    ================================================================
@@ -2361,7 +2381,7 @@ loginForm.addEventListener('submit', async (e) => {
     afficherVueClient('account');
   } catch (err) {
     console.error("Erreur de connexion client :", err);
-    loginStatus.textContent = "Email ou mot de passe incorrect.";
+    loginStatus.textContent = messageErreurConnexion(err);
     loginStatus.className = "text-xs mt-3 text-red-500 font-medium";
   } finally {
     loginSubmitBtn.disabled = false;
@@ -2393,6 +2413,8 @@ signupForm.addEventListener('submit', async (e) => {
       signupStatus.textContent = "Cet email a déjà un compte — connecte-toi plutôt.";
     } else if(err.code === 'auth/weak-password'){
       signupStatus.textContent = "Mot de passe trop court (6 caractères minimum).";
+    } else if(['auth/network-request-failed', 'auth/invalid-email', 'auth/operation-not-allowed'].includes(err.code)){
+      signupStatus.textContent = messageErreurConnexion(err);
     } else {
       signupStatus.textContent = "Échec de la création du compte. Réessaie.";
     }
@@ -2490,19 +2512,24 @@ async function verifierEtOuvrirEspaceChauffeur(){
     return;
   }
 
-  const { collection, query, where, getDocs } = window._firestore;
+  const { collection, getDocs } = window._firestore;
   try {
-    const q = query(collection(window._db, "chauffeurs"), where("email", "==", utilisateur.email));
-    const snapshot = await getDocs(q);
+    // Firebase enregistre l'email de connexion en minuscules, alors que la
+    // fiche du chauffeur a pu être saisie avec des majuscules ou des espaces :
+    // on compare donc sans tenir compte de la casse.
+    const emailConnecte = String(utilisateur.email || '').trim().toLowerCase();
+    const snapshot = await getDocs(collection(window._db, "chauffeurs"));
+    const fiche = snapshot.docs.map(d => d.data()).find(c => String(c.email || '').trim().toLowerCase() === emailConnecte);
 
-    if(snapshot.empty){
+    if(!fiche){
       afficherVueChauffeur('non-reconnu');
       return;
     }
 
     document.getElementById('chauffeurEmailDisplay').textContent = utilisateur.email;
     afficherVueChauffeur('dashboard');
-    ecouterMesMissions(utilisateur.email);
+    // Les voyages portent l'email tel qu'il figure sur la fiche du chauffeur
+    ecouterMesMissions(Array.from(new Set([fiche.email, emailConnecte])));
   } catch (err) {
     console.error("Erreur de vérification chauffeur :", err);
     afficherVueChauffeur('non-reconnu');
@@ -2547,7 +2574,7 @@ chauffeurLoginForm.addEventListener('submit', async (e) => {
     verifierEtOuvrirEspaceChauffeur();
   } catch (err) {
     console.error("Erreur de connexion chauffeur :", err);
-    chauffeurLoginStatus.textContent = "Email ou mot de passe incorrect.";
+    chauffeurLoginStatus.textContent = messageErreurConnexion(err);
     chauffeurLoginStatus.className = "text-xs mt-3 text-red-500 font-medium";
   } finally {
     chauffeurLoginSubmitBtn.disabled = false;
@@ -2578,6 +2605,8 @@ chauffeurSignupForm.addEventListener('submit', async (e) => {
       chauffeurSignupStatus.textContent = "Cet email a déjà un compte — connecte-toi plutôt.";
     } else if(err.code === 'auth/weak-password'){
       chauffeurSignupStatus.textContent = "Mot de passe trop court (6 caractères minimum).";
+    } else if(['auth/network-request-failed', 'auth/invalid-email', 'auth/operation-not-allowed'].includes(err.code)){
+      chauffeurSignupStatus.textContent = messageErreurConnexion(err);
     } else {
       chauffeurSignupStatus.textContent = "Échec de la création du compte. Réessaie.";
     }
@@ -2602,11 +2631,11 @@ document.getElementById('chauffeurLogoutBtnNonReconnu').addEventListener('click'
 const chauffeurMissionsList = document.getElementById('chauffeurMissionsList');
 const chauffeurMissionsEmpty = document.getElementById('chauffeurMissionsEmpty');
 
-function ecouterMesMissions(emailChauffeur){
+function ecouterMesMissions(emailsChauffeur){
   if(arreterEcouteMissions) arreterEcouteMissions();
 
   const { collection, query, where, onSnapshot } = window._firestore;
-  const q = query(collection(window._db, "missions"), where("chauffeurEmail", "==", emailChauffeur));
+  const q = query(collection(window._db, "missions"), where("chauffeurEmail", "in", emailsChauffeur));
 
   arreterEcouteMissions = onSnapshot(q, (snapshot) => {
     if(snapshot.empty){
@@ -2624,7 +2653,7 @@ function ecouterMesMissions(emailChauffeur){
 }
 
 function construireCarteMission(id, mission){
-  const etapeIndex = mission.etapeIndex ?? 0;
+  const etapeIndex = Number(mission.etapeIndex) || 0;
   const etapeLabel = ETAPES_MISSION[etapeIndex] || '—';
   const estTerminee = etapeIndex >= ETAPES_MISSION.length - 1;
 
@@ -2698,24 +2727,70 @@ function activerOngletSuivi(nom){
 tabColis.addEventListener('click', () => activerOngletSuivi('colis'));
 tabVehicule.addEventListener('click', () => activerOngletSuivi('vehicule'));
 
-// Données de démonstration — à remplacer par une lecture Firestore
-// sur une collection "vehicules" reliée à un vrai flux GPS.
-const vehiculesDemo = { "4521-BTX": true };
-
+// Recherche dans la flotte réelle (collection "vehicules", gérée depuis
+// l'admin). On n'affiche que l'état de service du véhicule : rien sur les
+// voyages, les clients ou les prix.
 const vehiculeBtn = document.getElementById('vehiculeBtn');
 const vehiculeInput = document.getElementById('vehiculeInput');
 const vehiculeResult = document.getElementById('vehiculeResult');
+const vehiculeError = document.getElementById('vehiculeError');
 const vehiculeIdEl = document.getElementById('vehiculeId');
 
-vehiculeBtn.addEventListener('click', () => {
-  const plaque = vehiculeInput.value.trim().toUpperCase();
-  if(vehiculesDemo[plaque]){
-    vehiculeIdEl.textContent = plaque;
-    vehiculeResult.classList.remove('hidden');
-  } else {
-    vehiculeResult.classList.add('hidden');
+// "1234 abc", "1234-ABC" et "1234ABC" désignent la même plaque
+function normaliserPlaque(plaque){
+  return String(plaque || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
+}
+
+const STATUTS_VEHICULE = {
+  actif: { libelle: 'En service', classes: 'bg-teal/15 text-teal' },
+  en_entretien: { libelle: 'En entretien', classes: 'bg-amber/20 text-amberdark' },
+  hors_service: { libelle: 'Hors service', classes: 'bg-red-500/15 text-red-500' }
+};
+const TYPES_VEHICULE = { tracteur: 'Tracteur', porteur: 'Porteur', 'semi-remorque': 'Semi-remorque', remorque: 'Remorque', fourgon: 'Fourgon', camion: 'Camion' };
+
+function afficherErreurVehicule(message){
+  vehiculeError.textContent = message;
+  vehiculeError.classList.remove('hidden');
+  vehiculeResult.classList.add('hidden');
+}
+
+async function chercherVehicule(){
+  const plaque = normaliserPlaque(vehiculeInput.value);
+  if(!plaque) return;
+  if(!window._db){
+    afficherErreurVehicule("Connexion à la base de données indisponible pour le moment.");
+    return;
   }
-});
+
+  vehiculeBtn.disabled = true;
+  try {
+    const { collection, getDocs } = window._firestore;
+    const snapshot = await getDocs(collection(window._db, "vehicules"));
+    const vehicule = snapshot.docs.map(d => d.data()).find(v => normaliserPlaque(v.immatriculation) === plaque);
+
+    if(!vehicule){
+      afficherErreurVehicule("Aucun véhicule de notre flotte ne porte cette immatriculation. Vérifiez la saisie.");
+      return;
+    }
+
+    const statut = STATUTS_VEHICULE[vehicule.statut] || STATUTS_VEHICULE.actif;
+    const statutEl = document.getElementById('vehiculeStatut');
+    statutEl.textContent = statut.libelle;
+    statutEl.className = `text-xs font-bold uppercase tracking-wide px-3.5 py-1.5 rounded-full ${statut.classes}`;
+    vehiculeIdEl.textContent = String(vehicule.immatriculation).toUpperCase();
+    document.getElementById('vehiculeDetails').textContent = [TYPES_VEHICULE[vehicule.type] || vehicule.type, vehicule.marque].filter(Boolean).join(' — ');
+
+    vehiculeError.classList.add('hidden');
+    vehiculeResult.classList.remove('hidden');
+  } catch (err) {
+    console.error("Erreur de recherche de véhicule :", err);
+    afficherErreurVehicule("Impossible de consulter la flotte pour le moment. Réessayez.");
+  } finally {
+    vehiculeBtn.disabled = false;
+  }
+}
+
+vehiculeBtn.addEventListener('click', chercherVehicule);
 vehiculeInput.addEventListener('keydown', (e) => { if(e.key === 'Enter') vehiculeBtn.click(); });
 
 /* ================================================================
@@ -2801,7 +2876,9 @@ function fermerConnexionAdmin(){
 function ouvrirTableauDeBord(){
   adminDashboard.classList.remove('hidden');
   document.body.style.overflow = 'hidden';
-  chargerCollection('devis', true); // collection affichée par défaut à l'ouverture
+  // Onglet Devis affiché (et surligné) par défaut à l'ouverture
+  document.querySelectorAll('.admin-tab').forEach(t => t.classList.toggle('active', t.dataset.collection === 'devis'));
+  chargerCollection('devis', true);
 }
 function fermerTableauDeBord(){
   adminDashboard.classList.add('hidden');
@@ -3183,6 +3260,9 @@ function lireValeurChamp(champEl){
   if(champEl.type === 'number') return champEl.value === '' ? null : parseFloat(champEl.value);
   // Liste de valeurs numériques (étapes) : on enregistre un nombre, pas le texte "2"
   if(champEl.dataset.numerique && champEl.value !== '') return Number(champEl.value);
+  // Emails toujours en minuscules : c'est ainsi que Firebase les enregistre à
+  // la connexion, et c'est ce qui relie un chauffeur ou un client à ses données
+  if(/email/i.test(champEl.dataset.champ || '') && champEl.tagName !== 'SELECT') return champEl.value.trim().toLowerCase();
   return champEl.value.trim();
 }
 
@@ -3456,7 +3536,8 @@ async function validerLigneRapide(champs){
   champs.forEach(champEl => {
     const champ = champEl.dataset.champ;
     const valeur = lireValeurChamp(champEl);
-    if(champ === '__id__'){ idPersonnalise = valeur || null; if(valeur) aSaisi = true; return; }
+    // Numéro de suivi en majuscules : le site public le recherche ainsi
+    if(champ === '__id__'){ idPersonnalise = valeur ? valeur.toUpperCase() : null; if(valeur) aSaisi = true; return; }
     if(valeur === '' || valeur === null) return;
     donnees[champ] = valeur;
     const col = schema.find(c => c.champ === champ);
@@ -3523,7 +3604,11 @@ async function chargerCollection(nomVue, reinitialiser){
 }
 
 async function chargerPageSuivante(){
-  if(chargementEnCours || !ilResteDesDocuments || !window._db) return;
+  if(!window._db){
+    adminLoadingLabel.textContent = "Base de données indisponible : vérifie ta connexion internet, puis recharge la page.";
+    return;
+  }
+  if(chargementEnCours || !ilResteDesDocuments) return;
   chargementEnCours = true;
   const monChargement = numeroChargement;
   adminLoadingLabel.textContent = "Chargement...";
@@ -4156,13 +4241,20 @@ const historiqueListEl = document.getElementById('historiqueList');
 const historiqueEmptyEl = document.getElementById('historiqueEmpty');
 
 async function chercherHistoriqueParEmail(){
-  const email = historiqueEmailInput.value.trim();
-  if(!email || !window._db) return;
+  const saisie = historiqueEmailInput.value.trim();
+  if(!saisie) return;
+  if(!window._db){
+    historiqueEmptyEl.classList.remove('hidden');
+    historiqueEmptyEl.textContent = "Connexion à la base de données indisponible pour le moment.";
+    return;
+  }
 
   const { collection, query, where, getDocs } = window._firestore;
 
   try {
-    const q = query(collection(window._db, "commandes"), where("email", "==", email));
+    // Recherche sur l'email tel que saisi et en minuscules (majuscules tolérées)
+    const variantes = Array.from(new Set([saisie, saisie.toLowerCase()]));
+    const q = query(collection(window._db, "commandes"), where("email", "in", variantes));
     const snapshot = await getDocs(q);
 
     if(snapshot.empty){
@@ -4175,7 +4267,7 @@ async function chercherHistoriqueParEmail(){
     historiqueEmptyEl.classList.add('hidden');
     historiqueListEl.innerHTML = snapshot.docs.map(docSnap => {
       const c = docSnap.data();
-      const statut = c.statutLabel || ETAPES_LIVRAISON_EMAIL[c.etapeActuelle] || '—';
+      const statut = c.statutLabel || ETAPES_LIVRAISON_EMAIL[Number(c.etapeActuelle) || 0] || '—';
       return `
         <div class="flex items-center justify-between p-4 rounded-lg border border-slate-200 dark:border-white/10">
           <span class="font-mono-num text-sm font-semibold text-navy dark:text-white">${docSnap.id}</span>
@@ -4241,6 +4333,7 @@ async function chercherDocumentsPOD(){
     const snap = await getDoc(doc(window._db, "commandes", numero));
 
     if(!snap.exists()){
+      podError.textContent = "Aucun document trouvé pour ce numéro.";
       podError.classList.remove('hidden');
       podResult.classList.add('hidden');
       return;
@@ -4262,8 +4355,9 @@ async function chercherDocumentsPOD(){
     podAucunDocument.classList.toggle('hidden', aCmr || aFacture);
   } catch (err) {
     console.error("Erreur de recherche POD :", err);
-    podError.textContent = "Impossible de charger les documents (vérifie tes règles Firestore).";
+    podError.textContent = "Impossible de charger les documents pour le moment. Réessayez.";
     podError.classList.remove('hidden');
+    podResult.classList.add('hidden');
   }
 }
 
