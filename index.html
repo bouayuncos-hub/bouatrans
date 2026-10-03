@@ -1082,6 +1082,7 @@
     </div>
     <!-- Onglets de collections -->
     <div class="max-w-6xl mx-auto px-5 pb-3 flex gap-2 flex-wrap">
+      <button class="admin-tab" data-collection="publier">📤 Publier</button>
       <button class="admin-tab" data-collection="devis">Devis</button>
       <button class="admin-tab" data-collection="candidatures">Candidatures</button>
       <button class="admin-tab" data-collection="commandes">Commandes / Suivi</button>
@@ -1098,7 +1099,46 @@
     </div>
   </div>
 
-  <div class="max-w-6xl mx-auto px-5 py-8">
+  <!-- ÉCRAN "PUBLIER" : l'accueil du tableau de bord. Une tuile = un type de
+       fichier ; un clic ouvre le choix des fichiers sur l'appareil. -->
+  <div id="adminPublier" class="hidden max-w-6xl mx-auto px-5 py-8">
+    <h2 class="text-2xl font-bold text-navy dark:text-white mb-1.5">Que veux-tu publier ?</h2>
+    <p class="text-sm text-slate-500 dark:text-cream/60 mb-6">Clique sur une case, choisis tes fichiers (plusieurs à la fois si tu veux) : ils sont mis en ligne et rangés tout seuls.</p>
+
+    <div class="grid grid-cols-2 lg:grid-cols-5 gap-4">
+      <button type="button" data-cible="medias" class="text-left bg-white dark:bg-navylight border-2 border-amber/60 hover:border-amber rounded-2xl p-5 transition">
+        <span class="text-4xl block mb-3">📷</span>
+        <span class="block font-bold text-navy dark:text-white">Photos et vidéos</span>
+        <span class="block text-xs text-teal font-semibold mt-1">Visibles dans la galerie du site</span>
+      </button>
+      <button type="button" data-cible="factures" class="text-left bg-white dark:bg-navylight border-2 border-slate-200 dark:border-white/15 hover:border-amber rounded-2xl p-5 transition">
+        <span class="text-4xl block mb-3">🧾</span>
+        <span class="block font-bold text-navy dark:text-white">Factures</span>
+        <span class="block text-xs text-slate-500 dark:text-cream/50 mt-1">Non affichées sur le site</span>
+      </button>
+      <button type="button" data-cible="voyages" class="text-left bg-white dark:bg-navylight border-2 border-slate-200 dark:border-white/15 hover:border-amber rounded-2xl p-5 transition">
+        <span class="text-4xl block mb-3">🚚</span>
+        <span class="block font-bold text-navy dark:text-white">Voyages</span>
+        <span class="block text-xs text-slate-500 dark:text-cream/50 mt-1">CMR, bons de livraison — non affichés sur le site</span>
+      </button>
+      <button type="button" data-cible="camions" class="text-left bg-white dark:bg-navylight border-2 border-slate-200 dark:border-white/15 hover:border-amber rounded-2xl p-5 transition">
+        <span class="text-4xl block mb-3">🚛</span>
+        <span class="block font-bold text-navy dark:text-white">Camions</span>
+        <span class="block text-xs text-slate-500 dark:text-cream/50 mt-1">Carte grise, assurance, contrôle — non affichés sur le site</span>
+      </button>
+      <button type="button" data-cible="autres" class="text-left bg-white dark:bg-navylight border-2 border-slate-200 dark:border-white/15 hover:border-amber rounded-2xl p-5 transition">
+        <span class="text-4xl block mb-3">📎</span>
+        <span class="block font-bold text-navy dark:text-white">Autres fichiers</span>
+        <span class="block text-xs text-slate-500 dark:text-cream/50 mt-1">Non affichés sur le site</span>
+      </button>
+    </div>
+
+    <input id="adminPublierInput" type="file" multiple class="hidden">
+    <p id="adminPublierEtat" class="hidden mt-6 text-sm font-semibold text-navy dark:text-cream"></p>
+    <ul id="adminPublierResultats" class="mt-2 max-w-2xl"></ul>
+  </div>
+
+  <div id="adminZoneTableau" class="max-w-6xl mx-auto px-5 py-8">
     <p class="text-sm text-slate-500 dark:text-cream/50 mb-5">
       Onglet actif : <span id="adminCollectionLabel" class="font-mono-num font-semibold text-navy dark:text-cream">devis</span>
       — <span id="adminCount">0</span> ligne(s) chargée(s)
@@ -1365,6 +1405,10 @@
   const app = initializeApp(firebaseConfig);
   const db = getFirestore(app);
   const storage = getStorage(app);
+  // Par défaut, un envoi sans réponse est retenté pendant 10 minutes :
+  // on ramène ce délai à 1 minute pour ne jamais rester bloqué.
+  storage.maxUploadRetryTime = 60000;
+  storage.maxOperationRetryTime = 20000;
   const auth = getAuth(app);
 
   // On rend "db", "storage", "auth" et les fonctions Firebase accessibles au
@@ -1399,6 +1443,91 @@
 function quandFirebasePret(action){
   if(window._db) action();
   else window.addEventListener('firebase-pret', action, { once: true });
+}
+
+/* ------------------------------------------------------------
+   FICHIERS ENREGISTRÉS DANS LA BASE
+   Quand le stockage Firebase n'est pas disponible, l'admin enregistre
+   photos et documents dans la collection "fichiers". Le champ du
+   document contient alors une référence "fs:identifiant" au lieu
+   d'un lien https. Ces fonctions transforment cette référence en
+   adresse utilisable par la page (image, lien à ouvrir).
+   ------------------------------------------------------------ */
+const PREFIXE_FICHIER_BASE = 'fs:';
+const cacheFichiersBase = new Map(); // identifiant → adresse locale déjà préparée
+
+function estFichierBase(valeur){
+  return typeof valeur === 'string' && valeur.startsWith(PREFIXE_FICHIER_BASE);
+}
+
+// Renvoie (promesse) une adresse affichable pour n'importe quelle valeur de
+// champ fichier : un lien https est rendu tel quel, une référence "fs:…" est
+// lue dans la base et convertie en adresse locale.
+function urlDeFichier(valeur){
+  if(!estFichierBase(valeur)) return Promise.resolve(valeur);
+  const id = valeur.slice(PREFIXE_FICHIER_BASE.length);
+  if(!cacheFichiersBase.has(id)){
+    const lecture = (async () => {
+      const { doc, getDoc, collection, getDocs } = window._firestore;
+      const fiche = await getDoc(doc(window._db, 'fichiers', id));
+      if(!fiche.exists()) throw new Error("fichier introuvable");
+      const infos = fiche.data();
+      let base64 = infos.donnees || '';
+      if(!base64){
+        const morceaux = await getDocs(collection(window._db, 'fichiers', id, 'morceaux'));
+        base64 = morceaux.docs.map(d => d.data()).sort((x, y) => x.rang - y.rang).map(m => m.donnees).join('');
+      }
+      const binaire = atob(base64);
+      const octets = new Uint8Array(binaire.length);
+      for(let i = 0; i < binaire.length; i++) octets[i] = binaire.charCodeAt(i);
+      return URL.createObjectURL(new Blob([octets], { type: infos.type || 'application/octet-stream' }));
+    })();
+    lecture.catch(() => cacheFichiersBase.delete(id)); // un échec n'est pas mémorisé : on pourra réessayer
+    cacheFichiersBase.set(id, lecture);
+  }
+  return cacheFichiersBase.get(id);
+}
+
+// Ouvre un fichier dans un nouvel onglet, quel que soit son mode d'enregistrement.
+function ouvrirFichier(valeur){
+  if(!valeur) return;
+  if(!estFichierBase(valeur)){
+    window.open(valeur, '_blank', 'noopener');
+    return;
+  }
+  // L'onglet est ouvert tout de suite (au moment du clic), sinon le navigateur
+  // le bloquerait comme une fenêtre pop-up ; le fichier y est chargé ensuite.
+  const onglet = window.open('', '_blank');
+  urlDeFichier(valeur)
+    .then(adresse => { if(onglet) onglet.location = adresse; else window.location.href = adresse; })
+    .catch(err => {
+      console.error("Erreur d'ouverture de fichier :", err);
+      if(onglet) onglet.close();
+      alert("Impossible d'ouvrir ce fichier pour le moment. Réessayez.");
+    });
+}
+
+// Affiche les photos enregistrées dans la base, au moment où elles arrivent
+// à l'écran (pas avant : on ne lit pas toute la galerie au chargement).
+const observateurPhotosBase = ('IntersectionObserver' in window) ? new IntersectionObserver((entrees) => {
+  entrees.forEach(entree => {
+    if(!entree.isIntersecting) return;
+    observateurPhotosBase.unobserve(entree.target);
+    chargerPhotoBase(entree.target);
+  });
+}, { rootMargin: '300px' }) : null;
+
+function chargerPhotoBase(img){
+  urlDeFichier(img.dataset.fichierBase)
+    .then(adresse => { img.src = adresse; })
+    .catch(err => console.error("Photo non chargée :", err));
+}
+
+function activerPhotosBase(conteneur){
+  conteneur.querySelectorAll('img[data-fichier-base]').forEach(img => {
+    if(observateurPhotosBase) observateurPhotosBase.observe(img);
+    else chargerPhotoBase(img);
+  });
 }
 
 /* ------------------------------------------------------------
@@ -2876,9 +3005,9 @@ function fermerConnexionAdmin(){
 function ouvrirTableauDeBord(){
   adminDashboard.classList.remove('hidden');
   document.body.style.overflow = 'hidden';
-  // Onglet Devis affiché (et surligné) par défaut à l'ouverture
-  document.querySelectorAll('.admin-tab').forEach(t => t.classList.toggle('active', t.dataset.collection === 'devis'));
-  chargerCollection('devis', true);
+  // L'écran "Publier" est l'accueil du tableau de bord
+  document.querySelectorAll('.admin-tab').forEach(t => t.classList.toggle('active', t.dataset.collection === 'publier'));
+  chargerCollection('publier', true);
 }
 function fermerTableauDeBord(){
   adminDashboard.classList.add('hidden');
@@ -2924,7 +3053,7 @@ adminLogoutBtn.addEventListener('click', () => {
    ---------------------------------------------------------------- */
 const PAGE_SIZE = 10;
 const PAGE_SIZE_VUE_COMPLETE = 500;
-let vueActive = 'devis';        // onglet affiché (clé de SCHEMAS_ADMIN)
+let vueActive = 'publier';      // onglet affiché ("publier" ou une clé de SCHEMAS_ADMIN)
 let collectionActive = 'devis'; // collection Firestore lue et écrite
 let dernierDocumentCharge = null;
 let chargementEnCours = false;
@@ -3095,7 +3224,8 @@ const SCHEMAS_ADMIN = {
     { champ: 'montantHT', label: 'Montant HT (€)', type: 'number' },
     { champ: 'tauxTVA', label: 'TVA %', type: 'number', defaut: 21 },
     { champ: '_ttc', label: 'Total TTC', type: 'calcul', calcul: f => ({ texte: formatEuros.format(calculerFacture(f).ttc) }) },
-    { champ: 'statut', label: 'État', type: 'select', options: ['en_attente', 'payee', 'annulee'], optionLabels: ['En attente', 'Payée', 'Annulée'], defaut: 'en_attente' }
+    { champ: 'statut', label: 'État', type: 'select', options: ['en_attente', 'payee', 'annulee'], optionLabels: ['En attente', 'Payée', 'Annulée'], defaut: 'en_attente' },
+    { champ: 'fichierUrl', label: 'Fichier', type: 'fichier', dossier: 'factures' }
   ],
 
   avis: [
@@ -3108,8 +3238,9 @@ const SCHEMAS_ADMIN = {
   documents: [
     { champ: 'nom', label: 'Nom', type: 'text' },
     { champ: 'url', label: 'Fichier', type: 'fichier', dossier: 'documents' },
-    { champ: 'categorie', label: 'Catégorie', type: 'select', options: ['cmr', 'facture', 'contrat', 'assurance', 'vehicule', 'autre'], optionLabels: ['CMR', 'Facture', 'Contrat', 'Assurance', 'Véhicule', 'Autre'], defaut: 'autre' },
+    { champ: 'categorie', label: 'Catégorie', type: 'select', options: ['voyage', 'vehicule', 'facture', 'contrat', 'assurance', 'autre'], optionLabels: ['Voyage (CMR…)', 'Camion', 'Facture', 'Contrat', 'Assurance', 'Autre'], defaut: 'autre' },
     { champ: 'missionId', label: 'Voyage lié', type: 'select', source: { collection: 'missions', valeur: m => m.id, label: libelleVoyage } },
+    { champ: 'vehicule', label: 'Camion lié', type: 'select', source: { collection: 'vehicules', valeur: v => v.immatriculation, label: v => v.immatriculation } },
     { champ: 'dateAjout', label: 'Ajouté le', type: 'date', defaut: () => aujourdHuiISO() }
   ],
   medias: [
@@ -3129,30 +3260,21 @@ const SCHEMAS_ADMIN = {
      tri        : ordre d'affichage des lignes
      resume     : tuiles de synthèse affichées au-dessus du tableau
      televersement : bouton "choisir des fichiers" — chaque fichier choisi
-                  est envoyé puis devient une ligne du tableau
+                  est publié puis devient une ligne du tableau (la règle de
+                  rangement est décrite dans CIBLES_PUBLICATION)
    ---------------------------------------------------------------- */
 const VUES_ADMIN = {
   missions: { references: ['vehicules', 'chauffeurs'] },
   documents: {
-    references: ['missions'],
+    references: ['missions', 'vehicules'],
     complet: true,
     tri: (a, b) => String(b.dateAjout || '').localeCompare(String(a.dateAjout || '')),
-    televersement: {
-      libelle: '📎 Choisir des documents',
-      dossier: 'documents',
-      creer: (fichier, url) => ({ nom: nomSansExtension(fichier.name), url, categorie: 'autre', dateAjout: aujourdHuiISO() })
-    }
+    televersement: { libelle: '📎 Choisir des documents', cible: 'autres' }
   },
   medias: {
     complet: true,
     tri: (a, b) => (a.ordre ?? 999) - (b.ordre ?? 999),
-    televersement: {
-      libelle: '📎 Choisir des photos / vidéos',
-      dossier: 'medias',
-      accept: 'image/*,video/*',
-      accepter: (fichier) => fichier.type.startsWith('image/') || fichier.type.startsWith('video/'),
-      creer: (fichier, url, rang) => ({ type: fichier.type.startsWith('video/') ? 'video' : 'photo', titre: nomSansExtension(fichier.name), url, visible: true, ordre: rang })
-    }
+    televersement: { libelle: '📎 Choisir des photos / vidéos', cible: 'medias' }
   },
   rentabilite: {
     collection: 'missions',
@@ -3175,6 +3297,7 @@ const VUES_ADMIN = {
   factures: {
     references: ['missions'],
     complet: true,
+    televersement: { libelle: '📎 Choisir des factures (PDF, photo)', cible: 'factures' },
     tri: (a, b) => String(b.numero || '').localeCompare(String(a.numero || '')),
     resume: (lignes) => {
       const parEtat = (etat) => lignes.filter(f => (f.statut || 'en_attente') === etat);
@@ -3242,11 +3365,13 @@ function construireChampColonne(col, valeur, classe){
     return `<input type="number" step="any" data-champ="${col.champ}" value="${echapperHtmlAdmin(val)}" class="${classe} w-full min-w-[90px] bg-transparent px-2 py-1.5 rounded text-sm text-navy dark:text-cream focus:outline-none focus:bg-cream dark:focus:bg-navy focus:ring-1 focus:ring-amber">`;
   }
   if(col.type === 'fichier'){
-    const lien = val ? `<a href="${echapperHtmlAdmin(val)}" target="_blank" rel="noopener" class="admin-fichier-lien text-teal hover:text-amber text-sm px-1" title="Ouvrir le fichier">↗</a>` : '';
+    // Même structure que celle tenue à jour par rafraichirCelluleFichier()
+    const interne = estFichierBase(val);
     return `<div class="flex items-center gap-1 min-w-[190px]">
-      <input type="text" data-champ="${col.champ}" value="${echapperHtmlAdmin(val)}" placeholder="lien ou 📎" class="${classe} flex-1 min-w-0 bg-transparent px-2 py-1.5 rounded text-sm text-navy dark:text-cream focus:outline-none focus:bg-cream dark:focus:bg-navy focus:ring-1 focus:ring-amber">
+      <input type="${interne ? 'hidden' : 'text'}" data-champ="${col.champ}" value="${echapperHtmlAdmin(val)}" placeholder="lien ou 📎" class="${classe} flex-1 min-w-0 bg-transparent px-2 py-1.5 rounded text-sm text-navy dark:text-cream focus:outline-none focus:bg-cream dark:focus:bg-navy focus:ring-1 focus:ring-amber">
+      ${interne ? `<span class="admin-fichier-etiquette flex-1 text-sm text-slate-500 dark:text-cream/60 px-2 whitespace-nowrap">📄 fichier enregistré</span>` : ''}
       <button type="button" class="admin-fichier-btn shrink-0 text-sm px-1.5 py-1 rounded hover:bg-amber/20" data-dossier="${col.dossier || 'divers'}" data-accept="${col.accept || ''}" title="Choisir un fichier sur l'appareil">📎</button>
-      ${lien}
+      ${val ? `<button type="button" class="admin-fichier-lien shrink-0 text-teal hover:text-amber text-sm px-1" title="Ouvrir le fichier">↗</button>` : ''}
     </div>`;
   }
   if(col.type === 'date'){
@@ -3282,14 +3407,21 @@ function remplirCalculsLigne(tr, donnees){
 }
 
 /* ----------------------------------------------------------------
-   ENVOI DE FICHIERS (Firebase Storage)
-   Photos, vidéos et documents choisis sur l'appareil sont envoyés dans
-   le dossier "admin/…" du stockage Firebase ; c'est le lien obtenu qui
-   est enregistré dans Firestore. Limites : 200 Mo pour une vidéo,
-   25 Mo pour les autres fichiers.
+   PUBLICATION DE FICHIERS
+   Un fichier choisi sur l'appareil est mis en ligne, puis sa référence
+   est enregistrée dans Firestore. Deux endroits possibles :
+     1. le stockage Firebase (Storage), quand il est disponible ;
+     2. sinon la base elle-même (collection "fichiers") : les photos y
+        sont compressées, les documents découpés en morceaux. Les vidéos
+        sont trop lourdes pour cette solution de secours.
+   Le stockage Firebase est testé une fois par session : s'il ne répond
+   pas, on passe directement au secours, sans attente ni blocage.
+   Limites : 200 Mo par vidéo, 25 Mo par fichier (8 Mo en secours).
    ---------------------------------------------------------------- */
 const TAILLE_MAX_VIDEO_MO = 200;
 const TAILLE_MAX_FICHIER_MO = 25;
+const TAILLE_MAX_FICHIER_BASE_MO = 8;
+const TAILLE_MORCEAU = 700000; // caractères par document Firestore (limite technique : 1 Mo)
 
 function nomSansExtension(nomFichier){
   return String(nomFichier).replace(/\.[^.]+$/, '');
@@ -3302,11 +3434,35 @@ function verifierTailleFichier(fichier){
   }
 }
 
-// Envoie un fichier et renvoie son lien. surProgression(pourcentage) est facultatif.
+function attendreAuPlus(promesse, millisecondes){
+  return Promise.race([
+    promesse,
+    new Promise((_, rejeter) => setTimeout(() => rejeter(new Error("délai dépassé")), millisecondes))
+  ]);
+}
+
+// Le stockage Firebase répond-il ? Testé une seule fois par session avec un
+// fichier de 2 octets, pour ne jamais rester bloqué sur un envoi sans réponse.
+let etatStockage = null; // null = pas encore testé
+async function stockageDisponible(){
+  if(etatStockage !== null) return etatStockage;
+  try {
+    if(!window._storage) throw new Error("non initialisé");
+    const { ref, uploadBytes, deleteObject } = window._storageFns;
+    const essai = ref(window._storage, `admin/_test/${Date.now()}.txt`);
+    await attendreAuPlus(uploadBytes(essai, new Blob(['ok'], { type: 'text/plain' })), 10000);
+    deleteObject(essai).catch(() => {});
+    etatStockage = true;
+  } catch (err) {
+    console.warn("Stockage Firebase indisponible — les fichiers seront enregistrés dans la base :", err);
+    etatStockage = false;
+  }
+  return etatStockage;
+}
+
+// Envoie un fichier dans le stockage Firebase et renvoie son lien.
 function envoyerFichierStorage(fichier, dossier, surProgression){
   return new Promise((resoudre, rejeter) => {
-    if(!window._storage) return rejeter(new Error("Firebase Storage n'est pas initialisé"));
-    try { verifierTailleFichier(fichier); } catch (err) { return rejeter(err); }
     const { ref, uploadBytesResumable, getDownloadURL } = window._storageFns;
     const nomPropre = fichier.name.replace(/[^a-zA-Z0-9._-]/g, '_');
     const fichierRef = ref(window._storage, `admin/${dossier}/${Date.now()}_${nomPropre}`);
@@ -3319,38 +3475,264 @@ function envoyerFichierStorage(fichier, dossier, surProgression){
   });
 }
 
-// Supprime du stockage les fichiers d'une ligne qu'on efface (sans bloquer
-// la suppression si le fichier n'existe plus ou n'est pas dans notre stockage).
-function supprimerFichiersDeLigne(donnees){
-  const { ref, deleteObject } = window._storageFns;
-  (SCHEMAS_ADMIN[vueActive] || []).filter(col => col.type === 'fichier').forEach(col => {
-    const url = donnees[col.champ];
-    if(typeof url === 'string' && url.startsWith('https://firebasestorage.googleapis.com/')){
-      try { deleteObject(ref(window._storage, url)).catch(() => {}); } catch (err) { /* lien non reconnu : on ignore */ }
+// Réduit une photo (dimension puis qualité) jusqu'à passer sous le poids voulu.
+async function compresserImage(fichier, coteMax, poidsMaxOctets){
+  const adresse = URL.createObjectURL(fichier);
+  try {
+    const image = await new Promise((resoudre, rejeter) => {
+      const img = new Image();
+      img.onload = () => resoudre(img);
+      img.onerror = () => rejeter(new Error("photo illisible par ce navigateur"));
+      img.src = adresse;
+    });
+    let cote = coteMax, qualite = 0.85, resultat = null;
+    for(let essai = 0; essai < 7; essai++){
+      const echelle = Math.min(1, cote / Math.max(image.naturalWidth, image.naturalHeight));
+      const canvas = document.createElement('canvas');
+      canvas.width = Math.max(1, Math.round(image.naturalWidth * echelle));
+      canvas.height = Math.max(1, Math.round(image.naturalHeight * echelle));
+      const contexte = canvas.getContext('2d');
+      contexte.fillStyle = '#ffffff'; // fond blanc pour les images transparentes
+      contexte.fillRect(0, 0, canvas.width, canvas.height);
+      contexte.drawImage(image, 0, 0, canvas.width, canvas.height);
+      resultat = await new Promise(resoudre => canvas.toBlob(resoudre, 'image/jpeg', qualite));
+      if(!resultat) throw new Error("photo illisible par ce navigateur");
+      if(resultat.size <= poidsMaxOctets) return resultat;
+      cote = Math.round(cote * 0.8);
+      qualite = Math.max(0.5, qualite - 0.08);
     }
+    throw new Error("photo trop lourde, même après réduction");
+  } finally {
+    URL.revokeObjectURL(adresse);
+  }
+}
+
+function lireEnBase64(blob){
+  return new Promise((resoudre, rejeter) => {
+    const lecteur = new FileReader();
+    lecteur.onload = () => resoudre(String(lecteur.result).split(',')[1] || '');
+    lecteur.onerror = () => rejeter(new Error("lecture du fichier impossible"));
+    lecteur.readAsDataURL(blob);
   });
 }
 
-// Met à jour le petit lien "↗" d'une cellule fichier après un changement.
-function rafraichirLienFichier(champEl){
+// Secours : enregistre le fichier dans la collection "fichiers" et renvoie
+// sa référence "fs:identifiant" (lue ensuite par urlDeFichier).
+async function enregistrerFichierDansLaBase(blob, nom, surProgression){
+  const { collection, doc, addDoc, setDoc, deleteDoc, serverTimestamp } = window._firestore;
+  const base64 = await lireEnBase64(blob);
+  const fiche = { nom, type: blob.type || 'application/octet-stream', taille: blob.size, dateCreation: serverTimestamp() };
+
+  if(base64.length <= TAILLE_MORCEAU){
+    const cree = await addDoc(collection(window._db, 'fichiers'), { ...fiche, morceaux: 1, donnees: base64 });
+    if(surProgression) surProgression(100);
+    return PREFIXE_FICHIER_BASE + cree.id;
+  }
+
+  const nombre = Math.ceil(base64.length / TAILLE_MORCEAU);
+  const cree = await addDoc(collection(window._db, 'fichiers'), { ...fiche, morceaux: nombre });
+  try {
+    for(let i = 0; i < nombre; i++){
+      await setDoc(doc(window._db, 'fichiers', cree.id, 'morceaux', String(i)), { rang: i, donnees: base64.slice(i * TAILLE_MORCEAU, (i + 1) * TAILLE_MORCEAU) });
+      if(surProgression) surProgression(Math.round((i + 1) / nombre * 100));
+    }
+  } catch (err) {
+    deleteDoc(doc(window._db, 'fichiers', cree.id)).catch(() => {}); // pas de fichier à moitié enregistré
+    throw err;
+  }
+  return PREFIXE_FICHIER_BASE + cree.id;
+}
+
+// Met un fichier en ligne et renvoie la valeur à enregistrer dans Firestore
+// (un lien https, ou une référence "fs:…" en secours).
+// pourLeSite = photo destinée à la galerie : réduite pour s'afficher vite.
+async function publierFichier(fichier, dossier, surProgression, pourLeSite){
+  verifierTailleFichier(fichier);
+  const estVideo = fichier.type.startsWith('video/');
+  const estPhoto = fichier.type.startsWith('image/') && !/gif|svg/.test(fichier.type);
+
+  if(await stockageDisponible()){
+    let aEnvoyer = fichier;
+    if(estPhoto && pourLeSite && fichier.size > 1500000){
+      try {
+        const reduite = await compresserImage(fichier, 1920, 1500000);
+        aEnvoyer = new File([reduite], nomSansExtension(fichier.name) + '.jpg', { type: 'image/jpeg' });
+      } catch (err) { /* photo non réductible : on envoie l'original */ }
+    }
+    try {
+      return await envoyerFichierStorage(aEnvoyer, dossier, surProgression);
+    } catch (err) {
+      if(estVideo) throw err;
+      console.warn("Envoi vers le stockage impossible, enregistrement dans la base :", err);
+    }
+  }
+
+  if(estVideo){
+    throw new Error("le stockage Firebase n'est pas disponible, et une vidéo est trop lourde pour la base : publie-la sur YouTube puis colle son lien dans l'onglet Médias");
+  }
+  if(estPhoto){
+    const reduite = await compresserImage(fichier, 1600, 480000);
+    return enregistrerFichierDansLaBase(reduite, nomSansExtension(fichier.name) + '.jpg', surProgression);
+  }
+  if(fichier.size > TAILLE_MAX_FICHIER_BASE_MO * 1024 * 1024){
+    throw new Error(`sans le stockage Firebase, un document ne peut pas dépasser ${TAILLE_MAX_FICHIER_BASE_MO} Mo`);
+  }
+  return enregistrerFichierDansLaBase(fichier, fichier.name, surProgression);
+}
+
+// Supprime un fichier mis en ligne par le site (stockage ou base). Sans effet
+// sur un lien externe (YouTube, autre site…). Ne bloque jamais l'appelant.
+function supprimerFichier(valeur){
+  if(typeof valeur !== 'string' || !valeur) return;
+  try {
+    if(estFichierBase(valeur)){
+      const { collection, doc, getDocs, deleteDoc } = window._firestore;
+      const id = valeur.slice(PREFIXE_FICHIER_BASE.length);
+      getDocs(collection(window._db, 'fichiers', id, 'morceaux'))
+        .then(morceaux => Promise.all(morceaux.docs.map(m => deleteDoc(doc(window._db, 'fichiers', id, 'morceaux', m.id)))))
+        .then(() => deleteDoc(doc(window._db, 'fichiers', id)))
+        .catch(() => {});
+    } else if(valeur.startsWith('https://firebasestorage.googleapis.com/')){
+      const { ref, deleteObject } = window._storageFns;
+      deleteObject(ref(window._storage, valeur)).catch(() => {});
+    }
+  } catch (err) { /* référence non reconnue : on ignore */ }
+}
+
+function supprimerFichiersDeLigne(donnees){
+  (SCHEMAS_ADMIN[vueActive] || []).filter(col => col.type === 'fichier').forEach(col => supprimerFichier(donnees[col.champ]));
+}
+
+// Dit en clair pourquoi une publication a échoué.
+function messageErreurPublication(err){
+  const code = (err && err.code) || '';
+  if(code === 'permission-denied') return "accès refusé par Firestore : publie le fichier firestore.rules dans la console Firebase";
+  if(code === 'storage/unauthorized') return "accès refusé par le stockage : publie le fichier storage.rules dans la console Firebase";
+  if(code === 'unavailable' || code === 'storage/retry-limit-exceeded') return "pas de connexion internet, réessaie";
+  if(code === 'storage/quota-exceeded' || code === 'resource-exhausted') return "quota Firebase atteint pour aujourd'hui";
+  return (err && err.message) || String(err);
+}
+
+/* ----------------------------------------------------------------
+   OÙ VA CHAQUE TYPE DE FICHIER
+     collection : où la ligne est créée
+     dossier    : sous-dossier dans le stockage
+     accept / accepter : types de fichiers admis
+     pourLeSite : photos réduites pour la galerie publique
+     preparer   : lecture préalable (rang d'affichage, numéros de facture)
+     creer      : la ligne créée pour un fichier donné
+   ---------------------------------------------------------------- */
+const CIBLES_PUBLICATION = {
+  medias: {
+    collection: 'medias', dossier: 'medias', onglet: 'medias', pourLeSite: true,
+    accept: 'image/*,video/*',
+    accepter: (f) => f.type.startsWith('image/') || f.type.startsWith('video/'),
+    preparer: async () => {
+      const { collection, getDocs } = window._firestore;
+      const existants = await getDocs(collection(window._db, 'medias'));
+      return { rang: existants.docs.reduce((max, d) => Math.max(max, Number(d.data().ordre) || 0), 0) };
+    },
+    creer: (f, valeur, contexte) => ({ type: f.type.startsWith('video/') ? 'video' : 'photo', titre: nomSansExtension(f.name), url: valeur, visible: true, ordre: ++contexte.rang })
+  },
+  factures: {
+    collection: 'factures', dossier: 'factures', onglet: 'factures',
+    preparer: async () => {
+      const { collection, getDocs } = window._firestore;
+      const existantes = await getDocs(collection(window._db, 'factures'));
+      return { factures: existantes.docs.map(d => d.data()) };
+    },
+    creer: (f, valeur, contexte) => {
+      const numero = prochainNumeroFacture(contexte.factures);
+      contexte.factures.push({ numero });
+      return { numero, fichierUrl: valeur, fichierNom: f.name, dateEmission: aujourdHuiISO(), tauxTVA: 21, statut: 'en_attente' };
+    }
+  },
+  voyages: {
+    collection: 'documents', dossier: 'voyages', onglet: 'documents',
+    creer: (f, valeur) => ({ nom: nomSansExtension(f.name), url: valeur, categorie: 'voyage', dateAjout: aujourdHuiISO() })
+  },
+  camions: {
+    collection: 'documents', dossier: 'vehicules', onglet: 'documents',
+    creer: (f, valeur) => ({ nom: nomSansExtension(f.name), url: valeur, categorie: 'vehicule', dateAjout: aujourdHuiISO() })
+  },
+  autres: {
+    collection: 'documents', dossier: 'documents', onglet: 'documents',
+    creer: (f, valeur) => ({ nom: nomSansExtension(f.name), url: valeur, categorie: 'autre', dateAjout: aujourdHuiISO() })
+  }
+};
+
+// Publie une liste de fichiers l'un après l'autre. Un fichier refusé ou en
+// échec n'arrête pas les suivants. Renvoie le résultat de chaque fichier.
+async function publierLot(fichiers, cible, surEtat){
+  const { collection, addDoc, serverTimestamp } = window._firestore;
+  const resultats = [];
+  let contexte = {};
+  try {
+    if(!window._db) throw new Error("base de données indisponible : vérifie ta connexion internet");
+    if(cible.preparer) contexte = await cible.preparer();
+  } catch (err) {
+    return fichiers.map(f => ({ nom: f.name, ok: false, raison: messageErreurPublication(err) }));
+  }
+
+  for(let i = 0; i < fichiers.length; i++){
+    const fichier = fichiers[i];
+    const avancement = `Envoi ${i + 1}/${fichiers.length} — ${fichier.name}`;
+    surEtat(avancement);
+    let valeur = null;
+    try {
+      if(cible.accepter && !cible.accepter(fichier)) throw new Error("ce type de fichier n'a pas sa place ici");
+      valeur = await publierFichier(fichier, cible.dossier, (p) => surEtat(`${avancement} (${p} %)`), cible.pourLeSite);
+      await addDoc(collection(window._db, cible.collection), { ...cible.creer(fichier, valeur, contexte), dateCreation: serverTimestamp() });
+      resultats.push({ nom: fichier.name, ok: true });
+    } catch (err) {
+      console.error("Erreur de publication :", err);
+      if(valeur) supprimerFichier(valeur); // fichier envoyé mais ligne non créée : on ne laisse rien traîner
+      resultats.push({ nom: fichier.name, ok: false, raison: messageErreurPublication(err) });
+    }
+  }
+  return resultats;
+}
+
+// Présentation d'une cellule "fichier" selon sa valeur : un lien externe se
+// lit et se modifie comme du texte ; un fichier enregistré dans la base
+// s'affiche comme une étiquette (sa référence interne n'a rien de lisible).
+function rafraichirCelluleFichier(champEl){
   const cellule = champEl.parentElement;
   if(!cellule || !cellule.querySelector('.admin-fichier-btn')) return;
+  const interne = estFichierBase(champEl.value);
+  champEl.type = interne ? 'hidden' : 'text';
+
+  let etiquette = cellule.querySelector('.admin-fichier-etiquette');
+  if(interne && !etiquette){
+    etiquette = document.createElement('span');
+    etiquette.className = "admin-fichier-etiquette flex-1 text-sm text-slate-500 dark:text-cream/60 px-2 whitespace-nowrap";
+    etiquette.textContent = "📄 fichier enregistré";
+    champEl.after(etiquette);
+  }
+  if(!interne && etiquette) etiquette.remove();
+
   let lien = cellule.querySelector('.admin-fichier-lien');
   if(!champEl.value){ if(lien) lien.remove(); return; }
   if(!lien){
-    lien = document.createElement('a');
-    lien.className = "admin-fichier-lien text-teal hover:text-amber text-sm px-1";
-    lien.target = "_blank"; lien.rel = "noopener"; lien.title = "Ouvrir le fichier"; lien.textContent = "↗";
+    lien = document.createElement('button');
+    lien.type = 'button';
+    lien.className = "admin-fichier-lien shrink-0 text-teal hover:text-amber text-sm px-1";
+    lien.title = "Ouvrir le fichier";
+    lien.textContent = "↗";
     cellule.appendChild(lien);
   }
-  lien.href = champEl.value;
 }
 
-// --- Bouton 📎 d'une cellule : choisir un fichier remplit le lien de la cellule
+// --- Boutons d'une cellule fichier : 📎 choisir un fichier, ↗ l'ouvrir
 const adminFichierCelluleInput = document.getElementById('adminFichierCelluleInput');
 let boutonFichierActif = null;
 
 adminTableBody.addEventListener('click', (e) => {
+  const lien = e.target.closest('.admin-fichier-lien');
+  if(lien){
+    ouvrirFichier(lien.parentElement.querySelector('[data-champ]').value);
+    return;
+  }
   const bouton = e.target.closest('.admin-fichier-btn');
   if(!bouton || bouton.disabled) return;
   boutonFichierActif = bouton;
@@ -3364,12 +3746,14 @@ adminFichierCelluleInput.addEventListener('change', async () => {
   const bouton = boutonFichierActif;
   if(!fichier || !bouton) return;
   const champEl = bouton.parentElement.querySelector('[data-champ]');
+  const ancienneValeur = champEl.value;
   bouton.disabled = true;
   try {
-    const url = await envoyerFichierStorage(fichier, bouton.dataset.dossier, (p) => { bouton.textContent = p + ' %'; });
-    champEl.value = url;
-    rafraichirLienFichier(champEl);
+    const valeur = await publierFichier(fichier, bouton.dataset.dossier, (p) => { bouton.textContent = p + ' %'; }, vueActive === 'medias');
+    champEl.value = valeur;
+    rafraichirCelluleFichier(champEl);
     champEl.dispatchEvent(new Event('televerse')); // ligne existante : enregistre aussitôt
+    if(ancienneValeur && ancienneValeur !== valeur) supprimerFichier(ancienneValeur); // fichier remplacé
 
     // Médias : le type (photo ou vidéo) se règle tout seul d'après le fichier choisi
     const selectType = bouton.closest('tr').querySelector('select[data-champ="type"]');
@@ -3379,14 +3763,14 @@ adminFichierCelluleInput.addEventListener('change', async () => {
     }
   } catch (err) {
     console.error("Erreur d'envoi de fichier :", err);
-    alert(`Envoi impossible : ${err.message || err}`);
+    alert(`Publication impossible : ${messageErreurPublication(err)}`);
   } finally {
     bouton.disabled = false;
     bouton.textContent = '📎';
   }
 });
 
-// --- Envoi en lot (Médias, Documents) : chaque fichier choisi devient une ligne
+// --- Barre "choisir des fichiers" d'un onglet (Médias, Documents, Factures)
 const adminTeleversement = document.getElementById('adminTeleversement');
 const adminTeleversementBtn = document.getElementById('adminTeleversementBtn');
 const adminTeleversementInput = document.getElementById('adminTeleversementInput');
@@ -3397,7 +3781,7 @@ function preparerBarreTeleversement(){
   adminTeleversement.classList.toggle('hidden', !config);
   if(!config) return;
   adminTeleversementBtn.textContent = config.libelle;
-  adminTeleversementInput.accept = config.accept || '';
+  adminTeleversementInput.accept = CIBLES_PUBLICATION[config.cible].accept || '';
   if(!adminTeleversementBtn.disabled) adminTeleversementEtat.textContent = "Tu peux en sélectionner plusieurs à la fois.";
 }
 
@@ -3406,41 +3790,89 @@ adminTeleversementBtn.addEventListener('click', () => {
   adminTeleversementInput.click();
 });
 
+function resumerResultats(resultats){
+  const reussis = resultats.filter(r => r.ok).length;
+  const echecs = resultats.filter(r => !r.ok);
+  return { reussis, echecs, texte: `${reussis} fichier(s) publié(s)` + (echecs.length ? ` — ${echecs.length} échec(s)` : '') };
+}
+
 adminTeleversementInput.addEventListener('change', async () => {
   const fichiers = Array.from(adminTeleversementInput.files);
   const vueDeDepart = vueActive;
-  const collectionDeDepart = collectionActive;
   const config = (VUES_ADMIN[vueDeDepart] || {}).televersement;
   if(!fichiers.length || !config) return;
 
-  // Les nouveaux fichiers se placent à la suite des lignes existantes
-  let rang = 0;
-  donneesChargees.forEach(d => { if(Number(d.ordre) > rang) rang = Number(d.ordre); });
-
-  const { collection, addDoc, serverTimestamp } = window._firestore;
-  const echecs = [];
-  let reussis = 0;
   adminTeleversementBtn.disabled = true;
-
-  for(let i = 0; i < fichiers.length; i++){
-    const fichier = fichiers[i];
-    const avancement = `Envoi ${i + 1}/${fichiers.length} — ${fichier.name}`;
-    adminTeleversementEtat.textContent = avancement;
-    try {
-      if(config.accepter && !config.accepter(fichier)) throw new Error("type de fichier non accepté ici");
-      const url = await envoyerFichierStorage(fichier, config.dossier, (p) => { adminTeleversementEtat.textContent = `${avancement} (${p} %)`; });
-      await addDoc(collection(window._db, collectionDeDepart), { ...config.creer(fichier, url, ++rang), dateCreation: serverTimestamp() });
-      reussis++;
-    } catch (err) {
-      console.error("Erreur d'envoi de fichier :", err);
-      echecs.push(`${fichier.name} : ${err.message || err}`);
-    }
-  }
-
+  const resultats = await publierLot(fichiers, CIBLES_PUBLICATION[config.cible], (texte) => { adminTeleversementEtat.textContent = texte; });
   adminTeleversementBtn.disabled = false;
-  adminTeleversementEtat.textContent = `${reussis} fichier(s) ajouté(s)` + (echecs.length ? ` — ${echecs.length} échec(s)` : '');
-  if(echecs.length) alert("Certains fichiers n'ont pas pu être envoyés :\n\n" + echecs.join('\n'));
+
+  const bilan = resumerResultats(resultats);
+  adminTeleversementEtat.textContent = bilan.texte;
+  if(bilan.echecs.length) alert("Certains fichiers n'ont pas pu être publiés :\n\n" + bilan.echecs.map(r => `${r.nom} : ${r.raison}`).join('\n'));
   if(vueActive === vueDeDepart) chargerCollection(vueDeDepart, true);
+});
+
+/* ----------------------------------------------------------------
+   ÉCRAN "PUBLIER" — l'accueil du tableau de bord
+   Une tuile par type de fichier : un clic ouvre le choix des fichiers
+   sur l'appareil, et chaque fichier choisi est mis en ligne puis rangé
+   au bon endroit. Rien d'autre à remplir.
+   ---------------------------------------------------------------- */
+const adminPublier = document.getElementById('adminPublier');
+const adminZoneTableau = document.getElementById('adminZoneTableau');
+const adminPublierInput = document.getElementById('adminPublierInput');
+const adminPublierEtat = document.getElementById('adminPublierEtat');
+const adminPublierResultats = document.getElementById('adminPublierResultats');
+const NOMS_ONGLETS_PUBLICATION = { medias: 'Médias', factures: 'Factures', documents: 'Documents' };
+let ciblePublierActive = null;
+let publicationEnCours = false;
+
+function afficherEcranPublier(visible){
+  adminPublier.classList.toggle('hidden', !visible);
+  adminZoneTableau.classList.toggle('hidden', visible);
+  document.getElementById('adminAddBtn').classList.toggle('hidden', visible); // "+ Ajouter" n'a de sens que sur un tableau
+}
+
+function allerSurOnglet(nomVue){
+  document.querySelectorAll('.admin-tab').forEach(t => t.classList.toggle('active', t.dataset.collection === nomVue));
+  chargerCollection(nomVue, true);
+}
+
+adminPublier.addEventListener('click', (e) => {
+  const versOnglet = e.target.closest('[data-vers-onglet]');
+  if(versOnglet){ allerSurOnglet(versOnglet.dataset.versOnglet); return; }
+
+  const tuile = e.target.closest('[data-cible]');
+  if(!tuile || publicationEnCours) return;
+  ciblePublierActive = tuile.dataset.cible;
+  adminPublierInput.accept = CIBLES_PUBLICATION[ciblePublierActive].accept || '';
+  adminPublierInput.value = '';
+  adminPublierInput.click();
+});
+
+adminPublierInput.addEventListener('change', async () => {
+  const fichiers = Array.from(adminPublierInput.files);
+  const cible = CIBLES_PUBLICATION[ciblePublierActive];
+  if(!fichiers.length || !cible) return;
+
+  publicationEnCours = true;
+  adminPublier.querySelectorAll('[data-cible]').forEach(t => { t.disabled = true; t.classList.add('opacity-50'); });
+  adminPublierResultats.innerHTML = '';
+  adminPublierEtat.classList.remove('hidden');
+
+  const resultats = await publierLot(fichiers, cible, (texte) => { adminPublierEtat.textContent = texte; });
+
+  publicationEnCours = false;
+  adminPublier.querySelectorAll('[data-cible]').forEach(t => { t.disabled = false; t.classList.remove('opacity-50'); });
+
+  const bilan = resumerResultats(resultats);
+  adminPublierEtat.textContent = bilan.texte + (etatStockage === false && bilan.reussis ? " (enregistrés dans la base : le stockage Firebase n'est pas disponible)" : '');
+  adminPublierResultats.innerHTML = resultats.map(r => `
+    <li class="flex items-start gap-2 text-sm py-1.5 border-b border-slate-100 dark:border-white/5">
+      <span class="${r.ok ? 'text-teal' : 'text-red-500'} font-bold">${r.ok ? '✓' : '✗'}</span>
+      <span class="text-navy dark:text-cream">${echapperHtmlAdmin(r.nom)}${r.ok ? '' : ` <span class="text-red-500">— ${echapperHtmlAdmin(r.raison)}</span>`}</span>
+    </li>`).join('')
+    + (bilan.reussis ? `<li class="pt-3"><button type="button" data-vers-onglet="${cible.onglet}" class="text-sm font-semibold text-amberdark hover:text-amber underline">Voir dans l'onglet ${NOMS_ONGLETS_PUBLICATION[cible.onglet]} →</button></li>` : '');
 });
 
 // Tuiles de synthèse au-dessus du tableau (vues de gestion uniquement).
@@ -3466,10 +3898,10 @@ function mettreAJourCompteur(){
 
 // Prochain numéro de facture de l'année : BT-2026-0001, BT-2026-0002...
 // (plus grand numéro existant + 1, pour ne jamais réutiliser un numéro).
-function prochainNumeroFacture(){
+function prochainNumeroFacture(factures){
   const prefixe = `BT-${new Date().getFullYear()}-`;
   let plusGrand = 0;
-  donneesChargees.forEach(f => {
+  factures.forEach(f => {
     const numero = String(f.numero || '');
     if(numero.startsWith(prefixe)){
       const n = parseInt(numero.slice(prefixe.length), 10);
@@ -3547,7 +3979,7 @@ async function validerLigneRapide(champs){
 
   if(!aSaisi) return; // rien de saisi : on ne crée pas une ligne faite uniquement de valeurs par défaut
 
-  if(vueActive === 'factures' && !donnees.numero) donnees.numero = prochainNumeroFacture();
+  if(vueActive === 'factures' && !donnees.numero) donnees.numero = prochainNumeroFacture(Array.from(donneesChargees.values()));
 
   const { collection, addDoc, doc, setDoc, serverTimestamp } = window._firestore;
   try {
@@ -3566,6 +3998,13 @@ async function validerLigneRapide(champs){
 let numeroChargement = 0; // évite qu'un chargement lent d'un ancien onglet s'affiche dans le nouveau
 
 async function chargerCollection(nomVue, reinitialiser){
+  // L'écran "Publier" n'est pas un tableau : on l'affiche et on s'arrête là
+  if(reinitialiser) afficherEcranPublier(nomVue === 'publier');
+  if(nomVue === 'publier'){
+    numeroChargement++; // annule un éventuel chargement de tableau en cours
+    vueActive = 'publier';
+    return;
+  }
   if(reinitialiser){
     const monChargement = ++numeroChargement;
     const vue = VUES_ADMIN[nomVue] || {};
@@ -3747,7 +4186,7 @@ async function sauvegarderCelluleInline(id, champEl, donneesConnues, tr){
     }
 
     donneesConnues[champ] = valeur;
-    rafraichirLienFichier(champEl);
+    rafraichirCelluleFichier(champEl);
     remplirCalculsLigne(tr, donneesConnues);
     mettreAJourResume();
 
@@ -4067,7 +4506,7 @@ function creerCarteMedia(m){
   if(m.type === 'photo'){
     return `
       <div class="galerie-carte bg-cream dark:bg-navy rounded-xl overflow-hidden border border-slate-200 dark:border-white/10 cursor-pointer" data-lightbox-src="${url}">
-        <img src="${url}" alt="${titre}" loading="lazy" class="w-full h-48 object-cover">
+        <img ${estFichierBase(url) ? `data-fichier-base="${url}"` : `src="${url}"`} alt="${titre}" loading="lazy" class="w-full h-48 object-cover bg-slate-200 dark:bg-white/10">
         ${m.titre ? `<p class="text-xs text-slate-500 dark:text-cream/50 px-3 py-2 truncate">${titre}</p>` : ''}
       </div>`;
   }
@@ -4172,6 +4611,7 @@ function renderGalerie(){
   }
   galerieEmptyEl.classList.add('hidden');
   galerieGridEl.innerHTML = liste.map(creerCarteMedia).join('');
+  activerPhotosBase(galerieGridEl);
   chargerScriptsReseauxSociauxSiNecessaire();
 }
 
@@ -4186,7 +4626,7 @@ galerieGridEl.addEventListener('click', (e) => {
   }
   const cartePhoto = e.target.closest('[data-lightbox-src]');
   if(cartePhoto){
-    galerieLightboxImgEl.src = cartePhoto.dataset.lightboxSrc;
+    urlDeFichier(cartePhoto.dataset.lightboxSrc).then(adresse => { galerieLightboxImgEl.src = adresse; }).catch(() => {});
     galerieLightboxEl.classList.remove('hidden');
     galerieLightboxEl.classList.add('flex');
   }
@@ -4323,6 +4763,21 @@ const podCmrLink = document.getElementById('podCmrLink');
 const podFactureLink = document.getElementById('podFactureLink');
 const podAucunDocument = document.getElementById('podAucunDocument');
 
+// Un document peut être un lien classique ou un fichier enregistré dans la
+// base : dans ce second cas, le clic passe par ouvrirFichier().
+function preparerLienDocument(lien, valeur){
+  lien.dataset.fichier = valeur;
+  lien.href = estFichierBase(valeur) ? '#' : valeur;
+}
+[podCmrLink, podFactureLink].forEach(lien => {
+  lien.addEventListener('click', (e) => {
+    if(estFichierBase(lien.dataset.fichier)){
+      e.preventDefault();
+      ouvrirFichier(lien.dataset.fichier);
+    }
+  });
+});
+
 async function chercherDocumentsPOD(){
   const numero = podInput.value.trim().toUpperCase();
   if(!numero || !window._db) return;
@@ -4347,10 +4802,10 @@ async function chercherDocumentsPOD(){
     const aFacture = Boolean(commande.factureUrl);
 
     podCmrLink.classList.toggle('hidden', !aCmr);
-    if(aCmr) podCmrLink.href = commande.cmrUrl;
+    if(aCmr) preparerLienDocument(podCmrLink, commande.cmrUrl);
 
     podFactureLink.classList.toggle('hidden', !aFacture);
-    if(aFacture) podFactureLink.href = commande.factureUrl;
+    if(aFacture) preparerLienDocument(podFactureLink, commande.factureUrl);
 
     podAucunDocument.classList.toggle('hidden', aCmr || aFacture);
   } catch (err) {
