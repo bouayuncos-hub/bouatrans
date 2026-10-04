@@ -736,8 +736,9 @@
       <h2 class="text-3xl md:text-4xl font-bold text-navy dark:text-white">Avis clients</h2>
     </div>
 
-    <!-- Duplique une carte pour ajouter un avis. MODIFIER LE TEXTE ICI -->
-    <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
+    <!-- Avis affichés par défaut. Dès que l'onglet "Avis" de l'admin contient
+         des avis visibles, ce sont eux qui s'affichent à la place. -->
+    <div id="avisListe" class="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
 
       <div class="bg-white dark:bg-navylight border border-slate-200 dark:border-white/10 rounded-xl p-6">
         <div class="text-amber mb-3">★★★★★</div>
@@ -774,8 +775,9 @@
       <h2 class="text-3xl md:text-4xl font-bold text-navy dark:text-white">Besoin d'y voir plus clair ?</h2>
     </div>
 
-    <!-- Duplique un .faq-item pour ajouter une question. MODIFIER LE TEXTE ICI -->
-    <div class="space-y-3">
+    <!-- Questions affichées par défaut. Dès que l'onglet "FAQ" de l'admin contient
+         des questions visibles, ce sont elles qui s'affichent à la place. -->
+    <div id="faqListe" class="space-y-3">
 
       <div class="faq-item border border-slate-200 dark:border-white/10 rounded-xl overflow-hidden">
         <button class="faq-question w-full flex justify-between items-center gap-4 text-left px-5 py-4 font-semibold text-navy dark:text-white">
@@ -896,6 +898,12 @@
         <h3 class="text-lg font-bold text-navy dark:text-white mb-4">Infos pratiques</h3>
         <div id="infosList" class="space-y-3"></div>
         <p id="infosEmpty" class="hidden text-slate-400 dark:text-cream/40 text-sm">Aucune info pour le moment.</p>
+
+        <!-- Documents publiés par l'admin (affiché seulement s'il y en a) -->
+        <div id="documentsPublicsBloc" class="hidden mt-8">
+          <h3 class="text-lg font-bold text-navy dark:text-white mb-4">Documents à télécharger</h3>
+          <div id="documentsPublicsList" class="space-y-2"></div>
+        </div>
       </aside>
     </div>
   </div>
@@ -1019,8 +1027,8 @@
         <h4 class="text-cream font-semibold mb-4">Contact</h4>
         <ul class="text-sm space-y-2.5">
           <li>Avenida Castilla-La Mancha 122<br>Yuncos, Tolède, 45210</li>
-          <li><a href="tel:+34745006675" class="hover:text-amber">+34 745 00 66 75</a></li>
-          <li><a href="mailto:bouayuncos@gmail.com" class="hover:text-amber">bouayuncos@gmail.com</a></li>
+          <li><a href="tel:+34745006675" data-coordonnee="telephone" class="hover:text-amber">+34 745 00 66 75</a></li>
+          <li><a href="mailto:bouayuncos@gmail.com" data-coordonnee="email" class="hover:text-amber">bouayuncos@gmail.com</a></li>
         </ul>
       </div>
       <div>
@@ -1131,6 +1139,8 @@
       <button class="admin-tab" data-collection="medias">Médias</button>
       <button class="admin-tab" data-collection="actualites">Actualités</button>
       <button class="admin-tab" data-collection="infos">Infos</button>
+      <button class="admin-tab" data-collection="avis">Avis clients</button>
+      <button class="admin-tab" data-collection="faq">FAQ</button>
       <button class="admin-tab" data-collection="textes">Textes du site</button>
     </div>
   </div>
@@ -1140,7 +1150,7 @@
        Seconde rangée : les documents internes, jamais affichés sur le site. -->
   <div id="adminPublier" class="hidden max-w-6xl mx-auto px-5 py-8">
     <h2 class="text-2xl font-bold text-navy dark:text-white mb-1.5">Que veux-tu publier ?</h2>
-    <p class="text-sm text-slate-500 dark:text-cream/60 mb-6">Clique sur une case, choisis tes fichiers (plusieurs à la fois si tu veux) : ils sont mis en ligne et rangés tout seuls.</p>
+    <p class="text-sm text-slate-500 dark:text-cream/60 mb-6">Clique sur une case, choisis tes fichiers (plusieurs à la fois si tu veux) : ils sont mis en ligne et rangés tout seuls. Rien à écrire.</p>
 
     <h3 class="text-xs font-bold uppercase tracking-widest text-amberdark mb-3">Appareil photo — prendre sur le moment</h3>
     <div class="grid grid-cols-2 lg:grid-cols-6 gap-4 mb-8">
@@ -1178,19 +1188,32 @@
         <span class="block font-bold text-navy dark:text-white">Chauffeurs</span>
         <span class="block text-xs text-teal font-semibold mt-1">Album « Chauffeurs » de la galerie</span>
       </button>
-      <button type="button" data-rediger="actualite" class="text-left bg-white dark:bg-navylight border-2 border-amber/60 hover:border-amber rounded-2xl p-5 transition">
+      <button type="button" data-cible="actualites" class="text-left bg-white dark:bg-navylight border-2 border-amber/60 hover:border-amber rounded-2xl p-5 transition">
         <span class="text-4xl block mb-3">📰</span>
-        <span class="block font-bold text-navy dark:text-white">Actualité</span>
-        <span class="block text-xs text-teal font-semibold mt-1">Un article, avec ou sans photo</span>
+        <span class="block font-bold text-navy dark:text-white">Actualités</span>
+        <span class="block text-xs text-teal font-semibold mt-1">Un fichier = une actualité</span>
       </button>
-      <button type="button" data-rediger="info" class="text-left bg-white dark:bg-navylight border-2 border-amber/60 hover:border-amber rounded-2xl p-5 transition">
+      <button type="button" data-cible="infos" class="text-left bg-white dark:bg-navylight border-2 border-amber/60 hover:border-amber rounded-2xl p-5 transition">
         <span class="text-4xl block mb-3">ℹ️</span>
-        <span class="block font-bold text-navy dark:text-white">Info</span>
-        <span class="block text-xs text-teal font-semibold mt-1">Un message court (horaires, annonce…)</span>
+        <span class="block font-bold text-navy dark:text-white">Infos</span>
+        <span class="block text-xs text-teal font-semibold mt-1">Un fichier = une info pratique</span>
+      </button>
+      <button type="button" data-cible="documentsPublics" class="text-left bg-white dark:bg-navylight border-2 border-amber/60 hover:border-amber rounded-2xl p-5 transition">
+        <span class="text-4xl block mb-3">📂</span>
+        <span class="block font-bold text-navy dark:text-white">Documents</span>
+        <span class="block text-xs text-teal font-semibold mt-1">À télécharger par les visiteurs</span>
       </button>
     </div>
 
-    <!-- Rédaction d'une actualité ou d'une info (ouvert par les deux cases ci-dessus) -->
+    <!-- Pour qui préfère écrire : une actualité ou une info avec un titre et un texte -->
+    <p class="text-sm text-slate-500 dark:text-cream/60 -mt-4 mb-8">
+      Tu préfères écrire un texte ?
+      <button type="button" data-rediger="actualite" class="font-semibold text-amberdark hover:text-amber underline">Rédiger une actualité</button>
+      ·
+      <button type="button" data-rediger="info" class="font-semibold text-amberdark hover:text-amber underline">Rédiger une info</button>
+    </p>
+
+    <!-- Rédaction d'une actualité ou d'une info (ouvert par les deux liens ci-dessus) -->
     <form id="adminRediger" class="hidden bg-white dark:bg-navylight border border-slate-200 dark:border-white/10 rounded-2xl p-5 mb-8 max-w-2xl" novalidate>
       <h3 id="adminRedigerTitre" class="text-lg font-bold text-navy dark:text-white mb-4">Nouvelle actualité</h3>
       <input id="redigerTitre" type="text" placeholder="Titre" maxlength="140"
@@ -1245,6 +1268,23 @@
   <div id="adminTextes" class="hidden max-w-4xl mx-auto px-5 py-8">
     <h2 class="text-2xl font-bold text-navy dark:text-white mb-1.5">Textes du site</h2>
     <p class="text-sm text-slate-500 dark:text-cream/60 mb-5">Modifie un texte puis clique ailleurs : il est enregistré et change aussitôt sur le site, pour tous les visiteurs. Ce sont les textes de la version française.</p>
+    <!-- Coordonnées : numéros et adresse utilisés par les liens du site -->
+    <div class="bg-white dark:bg-navylight border border-slate-200 dark:border-white/10 rounded-2xl p-5 mb-6">
+      <h3 class="text-sm font-bold uppercase tracking-wide text-amberdark mb-3">Coordonnées</h3>
+      <div class="grid sm:grid-cols-3 gap-4">
+        <label class="block text-xs font-semibold text-slate-500 dark:text-cream/60">Téléphone affiché
+          <input type="tel" data-coordonnee-champ="telephone" class="admin-coordonnee mt-1 w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-white/15 bg-cream dark:bg-navy text-sm text-navy dark:text-cream focus:outline-none focus:border-amber">
+        </label>
+        <label class="block text-xs font-semibold text-slate-500 dark:text-cream/60">Numéro WhatsApp
+          <input type="tel" data-coordonnee-champ="whatsapp" class="admin-coordonnee mt-1 w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-white/15 bg-cream dark:bg-navy text-sm text-navy dark:text-cream focus:outline-none focus:border-amber">
+        </label>
+        <label class="block text-xs font-semibold text-slate-500 dark:text-cream/60">Email de contact
+          <input type="email" data-coordonnee-champ="email" class="admin-coordonnee mt-1 w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-white/15 bg-cream dark:bg-navy text-sm text-navy dark:text-cream focus:outline-none focus:border-amber">
+        </label>
+      </div>
+      <p id="adminCoordonneesEtat" class="text-xs text-slate-500 dark:text-cream/50 mt-3">Ces coordonnées servent au numéro affiché, au bouton WhatsApp et aux demandes envoyées par email. Écris les numéros avec l'indicatif du pays (+34…).</p>
+    </div>
+
     <input id="adminTextesRecherche" type="search" placeholder="Chercher un texte…"
       class="w-full px-3.5 py-3 mb-6 rounded-lg border border-slate-200 dark:border-white/15 bg-white dark:bg-navylight text-slate-700 dark:text-cream focus:outline-none focus:border-amber">
     <div id="adminTextesListe"></div>
@@ -1265,6 +1305,12 @@
       <button id="adminTeleversementBtn" type="button" class="bg-amber hover:bg-amberdark text-navy font-semibold text-sm px-4 py-2.5 rounded-full transition"></button>
       <input id="adminTeleversementInput" type="file" multiple class="hidden">
       <span id="adminTeleversementEtat" class="text-sm text-slate-500 dark:text-cream/60"></span>
+    </div>
+
+    <!-- Onglets Avis et FAQ encore vides : reprendre ce que le site affiche déjà -->
+    <div id="adminImporter" class="hidden mb-5 flex flex-wrap items-center gap-3 bg-white dark:bg-navylight border border-dashed border-teal/60 rounded-xl px-4 py-3">
+      <button id="adminImporterBtn" type="button" class="bg-teal hover:bg-teal/90 text-white font-semibold text-sm px-4 py-2.5 rounded-full transition"></button>
+      <span class="text-sm text-slate-500 dark:text-cream/60">Tu pourras ensuite les modifier, en ajouter ou en supprimer.</span>
     </div>
 
     <!-- Tableau éditable en ligne (façon tableur/Notion) : la première ligne
@@ -1525,7 +1571,7 @@
      BOUTON FLOTTANT WHATSAPP
      MODIFIE le numéro dans href (format international, sans "+" ni espaces)
      ============================================================ -->
-<a href="https://wa.me/34745006675?text=Bonjour%2C%20j%27ai%20besoin%20d%27aide%20concernant%20un%20envoi%20BOUA%20Trans."
+<a href="https://wa.me/34745006675?text=Bonjour%2C%20j%27ai%20besoin%20d%27aide%20concernant%20un%20envoi%20BOUA%20Trans." data-coordonnee="whatsapp"
    target="_blank" rel="noopener"
    aria-label="Contacter le support via WhatsApp"
    class="fixed bottom-6 right-6 z-50 w-14 h-14 rounded-full bg-[#25D366] flex items-center justify-center shadow-lg hover:scale-110 transition">
@@ -2029,7 +2075,7 @@ Nom : ${d.nomComplet}
 Téléphone : ${d.telephone}
 Mon email : ${d.email}`;
 
-  const lienMailto = `mailto:bouayuncos@gmail.com?subject=${encodeURIComponent(sujet)}&body=${encodeURIComponent(corps)}`;
+  const lienMailto = `mailto:${coordonneesSite.email}?subject=${encodeURIComponent(sujet)}&body=${encodeURIComponent(corps)}`;
   window.location.href = lienMailto;
 });
 
@@ -2539,23 +2585,23 @@ appliquerLangue(localStorage.getItem('boua-lang') || 'fr');
    Les zones remplies par le site lui-même (listes, résultats) sont
    exclues : elles se gèrent dans leurs onglets.
    ================================================================ */
-const ZONES_SANS_TEXTE_MODIFIABLE = ['fretList', 'departsList', 'galerieGrid', 'stepperSteps', 'historiqueList', 'actualitesList', 'infosList'];
+const ZONES_SANS_TEXTE_MODIFIABLE = ['fretList', 'departsList', 'galerieGrid', 'stepperSteps', 'historiqueList', 'actualitesList', 'infosList', 'documentsPublicsList', 'avisListe', 'faqListe'];
 const BOUTONS_AU_TEXTE_VARIABLE = ['devisSubmitBtn'];
-const blocsTexte = []; // { cle, zone, defaut, noeud | element + i18n }
+const blocsTexte = []; // { cle, zone, defaut, noeud } ou, pour un texte traduit, { cle, zone, defaut, i18n }
 const traductionsFrOrigine = { ...traductions.fr };
 let surchargesTextes = {};
 
 function recenserTextesDuSite(){
-  const zones = [...document.querySelectorAll('section[id]'), document.querySelector('footer')].filter(Boolean);
+  const zones = [document.querySelector('header'), ...document.querySelectorAll('section[id]'), document.querySelector('footer')].filter(Boolean);
+  const clesI18nVues = new Set(); // un libellé traduit présent à plusieurs endroits (menu ordinateur + menu mobile) = un seul texte
   zones.forEach(zone => {
-    const nomZone = zone.tagName === 'FOOTER' ? 'pied' : zone.id;
+    const nomZone = zone.tagName === 'FOOTER' ? 'pied' : zone.tagName === 'HEADER' ? 'menu' : zone.id;
     let rang = 0;
     const parcours = document.createTreeWalker(zone, NodeFilter.SHOW_TEXT);
-    const dejaVus = new Set();
     while(parcours.nextNode()){
       const noeud = parcours.currentNode;
       const parent = noeud.parentElement;
-      if(!parent || parent.closest('svg, select, script, style, textarea, code')) continue;
+      if(!parent || parent.closest('svg, select, script, style, textarea, code, [data-coordonnee]')) continue;
       if(ZONES_SANS_TEXTE_MODIFIABLE.some(id => parent.closest('#' + id))) continue;
       // Un élément identifié est en général rempli par le site (résultat, message) ; seuls ses boutons ont un texte fixe
       if(parent.id && (parent.tagName !== 'BUTTON' || BOUTONS_AU_TEXTE_VARIABLE.includes(parent.id))) continue;
@@ -2565,9 +2611,9 @@ function recenserTextesDuSite(){
       const cleI18n = parent.getAttribute('data-i18n');
       if(cleI18n){
         // Texte traduit : c'est la version française qui est modifiable
-        if(dejaVus.has(parent)) continue;
-        dejaVus.add(parent);
-        blocsTexte.push({ cle: `${nomZone}:${rang++}`, zone: nomZone, defaut: traductionsFrOrigine[cleI18n] || texte, element: parent, i18n: cleI18n });
+        if(clesI18nVues.has(cleI18n)) continue;
+        clesI18nVues.add(cleI18n);
+        blocsTexte.push({ cle: `${nomZone}:${rang++}`, zone: nomZone, defaut: traductionsFrOrigine[cleI18n] || texte, i18n: cleI18n });
       } else {
         blocsTexte.push({ cle: `${nomZone}:${rang++}`, zone: nomZone, defaut: texte, noeud });
       }
@@ -2578,7 +2624,9 @@ function recenserTextesDuSite(){
 function ecrireBlocTexte(bloc, texte){
   if(bloc.i18n){
     traductions.fr[bloc.i18n] = texte;
-    if((document.documentElement.getAttribute('lang') || 'fr') === 'fr') bloc.element.textContent = texte;
+    if((document.documentElement.getAttribute('lang') || 'fr') === 'fr'){
+      document.querySelectorAll(`[data-i18n="${bloc.i18n}"]`).forEach(el => { el.textContent = texte; });
+    }
     return;
   }
   // On garde les espaces qui entouraient le texte d'origine dans la page
@@ -3222,14 +3270,130 @@ vehiculeInput.addEventListener('keydown', (e) => { if(e.key === 'Enter') vehicul
 /* ================================================================
    FAQ — ACCORDÉON
    ================================================================ */
-document.querySelectorAll('.faq-question').forEach(btn => {
-  btn.addEventListener('click', () => {
-    const reponse = btn.nextElementSibling;
-    const icone = btn.querySelector('.faq-icon');
-    const estOuvert = !reponse.classList.contains('hidden');
-    reponse.classList.toggle('hidden', estOuvert);
-    icone.textContent = estOuvert ? '+' : '−';
+// Un seul écouteur sur la liste : il vaut aussi pour les questions ajoutées
+// depuis l'admin, affichées après le chargement de la page.
+const faqListeEl = document.getElementById('faqListe');
+faqListeEl.addEventListener('click', (e) => {
+  const btn = e.target.closest('.faq-question');
+  if(!btn) return;
+  const reponse = btn.nextElementSibling;
+  const icone = btn.querySelector('.faq-icon');
+  const estOuvert = !reponse.classList.contains('hidden');
+  reponse.classList.toggle('hidden', estOuvert);
+  icone.textContent = estOuvert ? '+' : '−';
+});
+
+/* ================================================================
+   AVIS CLIENTS ET FAQ GÉRÉS DEPUIS L'ADMIN
+   ================================================================
+   Collections "avis" { nom, qualite, note, commentaire, ordre, visible }
+   et "faq" { question, reponse, ordre, visible }.
+   Tant qu'une collection ne contient rien de visible, la page garde
+   les avis / questions écrits dans le HTML. Dans l'admin, un bouton
+   permet de reprendre ce contenu d'origine pour partir de l'existant.
+   ================================================================ */
+const avisListeEl = document.getElementById('avisListe');
+const avisHtmlOrigine = avisListeEl.innerHTML;
+const faqHtmlOrigine = faqListeEl.innerHTML;
+
+// Contenu d'origine, lu dans le HTML (sert au bouton "reprendre" de l'admin)
+function lireAvisOrigine(){
+  const boite = document.createElement('div');
+  boite.innerHTML = avisHtmlOrigine;
+  return [...boite.children].map((carte, i) => {
+    const textes = carte.querySelectorAll('p');
+    return {
+      note: (carte.querySelector('div')?.textContent.match(/★/g) || []).length || 5,
+      commentaire: textes[0]?.textContent.trim() || '',
+      nom: textes[1]?.textContent.trim() || '',
+      qualite: textes[2]?.textContent.trim() || '',
+      ordre: i + 1, visible: true
+    };
+  }).filter(a => a.commentaire);
+}
+function lireFaqOrigine(){
+  const boite = document.createElement('div');
+  boite.innerHTML = faqHtmlOrigine;
+  return [...boite.querySelectorAll('.faq-item')].map((item, i) => ({
+    question: [...item.querySelector('.faq-question').childNodes].filter(n => n.nodeType === Node.TEXT_NODE).map(n => n.nodeValue).join(' ').replace(/\s+/g, ' ').trim(),
+    reponse: item.querySelector('.faq-answer').textContent.replace(/\s+/g, ' ').trim(),
+    ordre: i + 1, visible: true
+  })).filter(q => q.question);
+}
+
+function renderAvis(liste){
+  if(!liste.length){ avisListeEl.innerHTML = avisHtmlOrigine; return; }
+  avisListeEl.innerHTML = liste.map(a => {
+    const note = Math.min(5, Math.max(1, Math.round(Number(a.note) || 5)));
+    return `
+      <div class="bg-white dark:bg-navylight border border-slate-200 dark:border-white/10 rounded-xl p-6">
+        <div class="text-amber mb-3" aria-label="${note} sur 5">${'★'.repeat(note)}<span class="text-slate-300 dark:text-white/20">${'★'.repeat(5 - note)}</span></div>
+        <p class="text-sm text-slate-600 dark:text-cream/70 mb-4 whitespace-pre-line">${echapperHtml(a.commentaire)}</p>
+        <p class="text-sm font-semibold text-navy dark:text-white">${echapperHtml(a.nom)}</p>
+        ${a.qualite ? `<p class="text-xs text-slate-400 dark:text-cream/40">${echapperHtml(a.qualite)}</p>` : ''}
+      </div>`;
+  }).join('');
+}
+
+function renderFaq(liste){
+  if(!liste.length){ faqListeEl.innerHTML = faqHtmlOrigine; return; }
+  faqListeEl.innerHTML = liste.map(q => `
+    <div class="faq-item border border-slate-200 dark:border-white/10 rounded-xl overflow-hidden">
+      <button class="faq-question w-full flex justify-between items-center gap-4 text-left px-5 py-4 font-semibold text-navy dark:text-white">
+        ${echapperHtml(q.question)}
+        <span class="faq-icon text-amber text-xl leading-none">+</span>
+      </button>
+      <div class="faq-answer hidden px-5 pb-4 text-sm text-slate-500 dark:text-cream/60 whitespace-pre-line">${echapperHtml(q.reponse)}</div>
+    </div>`).join('');
+}
+
+/* ================================================================
+   COORDONNÉES DU SITE (téléphone, WhatsApp, email)
+   ================================================================
+   Réglables dans l'admin (onglet "Textes du site"), enregistrées dans
+   le document Firestore contenus/coordonnees. Les liens marqués
+   data-coordonnee sont mis à jour : numéro affiché, appel en un clic,
+   bouton WhatsApp, adresse d'envoi des demandes par email.
+   ================================================================ */
+const COORDONNEES_ORIGINE = { telephone: '+34 745 00 66 75', whatsapp: '34745006675', email: 'bouayuncos@gmail.com' };
+let coordonneesSite = { ...COORDONNEES_ORIGINE };
+
+function appliquerCoordonnees(valeurs){
+  coordonneesSite = { ...COORDONNEES_ORIGINE };
+  ['telephone', 'whatsapp', 'email'].forEach(cle => {
+    if(valeurs && typeof valeurs[cle] === 'string' && valeurs[cle].trim()) coordonneesSite[cle] = valeurs[cle].trim();
   });
+  document.querySelectorAll('[data-coordonnee="telephone"]').forEach(lien => {
+    lien.href = 'tel:' + coordonneesSite.telephone.replace(/[^+0-9]/g, '');
+    lien.textContent = coordonneesSite.telephone;
+  });
+  document.querySelectorAll('[data-coordonnee="email"]').forEach(lien => {
+    lien.href = 'mailto:' + coordonneesSite.email;
+    lien.textContent = coordonneesSite.email;
+  });
+  document.querySelectorAll('[data-coordonnee="whatsapp"]').forEach(lien => {
+    const message = (lien.getAttribute('href').split('?')[1]) || '';
+    // WhatsApp attend le numéro international en chiffres seuls (ni "+", ni "00", ni espaces)
+    lien.href = 'https://wa.me/' + coordonneesSite.whatsapp.replace(/\D/g, '').replace(/^00/, '') + (message ? '?' + message : '');
+  });
+}
+
+quandFirebasePret(() => {
+  const { collection, doc, onSnapshot } = window._firestore;
+  const parOrdre = (a, b) => (Number(a.ordre) || 999) - (Number(b.ordre) || 999);
+
+  onSnapshot(collection(window._db, "avis"), (snapshot) => {
+    renderAvis(snapshot.docs.map(d => d.data()).filter(a => a.visible !== false && a.commentaire).sort(parOrdre));
+  }, (err) => console.error("Erreur d'écoute temps réel sur 'avis' :", err));
+
+  onSnapshot(collection(window._db, "faq"), (snapshot) => {
+    renderFaq(snapshot.docs.map(d => d.data()).filter(q => q.visible !== false && q.question).sort(parOrdre));
+  }, (err) => console.error("Erreur d'écoute temps réel sur 'faq' :", err));
+
+  onSnapshot(doc(window._db, "contenus", "coordonnees"), (snap) => {
+    appliquerCoordonnees(snap.exists() ? snap.data() : {});
+    document.dispatchEvent(new Event('coordonnees-modifiees'));
+  }, (err) => console.error("Erreur d'écoute des coordonnées :", err));
 });
 
 /* ================================================================
@@ -3544,16 +3708,27 @@ const SCHEMAS_ADMIN = {
     { champ: 'fichierUrl', label: 'Fichier', type: 'fichier', dossier: 'factures' }
   ],
 
+  // Contenus du site gérés en liste : avis clients et questions fréquentes
   avis: [
     { champ: 'nom', label: 'Client', type: 'text' },
-    { champ: 'note', label: 'Note', type: 'number' },
-    { champ: 'commentaire', label: 'Commentaire', type: 'text' },
-    { champ: 'statut', label: 'Modération', type: 'select', options: ['en_attente', 'approuve', 'rejete'], defaut: 'en_attente' }
+    { champ: 'qualite', label: 'Qualité (ex : client professionnel)', type: 'text' },
+    { champ: 'note', label: 'Note sur 5', type: 'select', options: [5, 4, 3, 2, 1], defaut: 5 },
+    { champ: 'commentaire', label: 'Avis', type: 'texte_long' },
+    { champ: 'ordre', label: 'Ordre', type: 'number' },
+    { champ: 'visible', label: 'Visible', type: 'checkbox', defaut: true }
   ],
-  // Archive interne (jamais affichée sur le site public)
+  faq: [
+    { champ: 'question', label: 'Question', type: 'texte_long' },
+    { champ: 'reponse', label: 'Réponse', type: 'texte_long' },
+    { champ: 'ordre', label: 'Ordre', type: 'number' },
+    { champ: 'visible', label: 'Visible', type: 'checkbox', defaut: true }
+  ],
+  // Archive de documents : internes par défaut ; "Sur le site" coché = proposé
+  // aux visiteurs dans "Documents à télécharger"
   documents: [
     { champ: 'nom', label: 'Nom', type: 'text' },
     { champ: 'url', label: 'Fichier', type: 'fichier', dossier: 'documents' },
+    { champ: 'public', label: 'Sur le site', type: 'checkbox' },
     { champ: 'categorie', label: 'Catégorie', type: 'select', options: ['voyage', 'vehicule', 'facture', 'contrat', 'assurance', 'autre'], optionLabels: ['Voyage (CMR…)', 'Camion', 'Facture', 'Contrat', 'Assurance', 'Autre'], defaut: 'autre' },
     { champ: 'missionId', label: 'Voyage lié', type: 'select', source: { collection: 'missions', valeur: m => m.id, label: libelleVoyage } },
     { champ: 'vehicule', label: 'Camion lié', type: 'select', source: { collection: 'vehicules', valeur: v => v.immatriculation, label: v => v.immatriculation } },
@@ -3565,12 +3740,17 @@ const SCHEMAS_ADMIN = {
     { champ: 'titre', label: 'Titre', type: 'text' },
     { champ: 'texte', label: 'Texte', type: 'texte_long' },
     { champ: 'imageUrl', label: 'Photo (fichier ou lien)', type: 'fichier', dossier: 'actualites', accept: 'image/*' },
+    { champ: 'videoUrl', label: 'Vidéo', type: 'fichier', dossier: 'actualites', accept: 'video/*' },
+    { champ: 'fichierUrl', label: 'Pièce jointe', type: 'fichier', dossier: 'actualites' },
     { champ: 'datePublication', label: 'Date', type: 'date', defaut: () => aujourdHuiISO() },
     { champ: 'visible', label: 'Visible', type: 'checkbox', defaut: true }
   ],
   infos: [
+    { champ: '_apercu', label: 'Photo', type: 'calcul', calcul: i => ({ html: htmlApercu(i.imageUrl, 'ℹ️') }) },
     { champ: 'titre', label: 'Titre', type: 'text' },
     { champ: 'texte', label: 'Texte', type: 'texte_long' },
+    { champ: 'imageUrl', label: 'Photo', type: 'fichier', dossier: 'infos', accept: 'image/*' },
+    { champ: 'fichierUrl', label: 'Pièce jointe', type: 'fichier', dossier: 'infos' },
     { champ: 'important', label: 'Important', type: 'checkbox' },
     { champ: 'datePublication', label: 'Date', type: 'date', defaut: () => aujourdHuiISO() },
     { champ: 'visible', label: 'Visible', type: 'checkbox', defaut: true }
@@ -3593,18 +3773,32 @@ const SCHEMAS_ADMIN = {
      complet    : charge tous les documents d'un coup (totaux exacts)
      tri        : ordre d'affichage des lignes
      resume     : tuiles de synthèse affichées au-dessus du tableau
+     importer   : bouton proposé quand l'onglet est vide, pour y reprendre
+                  le contenu d'origine du site (avis, questions fréquentes)
      televersement : bouton "choisir des fichiers" — chaque fichier choisi
                   est publié puis devient une ligne du tableau (la règle de
                   rangement est décrite dans CIBLES_PUBLICATION)
    ---------------------------------------------------------------- */
 const VUES_ADMIN = {
   missions: { references: ['vehicules', 'chauffeurs'] },
+  avis: {
+    complet: true,
+    tri: (a, b) => (Number(a.ordre) || 999) - (Number(b.ordre) || 999),
+    importer: { libelle: '📥 Reprendre les avis affichés sur le site', lire: () => lireAvisOrigine() }
+  },
+  faq: {
+    complet: true,
+    tri: (a, b) => (Number(a.ordre) || 999) - (Number(b.ordre) || 999),
+    importer: { libelle: '📥 Reprendre les questions affichées sur le site', lire: () => lireFaqOrigine() }
+  },
   actualites: {
     complet: true,
+    televersement: { libelle: '📎 Choisir des fichiers (un fichier = une actualité)', cible: 'actualites' },
     tri: (a, b) => String(b.datePublication || '').localeCompare(String(a.datePublication || ''))
   },
   infos: {
     complet: true,
+    televersement: { libelle: '📎 Choisir des fichiers (un fichier = une info)', cible: 'infos' },
     tri: (a, b) => (b.important ? 1 : 0) - (a.important ? 1 : 0) || String(b.datePublication || '').localeCompare(String(a.datePublication || ''))
   },
   documents: {
@@ -3974,7 +4168,41 @@ function messageErreurPublication(err){
      pourLeSite : photos réduites pour la galerie publique
      preparer   : lecture préalable (rang d'affichage, numéros de facture)
      creer      : la ligne créée pour un fichier donné
+     sansEnvoi / creerSansEnvoi : fichiers dont on reprend le contenu au
+                  lieu de les mettre en ligne (un .txt devient le texte)
    ---------------------------------------------------------------- */
+// Titre d'une publication d'après le nom du fichier choisi : "Nouveau_camion-2026.pdf"
+// → "Nouveau camion 2026". Un nom d'appareil photo ("IMG_20261004_1432.jpg") ne
+// veut rien dire pour un visiteur : on met alors "Actualité du 4 octobre 2026".
+function titreDepuisFichier(nomFichier, generique){
+  const propre = nomSansExtension(nomFichier).replace(/[_\-.]+/g, ' ').replace(/\s+/g, ' ').trim();
+  const lettres = propre.replace(/[^A-Za-zÀ-ÿ]/g, '');
+  const nomAutomatique = /^(img|dsc|dscn|pxl|vid|mvimg|image|photo|video|screenshot|capture|scan|doc|document|whatsapp|signal|telegram)\b/i.test(propre);
+  if(lettres.length < 3 || (nomAutomatique && /\d{3,}/.test(propre))){
+    return `${generique} du ${formaterDateLongue(aujourdHuiISO())}`;
+  }
+  return propre.charAt(0).toUpperCase() + propre.slice(1);
+}
+
+// Une actualité ou une info créée à partir d'un fichier : la photo s'affiche,
+// la vidéo se lit, tout autre fichier devient une pièce jointe à ouvrir.
+function publicationDepuisFichier(f, valeur, generique, avecVideo){
+  const publication = { titre: titreDepuisFichier(f.name, generique), texte: '', datePublication: aujourdHuiISO(), visible: true };
+  if(f.type.startsWith('image/')) publication.imageUrl = valeur;
+  else if(avecVideo && f.type.startsWith('video/')) publication.videoUrl = valeur;
+  else { publication.fichierUrl = valeur; publication.fichierNom = f.name; }
+  return publication;
+}
+
+// Un fichier texte (.txt) n'est pas joint : son contenu devient le texte de la publication
+function estFichierTexte(f){
+  return (f.type === 'text/plain' || /\.txt$/i.test(f.name)) && f.size <= 20000;
+}
+async function publicationDepuisTexte(f, generique){
+  const texte = (await f.text()).trim();
+  return { titre: titreDepuisFichier(f.name, generique), texte, datePublication: aujourdHuiISO(), visible: true };
+}
+
 // Photos et vidéos de la galerie publique, rangées dans un album
 function ciblePourAlbum(album){
   return {
@@ -4019,6 +4247,24 @@ const CIBLES_PUBLICATION = {
   autres: {
     collection: 'documents', dossier: 'documents', onglet: 'documents',
     creer: (f, valeur) => ({ nom: nomSansExtension(f.name), url: valeur, categorie: 'autre', dateAjout: aujourdHuiISO() })
+  },
+
+  // --- Publications du site par simple choix de fichiers
+  actualites: {
+    collection: 'actualites', dossier: 'actualites', onglet: 'actualites', pourLeSite: true,
+    sansEnvoi: estFichierTexte,
+    creerSansEnvoi: (f) => publicationDepuisTexte(f, 'Actualité'),
+    creer: (f, valeur) => publicationDepuisFichier(f, valeur, 'Actualité', true)
+  },
+  infos: {
+    collection: 'infos', dossier: 'infos', onglet: 'infos', pourLeSite: true,
+    sansEnvoi: estFichierTexte,
+    creerSansEnvoi: async (f) => ({ ...(await publicationDepuisTexte(f, 'Info')), important: false }),
+    creer: (f, valeur) => ({ ...publicationDepuisFichier(f, valeur, 'Info', false), important: false })
+  },
+  documentsPublics: {
+    collection: 'documents', dossier: 'documents', onglet: 'documents',
+    creer: (f, valeur) => ({ nom: titreDepuisFichier(f.name, 'Document'), url: valeur, categorie: 'autre', public: true, dateAjout: aujourdHuiISO() })
   }
 };
 
@@ -4042,8 +4288,14 @@ async function publierLot(fichiers, cible, surEtat){
     let valeur = null;
     try {
       if(cible.accepter && !cible.accepter(fichier)) throw new Error("ce type de fichier n'a pas sa place ici");
-      valeur = await publierFichier(fichier, cible.dossier, (p) => surEtat(`${avancement} (${p} %)`), cible.pourLeSite);
-      await addDoc(collection(window._db, cible.collection), { ...cible.creer(fichier, valeur, contexte), dateCreation: serverTimestamp() });
+      let donnees;
+      if(cible.sansEnvoi && cible.sansEnvoi(fichier)){
+        donnees = await cible.creerSansEnvoi(fichier, contexte);
+      } else {
+        valeur = await publierFichier(fichier, cible.dossier, (p) => surEtat(`${avancement} (${p} %)`), cible.pourLeSite);
+        donnees = cible.creer(fichier, valeur, contexte);
+      }
+      await addDoc(collection(window._db, cible.collection), { ...donnees, dateCreation: serverTimestamp() });
       resultats.push({ nom: fichier.name, ok: true });
     } catch (err) {
       console.error("Erreur de publication :", err);
@@ -4615,7 +4867,7 @@ adminPublier.addEventListener('click', (e) => {
 const adminTextesListe = document.getElementById('adminTextesListe');
 const adminTextesRecherche = document.getElementById('adminTextesRecherche');
 const NOMS_ZONES_TEXTE = {
-  top: 'Haut de page (accueil)', services: 'Services', devis: 'Devis', suivi: 'Suivi', carrieres: 'Carrières',
+  menu: 'Menu du haut', top: 'Haut de page (accueil)', services: 'Services', devis: 'Devis', suivi: 'Suivi', carrieres: 'Carrières',
   fret: 'Bourse de fret', avis: 'Avis clients', faq: 'Questions fréquentes', departs: 'Prochains départs',
   galerie: 'Galerie', actualites: 'Actualités & infos', eco: 'Éco-transport', 'espace-client-pod': 'Espace client',
   pied: 'Pied de page (contact)'
@@ -4644,6 +4896,47 @@ function afficherEditeurTextes(){
 }
 
 adminTextesRecherche.addEventListener('input', afficherEditeurTextes);
+
+// --- Coordonnées (téléphone, WhatsApp, email) : enregistrées en quittant le champ
+const champsCoordonnees = document.querySelectorAll('.admin-coordonnee');
+const adminCoordonneesEtat = document.getElementById('adminCoordonneesEtat');
+
+function remplirChampsCoordonnees(){
+  champsCoordonnees.forEach(champ => {
+    if(document.activeElement !== champ) champ.value = coordonneesSite[champ.dataset.coordonneeChamp];
+  });
+}
+remplirChampsCoordonnees();
+document.addEventListener('coordonnees-modifiees', remplirChampsCoordonnees);
+
+champsCoordonnees.forEach(champ => {
+  champ.addEventListener('change', async () => {
+    const cle = champ.dataset.coordonneeChamp;
+    const valeur = champ.value.trim();
+    const dire = (message, erreur) => {
+      adminCoordonneesEtat.textContent = message;
+      adminCoordonneesEtat.className = `text-xs mt-3 ${erreur ? 'text-red-500 font-medium' : 'text-teal font-medium'}`;
+    };
+    // Une coordonnée fausse casserait les liens de contact du site : on vérifie avant d'enregistrer
+    const valide = cle === 'email' ? /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(valeur) : valeur.replace(/\D/g, '').length >= 8;
+    if(!valide){
+      dire(cle === 'email' ? "Adresse email invalide : rien n'a été modifié." : "Numéro trop court : écris-le en entier, avec l'indicatif du pays. Rien n'a été modifié.", true);
+      champ.value = coordonneesSite[cle];
+      return;
+    }
+    try {
+      const { doc, setDoc } = window._firestore;
+      const nouvelles = { ...coordonneesSite, [cle]: valeur };
+      await setDoc(doc(window._db, 'contenus', 'coordonnees'), nouvelles);
+      appliquerCoordonnees(nouvelles);
+      dire("✓ Enregistré : le site utilise maintenant cette coordonnée.", false);
+    } catch (err) {
+      console.error("Erreur d'enregistrement des coordonnées :", err);
+      champ.value = coordonneesSite[cle];
+      dire(`Enregistrement impossible : ${messageErreurPublication(err)}`, true);
+    }
+  });
+});
 
 // Enregistre l'ensemble des modifications (un seul document Firestore)
 async function enregistrerTexteDuSite(cle, nouveauTexte){
@@ -4709,7 +5002,38 @@ function mettreAJourResume(){
 
 function mettreAJourCompteur(){
   adminCount.textContent = donneesChargees.size;
+  mettreAJourImport();
 }
+
+// Bouton "reprendre le contenu du site" : visible seulement si l'onglet le
+// prévoit, qu'il est vide et que la lecture de la base est terminée.
+const adminImporter = document.getElementById('adminImporter');
+const adminImporterBtn = document.getElementById('adminImporterBtn');
+function mettreAJourImport(){
+  const config = (VUES_ADMIN[vueActive] || {}).importer;
+  const proposer = !!config && donneesChargees.size === 0 && !ilResteDesDocuments;
+  adminImporter.classList.toggle('hidden', !proposer);
+  if(proposer) adminImporterBtn.textContent = config.libelle;
+}
+
+adminImporterBtn.addEventListener('click', async () => {
+  const vueDeDepart = vueActive;
+  const config = (VUES_ADMIN[vueDeDepart] || {}).importer;
+  if(!config) return;
+  adminImporterBtn.disabled = true;
+  try {
+    const { collection, addDoc, serverTimestamp } = window._firestore;
+    for(const element of config.lire()){
+      await addDoc(collection(window._db, collectionActive), { ...element, dateCreation: serverTimestamp() });
+    }
+    if(vueActive === vueDeDepart) chargerCollection(vueDeDepart, true);
+  } catch (err) {
+    console.error("Erreur de reprise du contenu :", err);
+    alert(`Reprise impossible : ${messageErreurPublication(err)}`);
+  } finally {
+    adminImporterBtn.disabled = false;
+  }
+});
 
 // Prochain numéro de facture de l'année : BT-2026-0001, BT-2026-0002...
 // (plus grand numéro existant + 1, pour ne jamais réutiliser un numéro).
@@ -4888,6 +5212,7 @@ async function chargerPageSuivante(){
 
     if(snapshot.empty){
       ilResteDesDocuments = false;
+      mettreAJourImport();
       adminLoadingLabel.textContent = donneesChargees.size === 0
         ? "Aucun document pour le moment — utilise la première ligne pour en ajouter un."
         : "Fin de la liste.";
@@ -5540,8 +5865,9 @@ quandFirebasePret(() => {
 /* ================================================================
    ACTUALITÉS & INFOS — temps réel (collections "actualites" et "infos")
    ================================================================
-   actualites : { titre, texte, imageUrl, datePublication, visible }
-   infos      : { titre, texte, important, datePublication, visible }
+   actualites : { titre, texte, imageUrl, videoUrl, fichierUrl, fichierNom, datePublication, visible }
+   infos      : { titre, texte, imageUrl, fichierUrl, fichierNom, important, datePublication, visible }
+   documents  : ceux dont "public" vaut true → liste "Documents à télécharger"
    Rédigées depuis l'admin ; "visible" décoché = retiré du site sans
    être supprimé.
    ================================================================ */
@@ -5551,18 +5877,30 @@ const infosListEl = document.getElementById('infosList');
 const infosEmptyEl = document.getElementById('infosEmpty');
 const LONGUEUR_EXTRAIT_ACTUALITE = 220;
 
+// Bouton "ouvrir le document" d'une actualité, d'une info ou de la liste des documents
+function boutonPieceJointe(valeur, nom){
+  const adresse = urlSure(valeur);
+  if(!adresse) return '';
+  return `<button type="button" data-fichier-joint="${echapperHtml(adresse)}" class="fichier-joint mt-3 inline-flex items-center gap-2 text-sm font-semibold text-amberdark hover:text-amber text-left">
+    <span>📄</span><span class="underline">${echapperHtml(nom || 'Ouvrir le document')}</span>
+  </button>`;
+}
+
 function carteActualite(a){
   const image = urlSure(a.imageUrl);
+  const video = urlSure(a.videoUrl);
   const texte = String(a.texte || '');
   const long = texte.length > LONGUEUR_EXTRAIT_ACTUALITE;
   return `
     <article class="bg-white dark:bg-navylight border border-slate-200 dark:border-white/10 rounded-xl overflow-hidden">
       ${image ? `<img ${estFichierBase(image) ? `data-fichier-base="${echapperHtml(image)}"` : `src="${echapperHtml(image)}"`} alt="" loading="lazy" class="w-full h-44 object-cover bg-slate-200 dark:bg-white/10">` : ''}
+      ${video ? `<video ${estFichierBase(video) ? `data-fichier-base="${echapperHtml(video)}"` : `src="${echapperHtml(video)}"`} controls preload="metadata" playsinline class="w-full aspect-video bg-black"></video>` : ''}
       <div class="p-5">
         ${a.datePublication ? `<span class="font-mono-num text-xs text-amberdark">${echapperHtml(formaterDateLongue(a.datePublication))}</span>` : ''}
         <h3 class="text-lg font-bold text-navy dark:text-white mt-1 mb-2">${echapperHtml(a.titre)}</h3>
-        <p class="actu-texte text-sm text-slate-600 dark:text-cream/70 whitespace-pre-line ${long ? 'line-clamp-4' : ''}">${echapperHtml(texte)}</p>
+        ${texte ? `<p class="actu-texte text-sm text-slate-600 dark:text-cream/70 whitespace-pre-line ${long ? 'line-clamp-4' : ''}">${echapperHtml(texte)}</p>` : ''}
         ${long ? `<button type="button" class="actu-suite mt-2 text-sm font-semibold text-amberdark hover:text-amber">Lire la suite</button>` : ''}
+        ${boutonPieceJointe(a.fichierUrl, a.fichierNom)}
       </div>
     </article>`;
 }
@@ -5610,8 +5948,31 @@ function renderInfos(liste){
       ${info.important ? `<span class="inline-block text-[11px] font-bold uppercase tracking-wide bg-amber text-navy px-2 py-0.5 rounded-full mb-2">Important</span>` : ''}
       <h4 class="font-bold text-navy dark:text-white">${echapperHtml(info.titre)}</h4>
       ${info.texte ? `<p class="text-sm text-slate-600 dark:text-cream/70 whitespace-pre-line mt-1">${echapperHtml(info.texte)}</p>` : ''}
+      ${urlSure(info.imageUrl) ? `<img ${estFichierBase(info.imageUrl) ? `data-fichier-base="${echapperHtml(info.imageUrl)}"` : `src="${echapperHtml(urlSure(info.imageUrl))}"`} alt="" loading="lazy" class="w-full rounded-lg mt-3 bg-slate-200 dark:bg-white/10">` : ''}
+      ${boutonPieceJointe(info.fichierUrl, info.fichierNom)}
     </div>`).join('');
+  activerPhotosBase(infosListEl);
 }
+
+// Documents publiés par l'admin (case "Documents" de l'écran Publier, ou
+// case "Sur le site" cochée dans l'onglet Documents)
+const documentsPublicsBlocEl = document.getElementById('documentsPublicsBloc');
+const documentsPublicsListEl = document.getElementById('documentsPublicsList');
+
+function renderDocumentsPublics(liste){
+  documentsPublicsBlocEl.classList.toggle('hidden', liste.length === 0);
+  documentsPublicsListEl.innerHTML = liste.map(d => `
+    <button type="button" data-fichier-joint="${echapperHtml(urlSure(d.url))}" class="fichier-joint w-full flex items-center gap-3 text-left p-3 rounded-lg border border-slate-200 dark:border-white/10 bg-white dark:bg-navylight hover:border-amber transition">
+      <span class="text-xl">📄</span>
+      <span class="text-sm font-semibold text-navy dark:text-white">${echapperHtml(d.nom || 'Document')}</span>
+    </button>`).join('');
+}
+
+// Un clic sur une pièce jointe ouvre le fichier (stockage Firebase ou base)
+document.getElementById('actualites').addEventListener('click', (e) => {
+  const bouton = e.target.closest('.fichier-joint');
+  if(bouton) ouvrirFichier(bouton.dataset.fichierJoint);
+});
 
 quandFirebasePret(() => {
   const { collection, onSnapshot } = window._firestore;
@@ -5623,6 +5984,14 @@ quandFirebasePret(() => {
     console.error("Erreur d'écoute temps réel sur 'actualites' :", err);
     actualitesEmptyEl.classList.remove('hidden');
   });
+
+  // Seuls les documents marqués "Sur le site" sont lus : les documents
+  // internes ne sont jamais envoyés au navigateur du visiteur.
+  const { query, where } = window._firestore;
+  onSnapshot(query(collection(window._db, "documents"), where("public", "==", true)), (snapshot) => {
+    renderDocumentsPublics(snapshot.docs.map(d => d.data()).filter(d => urlSure(d.url))
+      .sort((a, b) => String(b.dateAjout || '').localeCompare(String(a.dateAjout || ''))));
+  }, (err) => console.error("Erreur d'écoute temps réel sur 'documents' :", err));
 
   onSnapshot(collection(window._db, "infos"), (snapshot) => {
     renderInfos(snapshot.docs.map(d => d.data()).filter(i => i.visible !== false && (i.titre || i.texte))
