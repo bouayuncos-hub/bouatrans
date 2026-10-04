@@ -866,6 +866,7 @@
     </div>
 
     <div id="galerieGrid" class="grid sm:grid-cols-2 lg:grid-cols-3 gap-5"></div>
+    <div id="galerieSentinelle" class="hidden h-8" aria-hidden="true"></div>
     <p id="galerieEmpty" class="hidden text-slate-400 dark:text-cream/40 text-sm">Aucun média dans cette catégorie pour le moment.</p>
   </div>
 </section>
@@ -888,6 +889,7 @@
     <div class="grid lg:grid-cols-3 gap-8">
       <div class="lg:col-span-2">
         <div id="actualitesList" class="grid sm:grid-cols-2 gap-5"></div>
+        <div id="actualitesSentinelle" class="hidden h-8" aria-hidden="true"></div>
         <p id="actualitesEmpty" class="hidden text-slate-400 dark:text-cream/40 text-sm">Aucune actualité pour le moment.</p>
       </div>
       <aside>
@@ -1140,6 +1142,20 @@
     <h2 class="text-2xl font-bold text-navy dark:text-white mb-1.5">Que veux-tu publier ?</h2>
     <p class="text-sm text-slate-500 dark:text-cream/60 mb-6">Clique sur une case, choisis tes fichiers (plusieurs à la fois si tu veux) : ils sont mis en ligne et rangés tout seuls.</p>
 
+    <h3 class="text-xs font-bold uppercase tracking-widest text-amberdark mb-3">Appareil photo — prendre sur le moment</h3>
+    <div class="grid grid-cols-2 lg:grid-cols-6 gap-4 mb-8">
+      <button type="button" data-camera="photo" class="text-left bg-navy text-cream border-2 border-navy hover:border-amber rounded-2xl p-5 transition">
+        <span class="text-4xl block mb-3">📸</span>
+        <span class="block font-bold text-white">Prendre une photo</span>
+        <span class="block text-xs text-cream/70 mt-1">Avec la caméra de cet appareil</span>
+      </button>
+      <button type="button" data-camera="video" class="text-left bg-navy text-cream border-2 border-navy hover:border-amber rounded-2xl p-5 transition">
+        <span class="text-4xl block mb-3">🎥</span>
+        <span class="block font-bold text-white">Filmer une vidéo</span>
+        <span class="block text-xs text-cream/70 mt-1">Avec la caméra de cet appareil</span>
+      </button>
+    </div>
+
     <h3 class="text-xs font-bold uppercase tracking-widest text-teal mb-3">Sur le site — visible par tous</h3>
     <div class="grid grid-cols-2 lg:grid-cols-6 gap-4 mb-8">
       <button type="button" data-cible="medias" class="text-left bg-white dark:bg-navylight border-2 border-amber/60 hover:border-amber rounded-2xl p-5 transition">
@@ -1270,6 +1286,53 @@
 </div>
 
 <input id="adminFichierCelluleInput" type="file" class="hidden">
+
+<!-- ============================================================
+     APPAREIL PHOTO DE L'ADMIN (photo et vidéo)
+     Plein écran, au-dessus du tableau de bord. L'image de la caméra
+     s'affiche en direct ; après la prise, on choisit de publier sur
+     le site ou de garder dans l'admin (onglet Médias dans les deux cas).
+     ============================================================ -->
+<div id="cameraModal" class="hidden fixed inset-0 z-[90] bg-black flex-col">
+  <div class="flex items-center justify-between gap-3 px-4 py-3 text-white">
+    <div class="flex gap-2">
+      <button id="cameraModePhoto" type="button" class="px-4 py-1.5 rounded-full text-sm font-semibold">Photo</button>
+      <button id="cameraModeVideo" type="button" class="px-4 py-1.5 rounded-full text-sm font-semibold">Vidéo</button>
+    </div>
+    <span id="cameraChrono" class="hidden font-mono-num text-sm font-bold bg-red-600 px-2.5 py-1 rounded-full">0:00</span>
+    <button id="cameraFermer" type="button" aria-label="Fermer l'appareil photo" class="text-2xl leading-none px-2 hover:text-amber">✕</button>
+  </div>
+
+  <div class="relative flex-1 min-h-0 flex items-center justify-center overflow-hidden">
+    <video id="cameraDirect" autoplay muted playsinline class="max-w-full max-h-full"></video>
+    <img id="cameraApercuPhoto" class="hidden max-w-full max-h-full" alt="Photo prise">
+    <video id="cameraApercuVideo" class="hidden max-w-full max-h-full" controls playsinline></video>
+    <div id="cameraMessage" class="hidden absolute inset-0 bg-black flex-col items-center justify-center text-center text-white px-6 gap-4">
+      <p id="cameraMessageTexte" class="max-w-md"></p>
+      <button id="cameraSecours" type="button" class="bg-amber hover:bg-amberdark text-navy font-semibold px-5 py-2.5 rounded-full transition">Utiliser l'appareil photo du téléphone</button>
+    </div>
+  </div>
+
+  <p id="cameraEtat" class="text-center text-sm text-white/85 px-4 py-1.5 min-h-[2rem]"></p>
+
+  <!-- Avant la prise : changer de caméra, déclencher -->
+  <div id="cameraCommandes" class="flex items-center justify-center gap-8 px-4 pt-2 pb-6">
+    <button id="cameraBasculer" type="button" title="Changer de caméra (avant / arrière)" class="w-12 h-12 rounded-full bg-white/15 hover:bg-white/25 text-2xl">🔄</button>
+    <button id="cameraDeclencheur" type="button" aria-label="Prendre la photo" class="w-[4.5rem] h-[4.5rem] rounded-full bg-white border-4 border-white/40 transition"></button>
+    <span class="w-12"></span>
+  </div>
+
+  <!-- Après la prise : où ranger la photo ou la vidéo -->
+  <div id="cameraApres" class="hidden flex-wrap items-center justify-center gap-3 px-4 pt-2 pb-6">
+    <button id="cameraPublier" type="button" class="bg-amber hover:bg-amberdark text-navy font-semibold px-5 py-2.5 rounded-full transition">Publier sur le site</button>
+    <button id="cameraGarder" type="button" class="bg-white hover:bg-cream text-navy font-semibold px-5 py-2.5 rounded-full transition">Garder dans l'admin</button>
+    <button id="cameraRefaire" type="button" class="text-white underline text-sm px-3 py-2">Recommencer</button>
+  </div>
+
+  <!-- Secours : l'appareil photo du téléphone lui-même (si le navigateur refuse la caméra) -->
+  <input id="cameraSecoursPhoto" type="file" accept="image/*" capture="environment" class="hidden">
+  <input id="cameraSecoursVideo" type="file" accept="video/*" capture="environment" class="hidden">
+</div>
 
 <!-- MODALE ÉDITION AVANCÉE (JSON) — réservée aux champs que le tableau ne
      représente pas bien (ex : le tableau "dates" d'une commande). Ouverte
@@ -1633,13 +1696,34 @@ const observateurPhotosBase = ('IntersectionObserver' in window) ? new Intersect
 }, { rootMargin: '300px' }) : null;
 
 function chargerPhotoBase(img){
+  if(img.dataset.fichierCharge) return; // déjà affiché : on ne recharge pas (une vidéo en lecture ne doit pas repartir de zéro)
+  img.dataset.fichierCharge = '1';
   urlDeFichier(img.dataset.fichierBase)
     .then(adresse => { img.src = adresse; })
-    .catch(err => console.error("Photo non chargée :", err));
+    .catch(err => { delete img.dataset.fichierCharge; console.error("Fichier non chargé :", err); });
 }
 
+/* ------------------------------------------------------------
+   DÉFILEMENT INFINI
+   Une liste longue (galerie, actualités) s'affiche par lots : le lot
+   suivant est ajouté quand le visiteur approche de la fin. "sentinelle"
+   est un élément invisible placé sous la liste ; dès qu'il approche de
+   l'écran, afficherSuite() est appelée. relancer() revérifie après un
+   ajout (si la sentinelle est encore à l'écran, on enchaîne).
+   ------------------------------------------------------------ */
+const DEFILEMENT_INFINI_POSSIBLE = 'IntersectionObserver' in window;
+function creerDefilementInfini(sentinelle, afficherSuite){
+  if(!DEFILEMENT_INFINI_POSSIBLE) return { relancer(){} };
+  const observateur = new IntersectionObserver((entrees) => {
+    if(entrees.some(entree => entree.isIntersecting)) afficherSuite();
+  }, { rootMargin: '400px' });
+  observateur.observe(sentinelle);
+  return { relancer(){ observateur.unobserve(sentinelle); observateur.observe(sentinelle); } };
+}
+
+// (vaut pour les photos comme pour les vidéos enregistrées dans la base)
 function activerPhotosBase(conteneur){
-  conteneur.querySelectorAll('img[data-fichier-base]').forEach(img => {
+  conteneur.querySelectorAll('[data-fichier-base]').forEach(img => {
     if(observateurPhotosBase) observateurPhotosBase.observe(img);
     else chargerPhotoBase(img);
   });
@@ -3260,12 +3344,15 @@ adminLogoutBtn.addEventListener('click', () => {
    collection Firestore. La plupart des vues portent le nom de leur
    collection ; "rentabilite" est une seconde vue sur la collection
    "missions" (mêmes voyages, colonnes financières).
-   Les vues courantes se chargent 10 par 10 (scroll infini) ; les vues
-   de gestion (rentabilité, factures) se chargent en entier pour que
-   les totaux affichés au-dessus du tableau soient exacts.
+   Défilement infini partout : les vues courantes lisent la base 10
+   lignes par 10 ; les vues de gestion (rentabilité, factures, médias…)
+   lisent tout d'un coup, pour que les totaux et le tri soient exacts,
+   puis affichent les lignes 20 par 20 au fil du défilement.
    ---------------------------------------------------------------- */
 const PAGE_SIZE = 10;
 const PAGE_SIZE_VUE_COMPLETE = 500;
+const LOT_AFFICHAGE_ADMIN = 20; // lignes ajoutées à l'écran à chaque étape du défilement
+let lignesEnAttente = [];       // lignes déjà lues dans la base, pas encore affichées
 let vueActive = 'publier';      // onglet affiché ("publier" ou une clé de SCHEMAS_ADMIN)
 let collectionActive = 'devis'; // collection Firestore lue et écrite
 let dernierDocumentCharge = null;
@@ -3675,8 +3762,9 @@ function remplirCalculsLigne(tr, donnees){
    est enregistrée dans Firestore. Deux endroits possibles :
      1. le stockage Firebase (Storage), quand il est disponible ;
      2. sinon la base elle-même (collection "fichiers") : les photos y
-        sont compressées, les documents découpés en morceaux. Les vidéos
-        sont trop lourdes pour cette solution de secours.
+        sont compressées, les documents et les vidéos courtes (8 Mo au
+        plus) découpés en morceaux. Une vidéo plus lourde a besoin du
+        stockage Firebase.
    Le stockage Firebase est testé une fois par session : s'il ne répond
    pas, on passe directement au secours, sans attente ni blocage.
    Limites : 200 Mo par vidéo, 25 Mo par fichier (8 Mo en secours).
@@ -3825,13 +3913,15 @@ async function publierFichier(fichier, dossier, surProgression, pourLeSite){
     try {
       return await envoyerFichierStorage(aEnvoyer, dossier, surProgression);
     } catch (err) {
-      if(estVideo) throw err;
+      if(estVideo && fichier.size > TAILLE_MAX_FICHIER_BASE_MO * 1024 * 1024) throw err;
       console.warn("Envoi vers le stockage impossible, enregistrement dans la base :", err);
     }
   }
 
-  if(estVideo){
-    throw new Error("le stockage Firebase n'est pas disponible, et une vidéo est trop lourde pour la base : publie-la sur YouTube puis colle son lien dans l'onglet Médias");
+  // Une vidéo courte (8 Mo au plus, soit environ 45 secondes filmées depuis
+  // l'appareil photo du site) tient dans la base ; au-delà, il faut le stockage.
+  if(estVideo && fichier.size > TAILLE_MAX_FICHIER_BASE_MO * 1024 * 1024){
+    throw new Error(`le stockage Firebase n'est pas disponible : sans lui, une vidéo ne peut pas dépasser ${TAILLE_MAX_FICHIER_BASE_MO} Mo. Filme-la avec l'appareil photo du site (45 secondes au plus), ou publie-la sur YouTube et colle son lien dans l'onglet Médias`);
   }
   if(estPhoto){
     const reduite = await compresserImage(fichier, 1600, 480000);
@@ -4219,6 +4309,303 @@ adminRediger.addEventListener('submit', async (e) => {
 });
 
 /* ----------------------------------------------------------------
+   APPAREIL PHOTO (photo et vidéo depuis la caméra de l'appareil)
+   La caméra s'affiche en direct dans la page. Une photo est une image
+   de ce direct ; une vidéo est enregistrée par le navigateur, à débit
+   réduit (environ 10 Mo par minute) pour rester légère à envoyer.
+   Chaque prise est rangée dans l'onglet Médias : "Publier sur le site"
+   la rend visible dans la galerie, "Garder dans l'admin" la laisse
+   masquée (case "Visible" décochée).
+   Si le navigateur refuse la caméra, un bouton ouvre l'appareil photo
+   du téléphone à la place.
+   ---------------------------------------------------------------- */
+const cameraModal = document.getElementById('cameraModal');
+const cameraDirect = document.getElementById('cameraDirect');
+const cameraApercuPhoto = document.getElementById('cameraApercuPhoto');
+const cameraApercuVideo = document.getElementById('cameraApercuVideo');
+const cameraMessage = document.getElementById('cameraMessage');
+const cameraEtat = document.getElementById('cameraEtat');
+const cameraChrono = document.getElementById('cameraChrono');
+const cameraCommandes = document.getElementById('cameraCommandes');
+const cameraApres = document.getElementById('cameraApres');
+const cameraDeclencheur = document.getElementById('cameraDeclencheur');
+const DUREE_MAX_VIDEO_SECONDES = 180;       // avec le stockage Firebase
+const DUREE_MAX_VIDEO_SANS_STOCKAGE = 45;   // sans lui : la vidéo doit tenir dans la base (8 Mo)
+
+let modeCamera = 'photo';             // "photo" ou "video"
+let orientationCamera = 'environment'; // caméra arrière ("user" = caméra avant)
+let fluxCamera = null;
+let demandeCamera = 0;                 // ignore la réponse d'une demande de caméra dépassée
+let enregistreurVideo = null;
+let minuterieVideo = null;
+let dureeMaxVideo = DUREE_MAX_VIDEO_SECONDES;
+let priseCamera = null;                // le fichier (photo ou vidéo) en attente de rangement
+let adresseApercuCamera = null;
+
+function afficherBloc(element, visible){
+  element.classList.toggle('hidden', !visible);
+  element.classList.toggle('flex', visible);
+}
+
+function arreterFluxCamera(){
+  if(fluxCamera) fluxCamera.getTracks().forEach(piste => piste.stop());
+  fluxCamera = null;
+  cameraDirect.srcObject = null;
+}
+
+function arreterEnregistrementVideo(garder){
+  clearInterval(minuterieVideo);
+  minuterieVideo = null;
+  cameraChrono.classList.add('hidden');
+  cameraDeclencheur.classList.remove('bg-red-600');
+  cameraDeclencheur.classList.add('bg-white');
+  if(enregistreurVideo && enregistreurVideo.state !== 'inactive'){
+    if(!garder) enregistreurVideo.onstop = null; // abandon : on ne garde pas la vidéo
+    enregistreurVideo.stop();
+  }
+  if(!garder) enregistreurVideo = null;
+}
+
+function afficherMessageCamera(texte){
+  document.getElementById('cameraMessageTexte').textContent = texte;
+  afficherBloc(cameraMessage, true);
+  afficherBloc(cameraCommandes, false);
+}
+
+// Affiche la prise à valider (ou revient au direct si prise = null)
+function montrerPriseCamera(prise){
+  if(adresseApercuCamera) URL.revokeObjectURL(adresseApercuCamera);
+  adresseApercuCamera = null;
+  priseCamera = prise;
+  cameraApercuPhoto.classList.add('hidden');
+  cameraApercuVideo.classList.add('hidden');
+  cameraApercuVideo.removeAttribute('src');
+
+  if(!prise){
+    cameraDirect.classList.remove('hidden');
+    afficherBloc(cameraApres, false);
+    afficherBloc(cameraCommandes, !!fluxCamera);
+    return;
+  }
+  adresseApercuCamera = URL.createObjectURL(prise);
+  const apercu = prise.type.startsWith('video/') ? cameraApercuVideo : cameraApercuPhoto;
+  apercu.src = adresseApercuCamera;
+  apercu.classList.remove('hidden');
+  cameraDirect.classList.add('hidden');
+  afficherBloc(cameraMessage, false);
+  afficherBloc(cameraCommandes, false);
+  afficherBloc(cameraApres, true);
+  cameraEtat.textContent = "Où veux-tu la ranger ?";
+}
+
+function reglerModeCamera(mode){
+  modeCamera = mode;
+  const actif = 'bg-amber text-navy', inactif = 'bg-white/15 text-white';
+  document.getElementById('cameraModePhoto').className = `px-4 py-1.5 rounded-full text-sm font-semibold ${mode === 'photo' ? actif : inactif}`;
+  document.getElementById('cameraModeVideo').className = `px-4 py-1.5 rounded-full text-sm font-semibold ${mode === 'video' ? actif : inactif}`;
+  cameraDeclencheur.setAttribute('aria-label', mode === 'photo' ? 'Prendre la photo' : 'Démarrer ou arrêter la vidéo');
+}
+
+async function demarrerCamera(){
+  const maDemande = ++demandeCamera;
+  arreterEnregistrementVideo(false);
+  arreterFluxCamera();
+  montrerPriseCamera(null);
+  afficherBloc(cameraMessage, false);
+  cameraEtat.textContent = "Ouverture de la caméra…";
+
+  if(!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia){
+    cameraEtat.textContent = '';
+    afficherMessageCamera("Ce navigateur ne donne pas accès à la caméra depuis le site.");
+    return;
+  }
+
+  const image = { facingMode: orientationCamera, width: { ideal: modeCamera === 'photo' ? 1920 : 1280 }, height: { ideal: modeCamera === 'photo' ? 1080 : 720 } };
+  let flux, sansSon = false;
+  try {
+    try {
+      flux = await navigator.mediaDevices.getUserMedia({ video: image, audio: modeCamera === 'video' });
+    } catch (err) {
+      if(modeCamera !== 'video') throw err;
+      flux = await navigator.mediaDevices.getUserMedia({ video: image, audio: false }); // micro refusé ou absent
+      sansSon = true;
+    }
+  } catch (err) {
+    if(maDemande !== demandeCamera) return;
+    console.warn("Caméra indisponible :", err);
+    cameraEtat.textContent = '';
+    const refus = err && (err.name === 'NotAllowedError' || err.name === 'SecurityError');
+    const absente = err && (err.name === 'NotFoundError' || err.name === 'OverconstrainedError');
+    afficherMessageCamera(refus ? "L'accès à la caméra a été refusé. Autorise-la pour ce site dans les réglages du navigateur, ou passe par l'appareil photo du téléphone."
+      : absente ? "Aucune caméra n'a été trouvée sur cet appareil."
+      : "La caméra n'a pas pu s'ouvrir (elle est peut-être utilisée par une autre application).");
+    return;
+  }
+  if(maDemande !== demandeCamera){ flux.getTracks().forEach(piste => piste.stop()); return; } // fenêtre fermée ou mode changé entre-temps
+
+  fluxCamera = flux;
+  cameraDirect.srcObject = flux;
+  afficherBloc(cameraCommandes, true);
+  cameraEtat.textContent = modeCamera === 'photo' ? "Appuie sur le bouton blanc pour prendre la photo."
+    : "Appuie sur le bouton blanc pour filmer, puis à nouveau pour arrêter." + (sansSon ? " Micro indisponible : la vidéo sera sans son." : '');
+
+  if(modeCamera === 'video'){
+    // Sans stockage Firebase, la vidéo doit rester assez courte pour tenir dans la base
+    stockageDisponible().then(disponible => {
+      if(maDemande !== demandeCamera) return;
+      dureeMaxVideo = disponible ? DUREE_MAX_VIDEO_SECONDES : DUREE_MAX_VIDEO_SANS_STOCKAGE;
+      if(!disponible) cameraEtat.textContent += ` Durée maximale : ${DUREE_MAX_VIDEO_SANS_STOCKAGE} secondes (stockage Firebase indisponible).`;
+    });
+  }
+}
+
+function ouvrirCamera(mode){
+  reglerModeCamera(mode);
+  afficherBloc(cameraModal, true);
+  demarrerCamera();
+}
+
+function fermerCamera(){
+  demandeCamera++;
+  arreterEnregistrementVideo(false);
+  arreterFluxCamera();
+  montrerPriseCamera(null);
+  afficherBloc(cameraModal, false);
+}
+
+function horodatageFichier(){
+  return new Date().toISOString().slice(0, 19).replace(/[:T]/g, '-');
+}
+
+function prendrePhoto(){
+  if(!cameraDirect.videoWidth) return; // image de la caméra pas encore arrivée
+  const canvas = document.createElement('canvas');
+  canvas.width = cameraDirect.videoWidth;
+  canvas.height = cameraDirect.videoHeight;
+  canvas.getContext('2d').drawImage(cameraDirect, 0, 0, canvas.width, canvas.height);
+  canvas.toBlob((image) => {
+    if(!image){ cameraEtat.textContent = "La photo n'a pas pu être prise. Réessaie."; return; }
+    montrerPriseCamera(new File([image], `photo-${horodatageFichier()}.jpg`, { type: 'image/jpeg' }));
+  }, 'image/jpeg', 0.92);
+}
+
+function demarrerVideo(){
+  if(typeof MediaRecorder === 'undefined'){
+    afficherMessageCamera("Ce navigateur ne sait pas enregistrer de vidéo depuis le site.");
+    return;
+  }
+  // Format lisible partout (mp4) quand le navigateur sait l'enregistrer, sinon webm
+  const format = ['video/mp4;codecs=avc1,mp4a.40.2', 'video/mp4', 'video/webm;codecs=vp9,opus', 'video/webm;codecs=vp8,opus', 'video/webm'].find(f => MediaRecorder.isTypeSupported(f));
+  const morceaux = [];
+  try {
+    enregistreurVideo = new MediaRecorder(fluxCamera, { ...(format ? { mimeType: format } : {}), videoBitsPerSecond: 1200000, audioBitsPerSecond: 64000 });
+  } catch (err) {
+    console.error("Enregistrement vidéo impossible :", err);
+    cameraEtat.textContent = "L'enregistrement vidéo n'a pas pu démarrer sur cet appareil.";
+    return;
+  }
+  const enregistreur = enregistreurVideo;
+  enregistreur.ondataavailable = (e) => { if(e.data && e.data.size) morceaux.push(e.data); };
+  enregistreur.onstop = () => {
+    const type = (enregistreur.mimeType || format || 'video/webm').split(';')[0];
+    const extension = type.includes('mp4') ? 'mp4' : 'webm';
+    enregistreurVideo = null;
+    if(!morceaux.length){ cameraEtat.textContent = "La vidéo est vide. Réessaie."; return; }
+    montrerPriseCamera(new File(morceaux, `video-${horodatageFichier()}.${extension}`, { type: `video/${extension}` }));
+  };
+  enregistreur.start(1000);
+
+  const debut = Date.now();
+  cameraDeclencheur.classList.remove('bg-white');
+  cameraDeclencheur.classList.add('bg-red-600');
+  cameraChrono.textContent = '0:00';
+  cameraChrono.classList.remove('hidden');
+  cameraEtat.textContent = "Enregistrement… appuie sur le bouton rouge pour arrêter.";
+  minuterieVideo = setInterval(() => {
+    const secondes = Math.floor((Date.now() - debut) / 1000);
+    cameraChrono.textContent = `${Math.floor(secondes / 60)}:${String(secondes % 60).padStart(2, '0')}`;
+    if(secondes >= dureeMaxVideo) arreterEnregistrementVideo(true); // durée maximale atteinte
+  }, 250);
+}
+
+cameraDeclencheur.addEventListener('click', () => {
+  if(!fluxCamera) return;
+  if(modeCamera === 'photo') prendrePhoto();
+  else if(enregistreurVideo) arreterEnregistrementVideo(true);
+  else demarrerVideo();
+});
+
+document.getElementById('cameraModePhoto').addEventListener('click', () => { if(modeCamera !== 'photo'){ reglerModeCamera('photo'); demarrerCamera(); } });
+document.getElementById('cameraModeVideo').addEventListener('click', () => { if(modeCamera !== 'video'){ reglerModeCamera('video'); demarrerCamera(); } });
+document.getElementById('cameraBasculer').addEventListener('click', () => {
+  orientationCamera = orientationCamera === 'environment' ? 'user' : 'environment';
+  demarrerCamera();
+});
+document.getElementById('cameraFermer').addEventListener('click', fermerCamera);
+document.getElementById('cameraRefaire').addEventListener('click', () => {
+  montrerPriseCamera(null);
+  if(fluxCamera) cameraEtat.textContent = '';
+  else demarrerCamera();
+});
+
+// Secours : l'appareil photo du téléphone (prise faite hors du site, puis rangée de la même façon)
+document.getElementById('cameraSecours').addEventListener('click', () => {
+  const champ = document.getElementById(modeCamera === 'photo' ? 'cameraSecoursPhoto' : 'cameraSecoursVideo');
+  champ.value = '';
+  champ.click();
+});
+['cameraSecoursPhoto', 'cameraSecoursVideo'].forEach(id => {
+  document.getElementById(id).addEventListener('change', (e) => {
+    const fichier = e.target.files[0];
+    if(fichier) montrerPriseCamera(fichier);
+  });
+});
+
+// Range la prise dans l'onglet Médias (visible sur le site, ou non)
+async function rangerPriseCamera(visibleSurLeSite){
+  if(!priseCamera) return;
+  const prise = priseCamera;
+  const boutons = cameraApres.querySelectorAll('button');
+  boutons.forEach(b => { b.disabled = true; b.classList.add('opacity-50'); });
+  cameraEtat.textContent = "Envoi en cours…";
+  let valeur = null;
+  try {
+    if(!window._db) throw new Error("base de données indisponible : vérifie ta connexion internet");
+    const cible = CIBLES_PUBLICATION.medias;
+    const contexte = await cible.preparer();
+    valeur = await publierFichier(prise, cible.dossier, (p) => { cameraEtat.textContent = `Envoi en cours (${p} %)…`; }, true);
+    const estVideo = prise.type.startsWith('video/');
+    const moment = new Date().toLocaleString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+    const { collection, addDoc, serverTimestamp } = window._firestore;
+    await addDoc(collection(window._db, 'medias'), {
+      ...cible.creer(prise, valeur, contexte),
+      titre: `${estVideo ? 'Vidéo' : 'Photo'} du ${moment}`,
+      visible: visibleSurLeSite,
+      origine: 'appareil photo',
+      dateCreation: serverTimestamp()
+    });
+    montrerPriseCamera(null);
+    cameraEtat.textContent = visibleSurLeSite
+      ? "✓ Publiée sur le site et rangée dans l'onglet Médias. Tu peux en prendre une autre."
+      : "✓ Gardée dans l'onglet Médias, non visible sur le site. Tu peux en prendre une autre.";
+    if(!fluxCamera) demarrerCamera(); // prise faite avec l'appareil du téléphone : on revient à l'écran de départ
+  } catch (err) {
+    console.error("Erreur d'enregistrement de la prise :", err);
+    if(valeur) supprimerFichier(valeur);
+    cameraEtat.textContent = `Enregistrement impossible : ${messageErreurPublication(err)}`;
+  } finally {
+    boutons.forEach(b => { b.disabled = false; b.classList.remove('opacity-50'); });
+  }
+}
+document.getElementById('cameraPublier').addEventListener('click', () => rangerPriseCamera(true));
+document.getElementById('cameraGarder').addEventListener('click', () => rangerPriseCamera(false));
+
+adminPublier.addEventListener('click', (e) => {
+  const tuile = e.target.closest('[data-camera]');
+  if(tuile) ouvrirCamera(tuile.dataset.camera);
+});
+
+/* ----------------------------------------------------------------
    ÉCRAN "TEXTES DU SITE"
    Liste tous les textes recensés sur les pages publiques (voir
    "TEXTES DU SITE MODIFIABLES"), section par section. Un texte se
@@ -4442,6 +4829,7 @@ async function chargerCollection(nomVue, reinitialiser){
     adminTableBody.innerHTML = '';
     adminTableHead.innerHTML = '';
     donneesChargees.clear();
+    lignesEnAttente = [];
     dernierDocumentCharge = null;
     ilResteDesDocuments = true;
     chargementEnCours = false;
@@ -4475,6 +4863,11 @@ async function chargerPageSuivante(){
     adminLoadingLabel.textContent = "Base de données indisponible : vérifie ta connexion internet, puis recharge la page.";
     return;
   }
+  // Des lignes déjà lues attendent : on en affiche un lot, sans relire la base
+  if(lignesEnAttente.length){
+    afficherLotEnAttente();
+    return;
+  }
   if(chargementEnCours || !ilResteDesDocuments) return;
   chargementEnCours = true;
   const monChargement = numeroChargement;
@@ -4503,24 +4896,42 @@ async function chargerPageSuivante(){
 
     let lignes = snapshot.docs.map(docSnap => ({ id: docSnap.id, donnees: docSnap.data() }));
     if(vue.tri) lignes.sort((a, b) => vue.tri(a.donnees, b.donnees));
-    lignes.forEach(ligne => construireLigneDocument(ligne.id, ligne.donnees));
 
     dernierDocumentCharge = snapshot.docs[snapshot.docs.length - 1];
+    if(snapshot.docs.length < taillePage) ilResteDesDocuments = false;
+
+    if(vue.complet){
+      // Tout est compté tout de suite (totaux exacts), affiché par lots
+      lignes.forEach(ligne => donneesChargees.set(ligne.id, ligne.donnees));
+      lignesEnAttente = lignes;
+      afficherLotEnAttente();
+    } else {
+      lignes.forEach(ligne => construireLigneDocument(ligne.id, ligne.donnees));
+      adminLoadingLabel.textContent = ilResteDesDocuments ? "" : "Fin de la liste.";
+      relancerDefilementAdmin();
+    }
     mettreAJourCompteur();
     mettreAJourResume();
-
-    if(snapshot.docs.length < taillePage){
-      ilResteDesDocuments = false;
-      adminLoadingLabel.textContent = "Fin de la liste.";
-    } else {
-      adminLoadingLabel.textContent = "";
-    }
   } catch (err) {
     console.error("Erreur de chargement admin :", err);
     adminLoadingLabel.textContent = "Erreur de chargement (vérifie ta configuration Firebase et tes règles Firestore).";
   } finally {
     if(monChargement === numeroChargement) chargementEnCours = false;
   }
+}
+
+function afficherLotEnAttente(){
+  lignesEnAttente.splice(0, LOT_AFFICHAGE_ADMIN).forEach(ligne => construireLigneDocument(ligne.id, ligne.donnees));
+  adminLoadingLabel.textContent = lignesEnAttente.length
+    ? `Fais défiler pour voir la suite (${donneesChargees.size - lignesEnAttente.length} sur ${donneesChargees.size})`
+    : "Fin de la liste.";
+  relancerDefilementAdmin();
+}
+
+// Après un ajout de lignes : si le bas de la liste est encore à l'écran, on enchaîne
+function relancerDefilementAdmin(){
+  observateurScrollInfini.unobserve(adminScrollSentinel);
+  observateurScrollInfini.observe(adminScrollSentinel);
 }
 
 // Observe la sentinelle en bas de liste : dès qu'elle apparaît à l'écran, on charge la suite
@@ -4946,7 +5357,7 @@ function creerCarteMedia(m){
   if(m.type === 'video'){
     return `
       <div class="galerie-carte bg-black rounded-xl overflow-hidden border border-slate-200 dark:border-white/10">
-        <video src="${url}" controls preload="metadata" playsinline class="w-full aspect-video bg-black"></video>
+        <video ${estFichierBase(urlBrute) ? `data-fichier-base="${url}"` : `src="${url}"`} controls preload="metadata" playsinline class="w-full aspect-video bg-black"></video>
         ${m.titre ? `<p class="text-xs text-cream/60 px-3 py-2 truncate">${titre}</p>` : ''}
       </div>`;
   }
@@ -5043,17 +5454,34 @@ function mediaCorrespondAuFiltre(m, filtre){
   return m.type === filtre;
 }
 
-function renderGalerie(){
-  const liste = tousLesMedias.filter(m => mediaCorrespondAuFiltre(m, filtreGalerieActif));
-  if(liste.length === 0){
-    galerieGridEl.innerHTML = '';
-    galerieEmptyEl.classList.remove('hidden');
-    return;
-  }
-  galerieEmptyEl.classList.add('hidden');
-  galerieGridEl.innerHTML = liste.map(creerCarteMedia).join('');
+// La galerie s'affiche par lots de 12 : la suite arrive au fil du défilement.
+const LOT_GALERIE = DEFILEMENT_INFINI_POSSIBLE ? 12 : Infinity;
+const galerieSentinelleEl = document.getElementById('galerieSentinelle');
+let listeGalerie = [];
+let nombreAffichesGalerie = 0;
+
+function afficherSuiteGalerie(combien){
+  const lot = listeGalerie.slice(nombreAffichesGalerie, nombreAffichesGalerie + (combien || LOT_GALERIE));
+  if(!lot.length) return;
+  galerieGridEl.insertAdjacentHTML('beforeend', lot.map(creerCarteMedia).join(''));
+  nombreAffichesGalerie += lot.length;
   activerPhotosBase(galerieGridEl);
   chargerScriptsReseauxSociauxSiNecessaire();
+  galerieSentinelleEl.classList.toggle('hidden', nombreAffichesGalerie >= listeGalerie.length);
+  defilementGalerie.relancer();
+}
+const defilementGalerie = creerDefilementInfini(galerieSentinelleEl, () => afficherSuiteGalerie());
+
+// conserverPosition : après une mise à jour en direct, on réaffiche autant
+// d'éléments qu'avant (le visiteur ne perd pas sa place dans la galerie).
+function renderGalerie(conserverPosition){
+  const dejaAffiches = conserverPosition ? nombreAffichesGalerie : 0;
+  listeGalerie = tousLesMedias.filter(m => mediaCorrespondAuFiltre(m, filtreGalerieActif));
+  galerieGridEl.innerHTML = '';
+  nombreAffichesGalerie = 0;
+  galerieSentinelleEl.classList.add('hidden');
+  galerieEmptyEl.classList.toggle('hidden', listeGalerie.length > 0);
+  afficherSuiteGalerie(Math.max(LOT_GALERIE, dejaAffiches));
 }
 
 // Clic sur une vignette YouTube → charge la vraie iframe (lecture différée,
@@ -5101,7 +5529,7 @@ quandFirebasePret(() => {
       .map(d => ({ id: d.id, ...d.data() }))
       .filter(m => m.visible !== false)
       .sort((a, b) => (a.ordre ?? 999) - (b.ordre ?? 999));
-    renderGalerie();
+    renderGalerie(true);
   }, (err) => {
     console.error("Erreur d'écoute temps réel sur 'medias' :", err);
     galerieEmptyEl.classList.remove('hidden');
@@ -5123,24 +5551,47 @@ const infosListEl = document.getElementById('infosList');
 const infosEmptyEl = document.getElementById('infosEmpty');
 const LONGUEUR_EXTRAIT_ACTUALITE = 220;
 
-function renderActualites(liste){
-  actualitesEmptyEl.classList.toggle('hidden', liste.length > 0);
-  actualitesListEl.innerHTML = liste.map(a => {
-    const image = urlSure(a.imageUrl);
-    const texte = String(a.texte || '');
-    const long = texte.length > LONGUEUR_EXTRAIT_ACTUALITE;
-    return `
-      <article class="bg-white dark:bg-navylight border border-slate-200 dark:border-white/10 rounded-xl overflow-hidden">
-        ${image ? `<img ${estFichierBase(image) ? `data-fichier-base="${echapperHtml(image)}"` : `src="${echapperHtml(image)}"`} alt="" loading="lazy" class="w-full h-44 object-cover bg-slate-200 dark:bg-white/10">` : ''}
-        <div class="p-5">
-          ${a.datePublication ? `<span class="font-mono-num text-xs text-amberdark">${echapperHtml(formaterDateLongue(a.datePublication))}</span>` : ''}
-          <h3 class="text-lg font-bold text-navy dark:text-white mt-1 mb-2">${echapperHtml(a.titre)}</h3>
-          <p class="actu-texte text-sm text-slate-600 dark:text-cream/70 whitespace-pre-line ${long ? 'line-clamp-4' : ''}">${echapperHtml(texte)}</p>
-          ${long ? `<button type="button" class="actu-suite mt-2 text-sm font-semibold text-amberdark hover:text-amber">Lire la suite</button>` : ''}
-        </div>
-      </article>`;
-  }).join('');
+function carteActualite(a){
+  const image = urlSure(a.imageUrl);
+  const texte = String(a.texte || '');
+  const long = texte.length > LONGUEUR_EXTRAIT_ACTUALITE;
+  return `
+    <article class="bg-white dark:bg-navylight border border-slate-200 dark:border-white/10 rounded-xl overflow-hidden">
+      ${image ? `<img ${estFichierBase(image) ? `data-fichier-base="${echapperHtml(image)}"` : `src="${echapperHtml(image)}"`} alt="" loading="lazy" class="w-full h-44 object-cover bg-slate-200 dark:bg-white/10">` : ''}
+      <div class="p-5">
+        ${a.datePublication ? `<span class="font-mono-num text-xs text-amberdark">${echapperHtml(formaterDateLongue(a.datePublication))}</span>` : ''}
+        <h3 class="text-lg font-bold text-navy dark:text-white mt-1 mb-2">${echapperHtml(a.titre)}</h3>
+        <p class="actu-texte text-sm text-slate-600 dark:text-cream/70 whitespace-pre-line ${long ? 'line-clamp-4' : ''}">${echapperHtml(texte)}</p>
+        ${long ? `<button type="button" class="actu-suite mt-2 text-sm font-semibold text-amberdark hover:text-amber">Lire la suite</button>` : ''}
+      </div>
+    </article>`;
+}
+
+// Les actualités s'affichent par lots de 6 : la suite arrive au fil du défilement.
+const LOT_ACTUALITES = DEFILEMENT_INFINI_POSSIBLE ? 6 : Infinity;
+const actualitesSentinelleEl = document.getElementById('actualitesSentinelle');
+let listeActualites = [];
+let nombreAfficheesActualites = 0;
+
+function afficherSuiteActualites(combien){
+  const lot = listeActualites.slice(nombreAfficheesActualites, nombreAfficheesActualites + (combien || LOT_ACTUALITES));
+  if(!lot.length) return;
+  actualitesListEl.insertAdjacentHTML('beforeend', lot.map(carteActualite).join(''));
+  nombreAfficheesActualites += lot.length;
   activerPhotosBase(actualitesListEl);
+  actualitesSentinelleEl.classList.toggle('hidden', nombreAfficheesActualites >= listeActualites.length);
+  defilementActualites.relancer();
+}
+const defilementActualites = creerDefilementInfini(actualitesSentinelleEl, () => afficherSuiteActualites());
+
+function renderActualites(liste){
+  const dejaAffichees = nombreAfficheesActualites;
+  listeActualites = liste;
+  actualitesListEl.innerHTML = '';
+  nombreAfficheesActualites = 0;
+  actualitesSentinelleEl.classList.add('hidden');
+  actualitesEmptyEl.classList.toggle('hidden', liste.length > 0);
+  afficherSuiteActualites(Math.max(LOT_ACTUALITES, dejaAffichees));
 }
 
 // "Lire la suite" / "Réduire" sur une actualité longue
