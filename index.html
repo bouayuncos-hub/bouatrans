@@ -162,6 +162,62 @@
   }
   .admin-tab.active{ background: #E8A33D; color: #0F1F38; }
   .admin-tab:not(.active):hover{ color: #F5F3ED; background: rgba(255,255,255,0.08); }
+
+  /* ---------- Formulaires pro (Frets & voyages, CMR) ---------- */
+  .champ-pro{
+    width: 100%; padding: 10px 12px; border-radius: 10px; font-size: 0.9rem;
+    border: 1px solid #E2E8F0; background: #F5F3ED; color: #0F1F38;
+  }
+  .champ-pro:focus{ outline: none; border-color: #E8A33D; box-shadow: 0 0 0 3px rgba(232,163,61,0.25); }
+  .champ-pro:invalid.champ-touche{ border-color: #EF4444; }
+  .dark .champ-pro{ background: #0F1F38; color: #F5F3ED; border-color: rgba(255,255,255,0.15); }
+  .etiquette-pro{ display: block; font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: #64748B; margin-bottom: 6px; }
+  .dark .etiquette-pro{ color: rgba(245,243,237,0.6); }
+  .etiquette-pro .requis{ color: #C7862A; }
+  .carte-pro{ background: #fff; border: 1px solid #E2E8F0; border-radius: 18px; padding: 20px; }
+  .dark .carte-pro{ background: #1C3358; border-color: rgba(255,255,255,0.1); }
+  .case-cmr-titre{ display: flex; align-items: center; gap: 8px; font-size: 0.78rem; font-weight: 700; color: #0F1F38; margin-bottom: 8px; }
+  .dark .case-cmr-titre{ color: #F5F3ED; }
+  .case-cmr-titre b{ display: inline-flex; align-items: center; justify-content: center; min-width: 22px; height: 22px; padding: 0 5px; border-radius: 6px; background: #0F1F38; color: #E8A33D; font-size: 0.7rem; }
+  .dark .case-cmr-titre b{ background: #E8A33D; color: #0F1F38; }
+  .badge-pro{ display: inline-block; font-size: 0.7rem; font-weight: 700; padding: 3px 9px; border-radius: 999px; white-space: nowrap; }
+  .filtre-voyage{ font-size: 0.78rem; font-weight: 600; padding: 6px 14px; border-radius: 999px; border: 1px solid #E2E8F0; color: #64748B; background: transparent; }
+  .filtre-voyage.actif{ background: #0F1F38; color: #E8A33D; border-color: #0F1F38; }
+  .dark .filtre-voyage{ border-color: rgba(255,255,255,0.15); color: rgba(245,243,237,0.7); }
+  .dark .filtre-voyage.actif{ background: #E8A33D; color: #0F1F38; border-color: #E8A33D; }
+
+  /* ---------- Feuille CMR (aperçu + PDF) : indépendante du thème ---------- */
+  .cmr-feuille{
+    width: 794px; min-height: 1123px; box-sizing: border-box; padding: 34px 36px 28px;
+    background: #fff; color: #0F1F38; font-family: Arial, Helvetica, sans-serif; font-size: 10.5px; line-height: 1.35;
+  }
+  .cmr-feuille *{ box-sizing: border-box; }
+  .cmr-entete{ display: flex; justify-content: space-between; align-items: center; border-bottom: 3px solid #E8A33D; padding-bottom: 10px; margin-bottom: 10px; }
+  .cmr-entete img{ height: 58px; }
+  .cmr-titre{ text-align: center; flex: 1; padding: 0 10px; }
+  .cmr-titre h1{ font-size: 15px; margin: 0; letter-spacing: .04em; }
+  .cmr-titre p{ font-size: 9px; margin: 3px 0 0; color: #475569; }
+  .cmr-numero{ text-align: right; min-width: 150px; }
+  .cmr-numero .big{ font-size: 22px; font-weight: 800; letter-spacing: .08em; }
+  .cmr-numero .num{ font-family: 'Courier New', monospace; font-size: 13px; font-weight: 700; color: #C7862A; }
+  .cmr-grille{ display: grid; grid-template-columns: 1fr 1fr; border: 1.5px solid #0F1F38; }
+  .cmr-case{ border: 0.75px solid #0F1F38; padding: 5px 7px 7px; min-height: 78px; }
+  .cmr-case.pleine{ grid-column: 1 / -1; }
+  .cmr-case .lib{ font-size: 8px; color: #475569; text-transform: uppercase; letter-spacing: .03em; margin-bottom: 3px; }
+  .cmr-case .lib b{ display: inline-block; background: #0F1F38; color: #fff; border-radius: 3px; padding: 0 4px; margin-right: 4px; font-size: 8px; }
+  .cmr-case .val{ font-size: 11px; white-space: pre-wrap; word-break: break-word; }
+  .cmr-case .val strong{ font-size: 12px; }
+  .cmr-case .dni{ font-family: 'Courier New', monospace; font-size: 11.5px; margin-top: 6px; letter-spacing: .02em; }
+  .cmr-marchandises{ grid-column: 1 / -1; border: 0.75px solid #0F1F38; }
+  .cmr-marchandises table{ width: 100%; border-collapse: collapse; }
+  .cmr-marchandises th{ font-size: 7.5px; font-weight: 600; text-transform: uppercase; color: #475569; text-align: left; padding: 4px 5px; border-bottom: 0.75px solid #0F1F38; border-right: 0.75px solid #CBD5E1; vertical-align: top; }
+  .cmr-marchandises th b{ display: inline-block; background: #0F1F38; color: #fff; border-radius: 3px; padding: 0 3px; margin-right: 3px; }
+  .cmr-marchandises td{ font-size: 10.5px; padding: 5px; border-right: 0.75px solid #CBD5E1; border-bottom: 0.5px dashed #CBD5E1; vertical-align: top; white-space: pre-wrap; }
+  .cmr-marchandises td.n{ text-align: right; font-family: 'Courier New', monospace; }
+  .cmr-marchandises tfoot td{ font-weight: 700; border-top: 0.75px solid #0F1F38; border-bottom: none; }
+  .cmr-signatures{ display: grid; grid-template-columns: 1fr 1fr 1fr; grid-column: 1 / -1; }
+  .cmr-signatures .cmr-case{ min-height: 132px; }
+  .cmr-pied{ margin-top: 8px; font-size: 8px; color: #64748B; display: flex; justify-content: space-between; gap: 10px; }
 </style>
 </head>
 
@@ -1116,6 +1172,7 @@
         <span class="font-display text-lg font-bold text-cream">Tableau de bord <span class="text-amber">admin</span></span>
       </div>
       <div class="flex items-center gap-3">
+        <button id="adminPdfBtn" title="Télécharger l'onglet affiché en PDF" class="border border-amber/60 text-amber hover:bg-amber hover:text-navy font-semibold text-sm px-4 py-2 rounded-full transition">⬇ PDF</button>
         <button id="adminAddBtn" class="bg-amber hover:bg-amberdark text-navy font-semibold text-sm px-4 py-2.5 rounded-full transition">+ Ajouter</button>
         <button id="adminLogoutBtn" class="text-cream/70 hover:text-amber text-sm font-medium">Déconnexion</button>
         <button id="adminCloseBtn" aria-label="Fermer" class="text-cream/70 hover:text-amber text-xl leading-none">✕</button>
@@ -1124,6 +1181,8 @@
     <!-- Onglets de collections -->
     <div class="max-w-6xl mx-auto px-5 pb-3 flex gap-2 flex-wrap">
       <button class="admin-tab" data-collection="publier">📤 Publier</button>
+      <button class="admin-tab" data-collection="nouveauVoyage">🚚 Frets &amp; voyages</button>
+      <button class="admin-tab" data-collection="cmr">📄 CMR</button>
       <button class="admin-tab" data-collection="devis">Devis</button>
       <button class="admin-tab" data-collection="candidatures">Candidatures</button>
       <button class="admin-tab" data-collection="commandes">Commandes / Suivi</button>
@@ -1288,6 +1347,274 @@
     <input id="adminTextesRecherche" type="search" placeholder="Chercher un texte…"
       class="w-full px-3.5 py-3 mb-6 rounded-lg border border-slate-200 dark:border-white/15 bg-white dark:bg-navylight text-slate-700 dark:text-cream focus:outline-none focus:border-amber">
     <div id="adminTextesListe"></div>
+  </div>
+
+
+  <!-- ÉCRAN "FRETS & VOYAGES" : saisie d'un nouveau fret + tableau de bord en temps réel.
+       Les voyages sont enregistrés dans la collection "missions" (les mêmes que
+       l'onglet Voyages, la Rentabilité et l'Espace Chauffeur). -->
+  <div id="adminVoyagesFret" class="hidden max-w-6xl mx-auto px-5 py-8">
+    <div class="flex items-end justify-between flex-wrap gap-3 mb-6">
+      <div>
+        <h2 class="text-2xl font-bold text-navy dark:text-white mb-1">Frets &amp; voyages</h2>
+        <p class="text-sm text-slate-500 dark:text-cream/60">Enregistre un nouveau fret en quelques secondes : il apparaît aussitôt dans le tableau de bord, dans l'onglet Voyages et dans l'Espace Chauffeur.</p>
+      </div>
+    </div>
+
+    <div class="grid lg:grid-cols-5 gap-6">
+      <!-- Formulaire -->
+      <form id="formNouveauVoyage" novalidate class="carte-pro lg:col-span-2 self-start">
+        <h3 class="font-bold text-navy dark:text-white text-lg mb-4 flex items-center gap-2"><span class="text-2xl">🚚</span> Nouveau fret</h3>
+
+        <div class="grid grid-cols-1 gap-4">
+          <div>
+            <label class="etiquette-pro" for="nvOrigine">Origine <span class="requis">*</span></label>
+            <input id="nvOrigine" name="origine" required list="villesEurope" autocomplete="off" placeholder="Ex : Yuncos (Toledo)" class="champ-pro">
+          </div>
+          <div class="flex justify-center -my-2">
+            <button type="button" id="nvInverser" title="Inverser origine et destination" class="text-xs font-semibold text-teal hover:text-amberdark px-3 py-1">⇅ Inverser</button>
+          </div>
+          <div>
+            <label class="etiquette-pro" for="nvDestination">Destination <span class="requis">*</span></label>
+            <input id="nvDestination" name="destination" required list="villesEurope" autocomplete="off" placeholder="Ex : Lyon (France)" class="champ-pro">
+          </div>
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="etiquette-pro" for="nvDate">Date de départ <span class="requis">*</span></label>
+              <input id="nvDate" name="dateDepart" type="date" required class="champ-pro">
+            </div>
+            <div>
+              <label class="etiquette-pro" for="nvTypeCommerce">Type de commerce <span class="requis">*</span></label>
+              <select id="nvTypeCommerce" name="typeCommerce" required class="champ-pro">
+                <option value="">— Choisir —</option>
+              </select>
+            </div>
+          </div>
+
+          <details class="group">
+            <summary class="cursor-pointer text-sm font-semibold text-teal hover:text-amberdark select-none">+ Détails facultatifs (client, camion, chauffeur, prix)</summary>
+            <div class="grid grid-cols-2 gap-3 mt-3">
+              <div class="col-span-2">
+                <label class="etiquette-pro" for="nvClient">Client</label>
+                <input id="nvClient" name="clientNom" class="champ-pro" placeholder="Nom du client">
+              </div>
+              <div>
+                <label class="etiquette-pro" for="nvVehicule">Camion</label>
+                <select id="nvVehicule" name="vehicule" class="champ-pro"><option value="">—</option></select>
+              </div>
+              <div>
+                <label class="etiquette-pro" for="nvChauffeur">Chauffeur</label>
+                <select id="nvChauffeur" name="chauffeurEmail" class="champ-pro"><option value="">—</option></select>
+              </div>
+              <div>
+                <label class="etiquette-pro" for="nvPoids">Poids (kg)</label>
+                <input id="nvPoids" name="poidsKg" type="number" min="0" step="1" class="champ-pro">
+              </div>
+              <div>
+                <label class="etiquette-pro" for="nvPrix">Prix HT (€)</label>
+                <input id="nvPrix" name="prixFacture" type="number" min="0" step="0.01" class="champ-pro">
+              </div>
+              <div class="col-span-2">
+                <label class="etiquette-pro" for="nvNotes">Notes</label>
+                <textarea id="nvNotes" name="notes" rows="2" class="champ-pro" placeholder="Quai, horaires, référence client…"></textarea>
+              </div>
+            </div>
+          </details>
+
+          <p id="nvErreur" class="hidden text-sm font-medium text-red-500"></p>
+          <button type="submit" id="nvEnregistrer" class="w-full bg-amber hover:bg-amberdark text-navy font-bold py-3.5 rounded-full transition">Enregistrer le fret</button>
+          <p id="nvSucces" class="hidden text-sm font-semibold text-teal text-center"></p>
+        </div>
+      </form>
+
+      <!-- Tableau de bord -->
+      <div class="lg:col-span-3">
+        <div id="voyagesStats" class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4"></div>
+        <div class="flex flex-wrap items-center gap-2 mb-4">
+          <button type="button" class="filtre-voyage actif" data-filtre-voyage="tous">Tous</button>
+          <button type="button" class="filtre-voyage" data-filtre-voyage="planifie">Planifiés</button>
+          <button type="button" class="filtre-voyage" data-filtre-voyage="en_cours">En cours</button>
+          <button type="button" class="filtre-voyage" data-filtre-voyage="termine">Livrés</button>
+          <button type="button" class="filtre-voyage" data-filtre-voyage="annule">Annulés</button>
+          <input id="voyagesRecherche" type="search" placeholder="Chercher (ville, client, camion…)" class="champ-pro !w-auto flex-1 min-w-[180px] !py-2">
+        </div>
+        <div id="voyagesListe" class="space-y-3"></div>
+        <p id="voyagesVide" class="hidden text-sm text-slate-500 dark:text-cream/50 text-center py-10">Aucun voyage pour le moment. Enregistre ton premier fret avec le formulaire.</p>
+      </div>
+    </div>
+
+    <datalist id="villesEurope">
+      <option value="Yuncos (Toledo)"><option value="Toledo"><option value="Madrid"><option value="Getafe (Madrid)"><option value="Illescas (Toledo)">
+      <option value="Barcelona"><option value="Valencia"><option value="Sevilla"><option value="Zaragoza"><option value="Bilbao"><option value="Málaga"><option value="Murcia"><option value="Alicante"><option value="Valladolid"><option value="Vigo"><option value="A Coruña"><option value="Algeciras"><option value="Irún">
+      <option value="Lisboa (Portugal)"><option value="Porto (Portugal)">
+      <option value="Paris (France)"><option value="Lyon (France)"><option value="Bordeaux (France)"><option value="Toulouse (France)"><option value="Marseille (France)"><option value="Perpignan (France)"><option value="Lille (France)">
+      <option value="Milano (Italia)"><option value="Torino (Italia)"><option value="Bruxelles (Belgique)"><option value="Antwerpen (België)"><option value="Amsterdam (Nederland)"><option value="Rotterdam (Nederland)">
+      <option value="Frankfurt (Deutschland)"><option value="München (Deutschland)"><option value="Köln (Deutschland)"><option value="Luxembourg"><option value="Genève (Suisse)">
+    </datalist>
+  </div>
+
+  <!-- ÉCRAN "CMR" : lettre de voiture internationale — saisie, aperçu, PDF, facturation -->
+  <div id="adminCmr" class="hidden max-w-6xl mx-auto px-5 py-8">
+    <div class="flex items-end justify-between flex-wrap gap-3 mb-6">
+      <div>
+        <h2 class="text-2xl font-bold text-navy dark:text-white mb-1">Lettre de voiture CMR</h2>
+        <p class="text-sm text-slate-500 dark:text-cream/60">Remplis les cases, prévisualise, télécharge le PDF puis facture en un clic. Les cases suivent la numérotation officielle du CMR.</p>
+      </div>
+      <button type="button" id="cmrNouveau" class="text-sm font-semibold text-teal hover:text-amberdark">+ Nouveau CMR vierge</button>
+    </div>
+
+    <form id="formCmr" novalidate class="space-y-5">
+      <!-- Lien voyage + numéro -->
+      <div class="carte-pro grid sm:grid-cols-3 gap-4">
+        <div class="sm:col-span-2">
+          <label class="etiquette-pro" for="cmrMission">Remplir depuis un voyage (facultatif)</label>
+          <select id="cmrMission" name="missionId" class="champ-pro"><option value="">— Aucun —</option></select>
+        </div>
+        <div>
+          <label class="etiquette-pro" for="cmrNumero">N° CMR</label>
+          <input id="cmrNumero" name="numero" class="champ-pro font-mono-num" placeholder="Attribué à l'enregistrement">
+        </div>
+      </div>
+
+      <div class="grid md:grid-cols-2 gap-5">
+        <div class="carte-pro">
+          <p class="case-cmr-titre"><b>1</b> Expéditeur · Remitente</p>
+          <input name="expediteurNom" class="champ-pro mb-2" placeholder="Nom / raison sociale" required>
+          <textarea name="expediteurAdresse" rows="2" class="champ-pro" placeholder="Adresse, code postal, ville, pays"></textarea>
+        </div>
+        <div class="carte-pro">
+          <p class="case-cmr-titre"><b>2</b> Destinataire · Consignatario</p>
+          <input name="destinataireNom" class="champ-pro mb-2" placeholder="Nom / raison sociale" required>
+          <textarea name="destinataireAdresse" rows="2" class="champ-pro" placeholder="Adresse, code postal, ville, pays"></textarea>
+        </div>
+        <div class="carte-pro">
+          <p class="case-cmr-titre"><b>3</b> Lieu de livraison · Lugar de entrega</p>
+          <input name="lieuLivraison" list="villesEurope" class="champ-pro mb-2" placeholder="Ville" required>
+          <input name="paysLivraison" class="champ-pro" placeholder="Pays">
+        </div>
+        <div class="carte-pro">
+          <p class="case-cmr-titre"><b>4</b> Lieu et date de prise en charge · Lugar y fecha de carga</p>
+          <input name="lieuPriseEnCharge" list="villesEurope" class="champ-pro mb-2" placeholder="Ville" required>
+          <div class="grid grid-cols-2 gap-2">
+            <input name="paysPriseEnCharge" class="champ-pro" placeholder="Pays">
+            <input name="datePriseEnCharge" type="date" class="champ-pro" required>
+          </div>
+        </div>
+        <div class="carte-pro md:col-span-2">
+          <p class="case-cmr-titre"><b>5</b> Documents annexés · Documentos anexos</p>
+          <input name="documentsAnnexes" class="champ-pro" placeholder="Ex : bon de livraison n°…, facture commerciale…">
+        </div>
+      </div>
+
+      <!-- Marchandises 6 à 12 -->
+      <div class="carte-pro">
+        <div class="flex items-center justify-between mb-3">
+          <p class="case-cmr-titre !mb-0"><b>6–12</b> Marchandises · Mercancías</p>
+          <button type="button" id="cmrAjouterLigne" class="text-sm font-semibold text-teal hover:text-amberdark">+ Ajouter une ligne</button>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="w-full text-sm min-w-[720px]">
+            <thead>
+              <tr class="text-left text-[0.68rem] uppercase tracking-wide text-slate-400 dark:text-cream/40">
+                <th class="py-1 pr-2">6 Marques et n°</th><th class="py-1 pr-2 w-20">7 Colis</th><th class="py-1 pr-2">8 Emballage</th>
+                <th class="py-1 pr-2">9 Nature de la marchandise</th><th class="py-1 pr-2 w-24">11 Poids brut kg</th><th class="py-1 pr-2 w-20">12 Volume m³</th><th class="w-8"></th>
+              </tr>
+            </thead>
+            <tbody id="cmrLignes"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="grid md:grid-cols-2 gap-5">
+        <div class="carte-pro">
+          <p class="case-cmr-titre"><b>13</b> Instructions de l'expéditeur · Instrucciones</p>
+          <textarea name="instructions" rows="2" class="champ-pro" placeholder="Douane, température, rendez-vous…"></textarea>
+        </div>
+        <div class="carte-pro">
+          <p class="case-cmr-titre"><b>14</b> Prescriptions d'affranchissement · Portes</p>
+          <select name="affranchissement" class="champ-pro mb-2">
+            <option value="franco">Franco · Pagado (port payé)</option>
+            <option value="non_franco">Non franco · Debido (port dû)</option>
+          </select>
+          <p class="case-cmr-titre !mt-2"><b>15</b> Remboursement · Reembolso</p>
+          <input name="remboursement" class="champ-pro" placeholder="Montant contre remboursement (facultatif)">
+        </div>
+
+        <!-- 16 Transporteur : pré-rempli -->
+        <div class="carte-pro border-2 !border-amber/70">
+          <p class="case-cmr-titre"><b>16</b> Transporteur · Porteador</p>
+          <input name="transporteurNom" id="cmrTransporteur" class="champ-pro mb-2 font-semibold" value="LASSINE Diakité" required>
+          <textarea name="transporteurAdresse" rows="2" class="champ-pro mb-2" placeholder="Adresse du transporteur (facultatif)"></textarea>
+          <p class="text-xs text-slate-500 dark:text-cream/60">Sur le PDF, la ligne <span class="font-mono-num font-semibold text-navy dark:text-cream">DNI : ..................................</span> reste vide, à compléter à la main.</p>
+        </div>
+        <div class="carte-pro">
+          <p class="case-cmr-titre"><b>17</b> Transporteurs successifs · Porteadores sucesivos</p>
+          <textarea name="transporteursSuccessifs" rows="2" class="champ-pro mb-3"></textarea>
+          <div class="grid grid-cols-2 gap-2">
+            <div><label class="etiquette-pro">Immat. tracteur</label><input name="immatTracteur" class="champ-pro font-mono-num uppercase" placeholder="0000 ABC"></div>
+            <div><label class="etiquette-pro">Immat. remorque</label><input name="immatRemorque" class="champ-pro font-mono-num uppercase" placeholder="R-0000-BBB"></div>
+          </div>
+        </div>
+        <div class="carte-pro">
+          <p class="case-cmr-titre"><b>18</b> Réserves et observations du transporteur · Reservas</p>
+          <textarea name="reserves" rows="2" class="champ-pro"></textarea>
+        </div>
+        <div class="carte-pro">
+          <p class="case-cmr-titre"><b>19</b> Conventions particulières · Estipulaciones particulares</p>
+          <textarea name="conventions" rows="2" class="champ-pro"></textarea>
+        </div>
+      </div>
+
+      <div class="grid md:grid-cols-3 gap-5">
+        <div class="carte-pro">
+          <p class="case-cmr-titre"><b>20</b> Prix du transport · Precio</p>
+          <label class="etiquette-pro">Montant HT (€) — sert à la facture</label>
+          <input name="prixHT" type="number" min="0" step="0.01" class="champ-pro mb-2">
+          <label class="etiquette-pro">Client à facturer</label>
+          <input name="factureA" class="champ-pro" placeholder="Par défaut : l'expéditeur">
+        </div>
+        <div class="carte-pro">
+          <p class="case-cmr-titre"><b>21</b> Établi à · Formalizado en</p>
+          <input name="etabliA" class="champ-pro mb-2" value="Yuncos (Toledo)">
+          <label class="etiquette-pro">Le</label>
+          <input name="etabliLe" type="date" class="champ-pro">
+        </div>
+        <div class="carte-pro">
+          <p class="case-cmr-titre"><b>22–24</b> Signatures</p>
+          <p class="text-xs text-slate-500 dark:text-cream/60">Les cases de signature de l'expéditeur, du transporteur et du destinataire sont laissées vierges sur le PDF, pour signer et tamponner sur papier.</p>
+        </div>
+      </div>
+
+      <p id="cmrErreur" class="hidden text-sm font-medium text-red-500"></p>
+      <div class="flex flex-wrap gap-3 sm:sticky sm:bottom-3 z-[5] bg-cream/90 dark:bg-navy/90 backdrop-blur rounded-2xl p-3 border border-slate-200 dark:border-white/10">
+        <button type="button" id="cmrApercuBtn" class="bg-navy dark:bg-white/10 text-cream hover:text-amber font-semibold px-5 py-3 rounded-full transition">👁 Aperçu du CMR</button>
+        <button type="button" id="cmrPdfBtn" class="bg-amber hover:bg-amberdark text-navy font-bold px-5 py-3 rounded-full transition">⬇ Télécharger le PDF</button>
+        <button type="button" id="cmrEnregistrerBtn" class="border-2 border-teal text-teal hover:bg-teal hover:text-white font-semibold px-5 py-2.5 rounded-full transition">💾 Enregistrer</button>
+        <button type="button" id="cmrFacturerBtn" class="border-2 border-amberdark text-amberdark hover:bg-amberdark hover:text-white font-semibold px-5 py-2.5 rounded-full transition">🧾 Facturer ce CMR</button>
+        <span id="cmrEtat" class="self-center text-sm text-slate-500 dark:text-cream/60"></span>
+      </div>
+    </form>
+
+    <!-- CMR enregistrés -->
+    <div class="mt-10">
+      <h3 class="text-lg font-bold text-navy dark:text-white mb-3">CMR enregistrés</h3>
+      <div id="cmrListe" class="space-y-2"></div>
+      <p id="cmrListeVide" class="hidden text-sm text-slate-500 dark:text-cream/50">Aucun CMR enregistré pour l'instant.</p>
+    </div>
+  </div>
+
+  <!-- Fenêtre d'aperçu du CMR (feuille A4) -->
+  <div id="cmrApercuModal" class="hidden fixed inset-0 z-[90] bg-black/70 flex flex-col">
+    <div class="flex items-center justify-between gap-3 bg-navy px-5 py-3 border-b border-white/10">
+      <span class="font-bold text-cream">Aperçu du CMR <span id="cmrApercuNumero" class="font-mono-num text-amber"></span></span>
+      <div class="flex items-center gap-3">
+        <button type="button" id="cmrApercuPdf" class="bg-amber hover:bg-amberdark text-navy font-bold text-sm px-4 py-2 rounded-full">⬇ Télécharger le PDF</button>
+        <button type="button" id="cmrApercuFermer" aria-label="Fermer" class="text-cream/70 hover:text-amber text-xl leading-none">✕</button>
+      </div>
+    </div>
+    <div class="flex-1 overflow-auto p-4 sm:p-8">
+      <div id="cmrApercuCadre" class="mx-auto shadow-2xl" style="width:794px"></div>
+    </div>
   </div>
 
   <div id="adminZoneTableau" class="max-w-6xl mx-auto px-5 py-8">
@@ -3602,6 +3929,18 @@ function libelleVoyage(m){
    "id" = identifiant du document (lecture seule sur les lignes existantes,
    saisissable sur la ligne d'ajout rapide : sert au numéro de suivi).
    ---------------------------------------------------------------- */
+// Types de commerce proposés pour chaque fret / voyage
+const TYPES_COMMERCE = [
+  ['marchandises_generales', 'Marchandises générales'],
+  ['alimentaire', 'Alimentaire / produits frais'],
+  ['vehicules', 'Véhicules (concessionnaires)'],
+  ['materiaux', 'Matériaux de construction'],
+  ['industrie', 'Industrie / machines'],
+  ['adr', 'Marchandises dangereuses (ADR)'],
+  ['demenagement', 'Déménagement'],
+  ['autre', 'Autre']
+];
+
 const SCHEMAS_ADMIN = {
   devis: [
     { champ: 'nomComplet', label: 'Client', type: 'text' },
@@ -3670,6 +4009,7 @@ const SCHEMAS_ADMIN = {
     { champ: 'chauffeurEmail', label: 'Chauffeur', type: 'select', source: { collection: 'chauffeurs', valeur: c => c.email, label: c => c.nom || c.email } },
     { champ: 'dateDepart', label: 'Départ le', type: 'date' },
     { champ: 'dateArrivee', label: 'Arrivée le', type: 'date' },
+    { champ: 'typeCommerce', label: 'Type de commerce', type: 'select', options: TYPES_COMMERCE.map(t => t[0]), optionLabels: TYPES_COMMERCE.map(t => t[1]) },
     { champ: 'clientNom', label: 'Client', type: 'text' },
     { champ: 'etapeIndex', label: 'Avancement', type: 'select', options: [0, 1, 2, 3, 4], optionLabels: ETAPES_MISSION, defaut: 0 },
     { champ: 'statutVoyage', label: 'Statut', type: 'select', options: ['planifie', 'en_cours', 'termine', 'annule'], optionLabels: ['Planifié', 'En cours', 'Livré', 'Annulé'], defaut: 'planifie' },
@@ -4441,14 +4781,18 @@ let ciblePublierActive = null;
 let publicationEnCours = false;
 
 // Deux onglets ne sont pas des tableaux : "publier" et "textes"
-const ECRANS_SPECIAUX = ['publier', 'textes'];
+const ECRANS_SPECIAUX = ['publier', 'textes', 'nouveauVoyage', 'cmr'];
 function afficherEcranAdmin(nomVue){
   const special = ECRANS_SPECIAUX.includes(nomVue);
   adminPublier.classList.toggle('hidden', nomVue !== 'publier');
   document.getElementById('adminTextes').classList.toggle('hidden', nomVue !== 'textes');
+  document.getElementById('adminVoyagesFret').classList.toggle('hidden', nomVue !== 'nouveauVoyage');
+  document.getElementById('adminCmr').classList.toggle('hidden', nomVue !== 'cmr');
   adminZoneTableau.classList.toggle('hidden', special);
   document.getElementById('adminAddBtn').classList.toggle('hidden', special); // "+ Ajouter" n'a de sens que sur un tableau
   if(nomVue === 'textes') afficherEditeurTextes();
+  if(nomVue === 'nouveauVoyage') ouvrirEcranVoyages(); else fermerEcranVoyages();
+  if(nomVue === 'cmr') ouvrirEcranCmr();
 }
 
 function allerSurOnglet(nomVue){
@@ -5138,6 +5482,7 @@ let numeroChargement = 0; // évite qu'un chargement lent d'un ancien onglet s'a
 
 async function chargerCollection(nomVue, reinitialiser){
   // Les écrans "Publier" et "Textes du site" ne sont pas des tableaux : on les affiche et on s'arrête là
+  if(reinitialiser && ECRANS_SPECIAUX.includes(nomVue)) vueActive = nomVue;
   if(reinitialiser) afficherEcranAdmin(nomVue);
   if(ECRANS_SPECIAUX.includes(nomVue)){
     numeroChargement++; // annule un éventuel chargement de tableau en cours
@@ -6152,6 +6497,925 @@ async function chercherDocumentsPOD(){
 
 podBtn.addEventListener('click', chercherDocumentsPOD);
 podInput.addEventListener('keydown', (e) => { if(e.key === 'Enter') chercherDocumentsPOD(); });
+
+/* ============================================================
+   MOTEUR PDF GLOBAL
+   Les bibliothèques (jsPDF, jsPDF-AutoTable, html2canvas) ne sont
+   chargées qu'au premier clic sur un bouton PDF, depuis le CDN
+   jsdelivr : rien à installer, et le site reste léger.
+   - exporterElementEnPdf(element, nom)  : n'importe quel bloc de la page → PDF A4
+   - exporterTableauEnPdf(titre, colonnes, lignes, nom) : tableau propre (texte net)
+   - exporterVueActiveEnPdf() : le bouton "PDF" de l'en-tête de l'admin
+   ============================================================ */
+const BIBLIOTHEQUES_PDF = {
+  jspdf: 'https://cdn.jsdelivr.net/npm/jspdf@2.5.2/dist/jspdf.umd.min.js',
+  autotable: 'https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.4/dist/jspdf.plugin.autotable.min.js',
+  html2canvas: 'https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js'
+};
+const scriptsPdfCharges = {};
+function chargerScriptPdf(url){
+  if(!scriptsPdfCharges[url]){
+    scriptsPdfCharges[url] = new Promise((resolve, reject) => {
+      const script = document.createElement('script');
+      script.src = url;
+      script.async = true;
+      script.onload = resolve;
+      script.onerror = () => {
+        delete scriptsPdfCharges[url]; // on pourra réessayer au prochain clic
+        script.remove();
+        reject(new Error("Impossible de charger l'outil PDF (vérifie ta connexion internet)."));
+      };
+      document.head.appendChild(script);
+    });
+  }
+  return scriptsPdfCharges[url];
+}
+async function chargerOutilsPdf({ capture = false, tableaux = false } = {}){
+  await chargerScriptPdf(BIBLIOTHEQUES_PDF.jspdf); // AutoTable a besoin de jsPDF déjà chargé
+  const attentes = [];
+  if(tableaux) attentes.push(chargerScriptPdf(BIBLIOTHEQUES_PDF.autotable));
+  if(capture) attentes.push(chargerScriptPdf(BIBLIOTHEQUES_PDF.html2canvas));
+  await Promise.all(attentes);
+  return window.jspdf.jsPDF;
+}
+
+// Les polices intégrées de jsPDF ne connaissent pas certains caractères
+// (espaces fines des montants en français, flèches…) : on les remplace.
+function textePdf(valeur){
+  return String(valeur ?? '')
+    .replace(/[   ]/g, ' ')
+    .replace(/→/g, '->').replace(/✓/g, 'Oui').replace(/[“”]/g, '"')
+    .replace(/[\u{1F300}-\u{1FAFF}☀-➿]️?/gu, '')
+    .trim();
+}
+
+function horodatagePdf(){
+  return new Date().toLocaleString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+}
+function nomFichierPdf(base){
+  return `${String(base).normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^\w-]+/g, '_').replace(/^_+|_+$/g, '') || 'document'}.pdf`;
+}
+
+// Capture visuelle d'un élément (tel qu'il apparaît) en PDF A4.
+// unePage : réduit pour tout faire tenir sur une page (CMR) ;
+// sinon le contenu est découpé proprement sur plusieurs pages.
+async function exporterElementEnPdf(element, nomFichier, { orientation = 'portrait', unePage = false, marge = 10, fond = null, enregistrer = true } = {}){
+  const jsPDF = await chargerOutilsPdf({ capture: true });
+  const couleurFond = fond || getComputedStyle(document.body).backgroundColor || '#ffffff';
+  const canvas = await window.html2canvas(element, {
+    scale: 2, useCORS: true, logging: false, backgroundColor: couleurFond,
+    windowWidth: Math.max(element.scrollWidth, document.documentElement.clientWidth)
+  });
+  const pdf = new jsPDF({ orientation, unit: 'mm', format: 'a4', compress: true });
+  const largeurPage = pdf.internal.pageSize.getWidth();
+  const hauteurPage = pdf.internal.pageSize.getHeight();
+  const largeurUtile = largeurPage - 2 * marge;
+  const hauteurUtile = hauteurPage - 2 * marge;
+
+  if(unePage){
+    const echelle = Math.min(largeurUtile / canvas.width, hauteurUtile / canvas.height);
+    const l = canvas.width * echelle, h = canvas.height * echelle;
+    pdf.addImage(canvas.toDataURL('image/jpeg', 0.92), 'JPEG', (largeurPage - l) / 2, marge, l, h);
+  } else {
+    const pixelsParPage = Math.floor(canvas.width * hauteurUtile / largeurUtile);
+    for(let y = 0, page = 0; y < canvas.height; y += pixelsParPage, page++){
+      const tranche = document.createElement('canvas');
+      tranche.width = canvas.width;
+      tranche.height = Math.min(pixelsParPage, canvas.height - y);
+      const ctx = tranche.getContext('2d');
+      ctx.fillStyle = couleurFond;
+      ctx.fillRect(0, 0, tranche.width, tranche.height);
+      ctx.drawImage(canvas, 0, y, canvas.width, tranche.height, 0, 0, canvas.width, tranche.height);
+      if(page > 0) pdf.addPage();
+      pdf.addImage(tranche.toDataURL('image/jpeg', 0.9), 'JPEG', marge, marge, largeurUtile, tranche.height * largeurUtile / canvas.width);
+    }
+  }
+  if(enregistrer) pdf.save(nomFichier);
+  return pdf;
+}
+
+// Tableau en PDF "texte" (net, léger, sélectionnable), mis en page aux couleurs BOUA Trans.
+async function exporterTableauEnPdf({ titre, sousTitre = '', colonnes, lignes, nomFichier, resume = [], orientation = 'landscape', enregistrer = true }){
+  const jsPDF = await chargerOutilsPdf({ tableaux: true });
+  const pdf = new jsPDF({ orientation, unit: 'mm', format: 'a4', compress: true });
+  const largeurPage = pdf.internal.pageSize.getWidth();
+  const hauteurPage = pdf.internal.pageSize.getHeight();
+
+  // Bandeau d'en-tête
+  pdf.setFillColor(15, 31, 56);
+  pdf.rect(0, 0, largeurPage, 24, 'F');
+  const logo = document.querySelector('img[alt="Logo BOUA Trans"]');
+  let xTexte = 12;
+  if(logo && /^data:image\/(png|jpe?g)/.test(logo.src)){
+    try { pdf.addImage(logo.src, logo.src.includes('png') ? 'PNG' : 'JPEG', 10, 3, 18, 18); xTexte = 32; } catch (e) { /* logo facultatif */ }
+  }
+  pdf.setTextColor(232, 163, 61);
+  pdf.setFont('helvetica', 'bold');
+  pdf.setFontSize(15);
+  pdf.text('BOUA Trans', xTexte, 11);
+  pdf.setTextColor(245, 243, 237);
+  pdf.setFontSize(11);
+  pdf.text(textePdf(titre), xTexte, 18);
+  pdf.setFont('helvetica', 'normal');
+  pdf.setFontSize(8.5);
+  pdf.text(textePdf(`Édité le ${horodatagePdf()}`), largeurPage - 10, 11, { align: 'right' });
+  pdf.text(textePdf(sousTitre || `${lignes.length} ligne(s)`), largeurPage - 10, 18, { align: 'right' });
+
+  let y = 30;
+  if(resume.length){
+    pdf.setTextColor(15, 31, 56);
+    pdf.setFontSize(9);
+    const texteResume = resume.map(t => `${textePdf(t.label)} : ${textePdf(t.valeur)}`).join('    |    ');
+    const morceaux = pdf.splitTextToSize(texteResume, largeurPage - 20);
+    pdf.text(morceaux, 10, y);
+    y += morceaux.length * 4.5 + 2;
+  }
+
+  pdf.autoTable({
+    startY: y,
+    head: [colonnes.map(textePdf)],
+    body: lignes.map(l => l.map(textePdf)),
+    theme: 'grid',
+    margin: { left: 10, right: 10, bottom: 14 },
+    styles: { font: 'helvetica', fontSize: colonnes.length > 9 ? 7 : 8.5, cellPadding: 1.8, textColor: [15, 31, 56], lineColor: [226, 232, 240], lineWidth: 0.2, overflow: 'linebreak' },
+    headStyles: { fillColor: [15, 31, 56], textColor: [232, 163, 61], fontStyle: 'bold' },
+    alternateRowStyles: { fillColor: [245, 243, 237] },
+    didDrawPage: () => {
+      pdf.setFontSize(7.5);
+      pdf.setTextColor(100, 116, 139);
+      pdf.text(textePdf('BOUA Trans · Avenida Castilla-La Mancha 122, 45210 Yuncos (Toledo), España'), 10, hauteurPage - 6);
+      pdf.text(`Page ${pdf.internal.getNumberOfPages()}`, largeurPage - 10, hauteurPage - 6, { align: 'right' });
+    }
+  });
+  if(enregistrer) pdf.save(nomFichier);
+  return pdf;
+}
+
+// Valeur lisible d'une cellule du tableau admin (libellés des listes, dates jj/mm/aaaa…)
+function valeurColonnePdf(col, donnees, id){
+  if(col.type === 'id') return id;
+  if(col.type === 'calcul'){
+    const r = col.calcul(donnees) || {};
+    if(r.texte !== undefined) return String(r.texte);
+    const tmp = document.createElement('div');
+    tmp.innerHTML = r.html || '';
+    return tmp.textContent.trim();
+  }
+  const v = donnees[col.champ];
+  if(v === undefined || v === null || v === '') return '';
+  if(col.type === 'select'){
+    const option = optionsDeColonne(col).find(o => String(o.valeur) === String(v));
+    return option ? String(option.label) : String(v);
+  }
+  if(col.type === 'checkbox') return (v === true || v === 'true') ? 'Oui' : 'Non';
+  if(col.type === 'date'){
+    const m = String(v).match(/^(\d{4})-(\d{2})-(\d{2})/);
+    return m ? `${m[3]}/${m[2]}/${m[1]}` : String(v);
+  }
+  if(col.type === 'fichier') return 'Oui';
+  if(col.type === 'number') return typeof v === 'number' ? v.toLocaleString('fr-FR') : String(v);
+  if(typeof v === 'object') return v.toDate ? v.toDate().toLocaleDateString('fr-FR') : JSON.stringify(v);
+  return String(v);
+}
+
+function libelleOngletActif(){
+  const onglet = document.querySelector(`.admin-tab[data-collection="${vueActive}"]`);
+  return onglet ? textePdf(onglet.textContent) : vueActive;
+}
+
+// Onglet tableau → PDF de TOUTES ses lignes (on lit la suite si tout n'est pas encore affiché)
+async function exporterTableauAdminEnPdf(){
+  const schema = (SCHEMAS_ADMIN[vueActive] || []).filter(col => col.type !== 'fichier' || vueActive === 'documents');
+  let lignes = Array.from(donneesChargees.entries());
+  if(ilResteDesDocuments && window._db){
+    const { collection, getDocs } = window._firestore;
+    const snap = await getDocs(collection(window._db, collectionActive));
+    const dejaLues = new Set(lignes.map(([id]) => id));
+    let suite = snap.docs.filter(d => !dejaLues.has(d.id)).map(d => [d.id, d.data()]);
+    const vue = VUES_ADMIN[vueActive] || {};
+    if(vue.tri) suite.sort((a, b) => vue.tri(a[1], b[1]));
+    lignes = lignes.concat(suite);
+  }
+  const vue = VUES_ADMIN[vueActive] || {};
+  const resume = vue.resume ? vue.resume(lignes.map(([, d]) => d)) : [];
+  const titre = libelleOngletActif();
+  return exporterTableauEnPdf({
+    titre,
+    colonnes: schema.map(col => col.label),
+    lignes: lignes.map(([id, d]) => schema.map(col => valeurColonnePdf(col, d, id))),
+    resume,
+    nomFichier: nomFichierPdf(`BOUA_Trans_${titre}_${aujourdHuiISO()}`)
+  });
+}
+
+async function exporterVueActiveEnPdf(){
+  if(vueActive === 'cmr') return telechargerCmrPdf();
+  if(vueActive === 'nouveauVoyage') return exporterVoyagesEnPdf();
+  if(vueActive === 'publier') return exporterElementEnPdf(document.getElementById('adminPublier'), nomFichierPdf('BOUA_Trans_Publier'));
+  if(vueActive === 'textes') return exporterElementEnPdf(document.getElementById('adminTextes'), nomFichierPdf('BOUA_Trans_Textes_du_site'));
+  return exporterTableauAdminEnPdf();
+}
+
+const adminPdfBtn = document.getElementById('adminPdfBtn');
+adminPdfBtn.addEventListener('click', async () => {
+  if(adminPdfBtn.disabled) return;
+  const texte = adminPdfBtn.textContent;
+  adminPdfBtn.disabled = true;
+  adminPdfBtn.textContent = 'PDF en cours…';
+  try {
+    await exporterVueActiveEnPdf();
+  } catch (err) {
+    console.error('Erreur PDF :', err);
+    alert(`Le PDF n'a pas pu être créé : ${err.message || err}`);
+  } finally {
+    adminPdfBtn.disabled = false;
+    adminPdfBtn.textContent = texte;
+  }
+});
+
+// Accessible partout dans la page (ex : BouaPdf.exporterElementEnPdf(document.querySelector('#services'), 'services.pdf'))
+window.BouaPdf = { chargerOutilsPdf, exporterElementEnPdf, exporterTableauEnPdf, exporterVueActiveEnPdf };
+
+
+/* ============================================================
+   FRETS & VOYAGES — formulaire + tableau de bord en temps réel
+   ============================================================ */
+const STATUTS_VOYAGE = {
+  planifie: { label: 'Planifié', classe: 'bg-slate-100 text-slate-700 dark:bg-white/10 dark:text-cream' },
+  en_cours: { label: 'En cours', classe: 'bg-amber/20 text-amberdark' },
+  termine:  { label: 'Livré',    classe: 'bg-teal/15 text-teal' },
+  annule:   { label: 'Annulé',   classe: 'bg-red-100 text-red-600' }
+};
+const formNouveauVoyage = document.getElementById('formNouveauVoyage');
+const nvTypeCommerce = document.getElementById('nvTypeCommerce');
+const nvErreur = document.getElementById('nvErreur');
+const nvSucces = document.getElementById('nvSucces');
+const nvEnregistrer = document.getElementById('nvEnregistrer');
+const voyagesListe = document.getElementById('voyagesListe');
+const voyagesStats = document.getElementById('voyagesStats');
+const voyagesVide = document.getElementById('voyagesVide');
+const voyagesRecherche = document.getElementById('voyagesRecherche');
+let voyagesCache = [];
+let filtreVoyage = 'tous';
+let nombreVoyagesAffiches = 30;
+let desabonnementVoyages = null;
+
+nvTypeCommerce.insertAdjacentHTML('beforeend', TYPES_COMMERCE.map(([v, l]) => `<option value="${v}">${l}</option>`).join(''));
+const libelleTypeCommerce = (v) => (TYPES_COMMERCE.find(t => t[0] === v) || [v, v || '—'])[1];
+
+function remplirSelect(select, elements, valeur, libelle){
+  const actuel = select.value;
+  select.innerHTML = '<option value="">—</option>' + elements
+    .filter(e => valeur(e))
+    .map(e => `<option value="${echapperHtmlAdmin(valeur(e))}">${echapperHtmlAdmin(libelle(e))}</option>`).join('');
+  select.value = actuel;
+}
+
+function ouvrirEcranVoyages(){
+  const champDate = document.getElementById('nvDate');
+  if(!champDate.value) champDate.value = aujourdHuiISO();
+  quandFirebasePret(async () => {
+    const { collection, getDocs, onSnapshot } = window._firestore;
+    try {
+      const [vehicules, chauffeurs] = await Promise.all([getDocs(collection(window._db, 'vehicules')), getDocs(collection(window._db, 'chauffeurs'))]);
+      remplirSelect(document.getElementById('nvVehicule'), vehicules.docs.map(d => d.data()), v => v.immatriculation, v => `${v.immatriculation}${v.marque ? ' · ' + v.marque : ''}`);
+      remplirSelect(document.getElementById('nvChauffeur'), chauffeurs.docs.map(d => d.data()), c => (c.email || '').toLowerCase(), c => c.nom || c.email);
+    } catch (err) { console.error('Listes camions/chauffeurs :', err); }
+    if(desabonnementVoyages || vueActive !== 'nouveauVoyage') return;
+    desabonnementVoyages = onSnapshot(collection(window._db, 'missions'), (snap) => {
+      voyagesCache = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      afficherTableauVoyages();
+    }, (err) => {
+      console.error('Écoute des voyages :', err);
+      voyagesListe.innerHTML = `<p class="text-sm text-red-500">Impossible de lire les voyages (${echapperHtmlAdmin(err.code || err.message)}).</p>`;
+    });
+  });
+}
+function fermerEcranVoyages(){
+  if(desabonnementVoyages){ desabonnementVoyages(); desabonnementVoyages = null; }
+}
+
+function voyagesFiltres(){
+  const recherche = voyagesRecherche.value.trim().toLowerCase();
+  return voyagesCache
+    .filter(v => filtreVoyage === 'tous' || (v.statutVoyage || 'planifie') === filtreVoyage)
+    .filter(v => !recherche || [v.villeDepart, v.villeArrivee, v.clientNom, v.vehicule, v.chauffeurEmail, libelleTypeCommerce(v.typeCommerce)]
+      .some(x => String(x || '').toLowerCase().includes(recherche)))
+    .sort((a, b) => String(b.dateDepart || '').localeCompare(String(a.dateDepart || '')) || ((b.dateCreation?.seconds || 0) - (a.dateCreation?.seconds || 0)));
+}
+
+function dateCourte(iso){
+  const m = String(iso || '').match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if(!m) return '—';
+  return new Date(+m[1], +m[2] - 1, +m[3]).toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' });
+}
+
+function afficherTableauVoyages(){
+  const moisCourant = aujourdHuiISO().slice(0, 7);
+  const compte = (s) => voyagesCache.filter(v => (v.statutVoyage || 'planifie') === s).length;
+  const caLivre = voyagesCache.filter(v => v.statutVoyage === 'termine').reduce((t, v) => t + (Number(v.prixFacture) || 0), 0);
+  const tuiles = [
+    { label: 'Voyages', valeur: voyagesCache.length, sous: `dont ${voyagesCache.filter(v => String(v.dateDepart || '').startsWith(moisCourant)).length} ce mois-ci`, icone: '🗺️' },
+    { label: 'Planifiés', valeur: compte('planifie'), sous: 'à charger', icone: '📅' },
+    { label: 'En cours', valeur: compte('en_cours'), sous: 'sur la route', icone: '🚛' },
+    { label: 'Livrés', valeur: compte('termine'), sous: `${formatEuros.format(caLivre)} HT`, icone: '✅' }
+  ];
+  voyagesStats.innerHTML = tuiles.map(t => `
+    <div class="carte-pro !p-4">
+      <p class="text-xs uppercase tracking-wide text-slate-400 dark:text-cream/40 flex items-center justify-between">${t.label}<span class="text-base">${t.icone}</span></p>
+      <p class="font-mono-num text-2xl font-bold text-navy dark:text-white" data-stat="${t.label}">${t.valeur}</p>
+      <p class="text-[0.7rem] text-slate-500 dark:text-cream/50">${echapperHtmlAdmin(t.sous)}</p>
+    </div>`).join('');
+
+  const liste = voyagesFiltres();
+  voyagesVide.classList.toggle('hidden', liste.length > 0);
+  if(!liste.length && voyagesCache.length) voyagesVide.textContent = 'Aucun voyage ne correspond à ce filtre.';
+  else voyagesVide.textContent = 'Aucun voyage pour le moment. Enregistre ton premier fret avec le formulaire.';
+
+  const e = echapperHtmlAdmin;
+  voyagesListe.innerHTML = liste.slice(0, nombreVoyagesAffiches).map(v => {
+    const statut = v.statutVoyage || 'planifie';
+    const details = [
+      `📅 ${dateCourte(v.dateDepart)}`,
+      v.clientNom ? `👤 ${e(v.clientNom)}` : '',
+      v.vehicule ? `🚛 ${e(v.vehicule)}` : '',
+      v.chauffeurEmail ? `🧑‍✈️ ${e(v.chauffeurEmail)}` : '',
+      v.poidsKg ? `⚖️ ${Number(v.poidsKg).toLocaleString('fr-FR')} kg` : '',
+      v.prixFacture ? `💶 ${formatEuros.format(Number(v.prixFacture))}` : ''
+    ].filter(Boolean).join('<span class="mx-1.5 opacity-40">·</span>');
+    return `
+    <div class="carte-pro !p-4 flex flex-wrap items-center gap-3" data-voyage="${e(v.id)}">
+      <div class="w-1.5 self-stretch rounded-full ${statut === 'termine' ? 'bg-teal' : statut === 'en_cours' ? 'bg-amber' : statut === 'annule' ? 'bg-red-400' : 'bg-slate-300'}"></div>
+      <div class="flex-1 min-w-[200px]">
+        <p class="font-bold text-navy dark:text-white">${e(v.villeDepart || '?')} <span class="text-amber">→</span> ${e(v.villeArrivee || '?')}</p>
+        <p class="text-xs text-slate-500 dark:text-cream/60 mt-0.5">${details}</p>
+      </div>
+      <span class="badge-pro bg-navy/5 text-navy dark:bg-white/10 dark:text-cream">${e(libelleTypeCommerce(v.typeCommerce))}</span>
+      <select data-statut-voyage="${e(v.id)}" class="champ-pro !w-auto !py-1.5 !text-xs font-semibold" aria-label="Statut du voyage">
+        ${Object.entries(STATUTS_VOYAGE).map(([cle, s]) => `<option value="${cle}" ${cle === statut ? 'selected' : ''}>${s.label}</option>`).join('')}
+      </select>
+      <button type="button" data-cmr-voyage="${e(v.id)}" class="text-xs font-bold text-teal hover:text-amberdark px-2 py-1" title="Préparer le CMR de ce voyage">📄 CMR</button>
+    </div>`;
+  }).join('') + (liste.length > nombreVoyagesAffiches
+    ? `<button type="button" id="voyagesPlus" class="w-full text-sm font-semibold text-teal hover:text-amberdark py-3">Voir plus (${liste.length - nombreVoyagesAffiches} restant(s))</button>` : '');
+}
+
+document.querySelectorAll('[data-filtre-voyage]').forEach(bouton => bouton.addEventListener('click', () => {
+  document.querySelectorAll('[data-filtre-voyage]').forEach(b => b.classList.toggle('actif', b === bouton));
+  filtreVoyage = bouton.dataset.filtreVoyage;
+  nombreVoyagesAffiches = 30;
+  afficherTableauVoyages();
+}));
+voyagesRecherche.addEventListener('input', () => { nombreVoyagesAffiches = 30; afficherTableauVoyages(); });
+
+voyagesListe.addEventListener('click', (e) => {
+  if(e.target.id === 'voyagesPlus'){ nombreVoyagesAffiches += 30; afficherTableauVoyages(); return; }
+  const boutonCmr = e.target.closest('[data-cmr-voyage]');
+  if(boutonCmr){
+    const voyage = voyagesCache.find(v => v.id === boutonCmr.dataset.cmrVoyage);
+    allerSurOnglet('cmr');
+    if(voyage) nouveauCmr(voyage);
+  }
+});
+voyagesListe.addEventListener('change', async (e) => {
+  const select = e.target.closest('[data-statut-voyage]');
+  if(!select) return;
+  const { doc, updateDoc } = window._firestore;
+  const maj = { statutVoyage: select.value };
+  if(select.value === 'termine') maj.etapeIndex = ETAPES_MISSION.length - 1;
+  try {
+    await updateDoc(doc(window._db, 'missions', select.dataset.statutVoyage), maj);
+  } catch (err) {
+    console.error('Statut voyage :', err);
+    alert("Le statut n'a pas pu être enregistré (vérifie ta connexion).");
+  }
+});
+
+document.getElementById('nvInverser').addEventListener('click', () => {
+  const o = document.getElementById('nvOrigine'), d = document.getElementById('nvDestination');
+  [o.value, d.value] = [d.value, o.value];
+});
+
+// Messages clairs pour les 4 champs obligatoires
+const MESSAGES_VOYAGE = {
+  nvOrigine: "Indique la ville d'origine.",
+  nvDestination: 'Indique la ville de destination.',
+  nvDate: 'Choisis la date de départ.',
+  nvTypeCommerce: 'Choisis le type de commerce.'
+};
+function verifierFormulaireVoyage(){
+  for(const [id, message] of Object.entries(MESSAGES_VOYAGE)){
+    const champ = document.getElementById(id);
+    champ.setCustomValidity(champ.value.trim() ? '' : message);
+    champ.classList.add('champ-touche');
+  }
+  const origine = document.getElementById('nvOrigine'), destination = document.getElementById('nvDestination');
+  if(origine.value.trim() && origine.value.trim().toLowerCase() === destination.value.trim().toLowerCase()){
+    destination.setCustomValidity("La destination doit être différente de l'origine.");
+  }
+  const invalide = formNouveauVoyage.querySelector(':invalid');
+  if(invalide){
+    nvErreur.textContent = invalide.validationMessage;
+    nvErreur.classList.remove('hidden');
+    invalide.reportValidity();
+    invalide.focus();
+    return false;
+  }
+  nvErreur.classList.add('hidden');
+  return true;
+}
+Object.keys(MESSAGES_VOYAGE).forEach(id => {
+  const champ = document.getElementById(id);
+  champ.addEventListener(champ.tagName === 'SELECT' || champ.type === 'date' ? 'change' : 'input', () => {
+    champ.setCustomValidity('');
+    if(id === 'nvDestination' || id === 'nvOrigine') document.getElementById('nvDestination').setCustomValidity('');
+    nvErreur.classList.add('hidden');
+  });
+});
+
+let enregistrementVoyageEnCours = false;
+formNouveauVoyage.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  if(enregistrementVoyageEnCours || !verifierFormulaireVoyage()) return;
+  if(!window._db){ nvErreur.textContent = 'Connexion à la base en cours… réessaie dans un instant.'; nvErreur.classList.remove('hidden'); return; }
+  const f = formNouveauVoyage.elements;
+  const voyage = {
+    villeDepart: f.origine.value.trim(),
+    villeArrivee: f.destination.value.trim(),
+    dateDepart: f.dateDepart.value,
+    typeCommerce: f.typeCommerce.value,
+    statutVoyage: 'planifie',
+    etapeIndex: 0,
+    source: 'formulaire_fret'
+  };
+  if(f.clientNom.value.trim()) voyage.clientNom = f.clientNom.value.trim();
+  if(f.vehicule.value) voyage.vehicule = f.vehicule.value;
+  if(f.chauffeurEmail.value) voyage.chauffeurEmail = f.chauffeurEmail.value.toLowerCase();
+  if(f.poidsKg.value !== '') voyage.poidsKg = Number(f.poidsKg.value);
+  if(f.prixFacture.value !== '') voyage.prixFacture = Number(f.prixFacture.value);
+  if(f.notes.value.trim()) voyage.notes = f.notes.value.trim();
+
+  enregistrementVoyageEnCours = true;
+  nvEnregistrer.disabled = true;
+  nvEnregistrer.textContent = 'Enregistrement…';
+  try {
+    const { collection, addDoc, serverTimestamp } = window._firestore;
+    await addDoc(collection(window._db, 'missions'), { ...voyage, dateCreation: serverTimestamp() });
+    formNouveauVoyage.reset();
+    formNouveauVoyage.querySelectorAll('.champ-touche').forEach(c => c.classList.remove('champ-touche'));
+    document.getElementById('nvDate').value = aujourdHuiISO();
+    nvSucces.textContent = `✓ Fret ${voyage.villeDepart} → ${voyage.villeArrivee} enregistré.`;
+    nvSucces.classList.remove('hidden');
+    setTimeout(() => nvSucces.classList.add('hidden'), 5000);
+    document.getElementById('nvOrigine').focus();
+  } catch (err) {
+    console.error('Enregistrement du fret :', err);
+    nvErreur.textContent = "Le fret n'a pas pu être enregistré (vérifie ta connexion et les règles Firestore).";
+    nvErreur.classList.remove('hidden');
+  } finally {
+    enregistrementVoyageEnCours = false;
+    nvEnregistrer.disabled = false;
+    nvEnregistrer.textContent = 'Enregistrer le fret';
+  }
+});
+
+function exporterVoyagesEnPdf(){
+  const liste = voyagesFiltres();
+  return exporterTableauEnPdf({
+    titre: 'Frets & voyages',
+    sousTitre: `${liste.length} voyage(s)${filtreVoyage !== 'tous' ? ' · ' + STATUTS_VOYAGE[filtreVoyage].label : ''}`,
+    colonnes: ['Départ le', 'Origine', 'Destination', 'Type de commerce', 'Client', 'Camion', 'Chauffeur', 'Poids (kg)', 'Prix HT', 'Statut'],
+    lignes: liste.map(v => [
+      valeurColonnePdf({ type: 'date', champ: 'd' }, { d: v.dateDepart }), v.villeDepart || '', v.villeArrivee || '', libelleTypeCommerce(v.typeCommerce),
+      v.clientNom || '', v.vehicule || '', v.chauffeurEmail || '', v.poidsKg ? Number(v.poidsKg).toLocaleString('fr-FR') : '',
+      v.prixFacture ? formatEuros.format(Number(v.prixFacture)) : '', (STATUTS_VOYAGE[v.statutVoyage || 'planifie'] || {}).label || ''
+    ]),
+    nomFichier: nomFichierPdf(`BOUA_Trans_Voyages_${aujourdHuiISO()}`)
+  });
+}
+
+
+/* ============================================================
+   CMR — lettre de voiture internationale
+   Saisie → aperçu A4 → PDF → enregistrement (collection "cmr")
+   → facture (collection "factures") en un clic.
+   ============================================================ */
+const TRANSPORTEUR_CMR = 'LASSINE Diakité';
+const LIGNE_DNI_CMR = 'DNI : ..................................'; // laissée vide, à compléter à la main
+const formCmr = document.getElementById('formCmr');
+const cmrLignes = document.getElementById('cmrLignes');
+const cmrEtat = document.getElementById('cmrEtat');
+const cmrErreur = document.getElementById('cmrErreur');
+const cmrMission = document.getElementById('cmrMission');
+const cmrApercuModal = document.getElementById('cmrApercuModal');
+let cmrIdCourant = null;      // CMR enregistré actuellement ouvert dans le formulaire
+let cmrFactureCourante = null; // numéro de facture déjà créé pour ce CMR
+let cmrListeCache = [];
+let missionsCmrCache = [];
+
+const CHAMPS_LIGNE_CMR = [
+  { cle: 'marques', placeholder: 'Marques / n°' },
+  { cle: 'colis', placeholder: '0', type: 'number' },
+  { cle: 'emballage', placeholder: 'Palettes, cartons…' },
+  { cle: 'nature', placeholder: 'Nature de la marchandise' },
+  { cle: 'poids', placeholder: 'kg', type: 'number' },
+  { cle: 'volume', placeholder: 'm³', type: 'number' }
+];
+function ajouterLigneCmr(valeurs = {}){
+  if(cmrLignes.children.length >= 10) return;
+  const tr = document.createElement('tr');
+  tr.innerHTML = CHAMPS_LIGNE_CMR.map(c => `<td class="py-1 pr-2"><input data-ligne="${c.cle}" ${c.type ? `type="number" min="0" step="any"` : ''} placeholder="${c.placeholder}" class="champ-pro !py-2" value="${echapperHtmlAdmin(valeurs[c.cle] ?? '')}"></td>`).join('')
+    + `<td><button type="button" class="cmr-suppr-ligne text-slate-400 hover:text-red-500 px-1" title="Retirer la ligne">✕</button></td>`;
+  cmrLignes.appendChild(tr);
+}
+document.getElementById('cmrAjouterLigne').addEventListener('click', () => ajouterLigneCmr());
+cmrLignes.addEventListener('click', (e) => {
+  if(!e.target.classList.contains('cmr-suppr-ligne')) return;
+  e.target.closest('tr').remove();
+  if(!cmrLignes.children.length) ajouterLigneCmr();
+});
+
+function lireFormulaireCmr(){
+  const donnees = {};
+  Array.from(formCmr.elements).forEach(el => {
+    if(!el.name) return;
+    donnees[el.name] = el.value.trim();
+  });
+  donnees.transporteurNom = donnees.transporteurNom || TRANSPORTEUR_CMR;
+  donnees.immatTracteur = donnees.immatTracteur.toUpperCase();
+  donnees.immatRemorque = donnees.immatRemorque.toUpperCase();
+  donnees.prixHT = donnees.prixHT === '' ? null : Number(donnees.prixHT);
+  donnees.lignes = Array.from(cmrLignes.children).map(tr => {
+    const ligne = {};
+    tr.querySelectorAll('[data-ligne]').forEach(input => { ligne[input.dataset.ligne] = input.value.trim(); });
+    return ligne;
+  }).filter(l => Object.values(l).some(v => v !== ''));
+  return donnees;
+}
+
+function remplirFormulaireCmr(donnees){
+  formCmr.reset();
+  Array.from(formCmr.elements).forEach(el => {
+    if(el.name && donnees[el.name] !== undefined && donnees[el.name] !== null) el.value = donnees[el.name];
+  });
+  cmrLignes.innerHTML = '';
+  (donnees.lignes && donnees.lignes.length ? donnees.lignes : [{}]).forEach(l => ajouterLigneCmr(l));
+  if(!formCmr.elements.transporteurNom.value) formCmr.elements.transporteurNom.value = TRANSPORTEUR_CMR;
+  if(!formCmr.elements.etabliLe.value) formCmr.elements.etabliLe.value = aujourdHuiISO();
+  if(!formCmr.elements.datePriseEnCharge.value) formCmr.elements.datePriseEnCharge.value = aujourdHuiISO();
+  formCmr.querySelectorAll('.champ-touche').forEach(c => c.classList.remove('champ-touche'));
+  cmrErreur.classList.add('hidden');
+}
+
+// Remplit les cases du CMR depuis un voyage enregistré (sans écraser ce qui est déjà saisi, sauf l'itinéraire)
+function appliquerVoyageAuCmr(voyage){
+  if(!voyage) return;
+  const f = formCmr.elements;
+  const siVide = (nom, valeur) => { if(valeur !== undefined && valeur !== null && valeur !== '' && !f[nom].value) f[nom].value = valeur; };
+  f.missionId.value = voyage.id;
+  if(voyage.villeDepart) f.lieuPriseEnCharge.value = voyage.villeDepart;
+  if(voyage.villeArrivee) f.lieuLivraison.value = voyage.villeArrivee;
+  if(voyage.dateDepart) f.datePriseEnCharge.value = voyage.dateDepart;
+  siVide('immatTracteur', voyage.vehicule);
+  siVide('expediteurNom', voyage.clientNom);
+  siVide('prixHT', voyage.prixFacture);
+  const premiere = cmrLignes.querySelector('tr');
+  if(premiere){
+    const nature = premiere.querySelector('[data-ligne="nature"]');
+    const poids = premiere.querySelector('[data-ligne="poids"]');
+    if(!nature.value && voyage.typeCommerce) nature.value = libelleTypeCommerce(voyage.typeCommerce);
+    if(!poids.value && voyage.poidsKg) poids.value = voyage.poidsKg;
+  }
+}
+cmrMission.addEventListener('change', () => {
+  appliquerVoyageAuCmr(missionsCmrCache.find(m => m.id === cmrMission.value));
+});
+
+function nouveauCmr(voyage){
+  cmrIdCourant = null;
+  cmrFactureCourante = null;
+  remplirFormulaireCmr({});
+  cmrEtat.textContent = 'Nouveau CMR (pas encore enregistré)';
+  if(voyage){
+    if(!missionsCmrCache.some(m => m.id === voyage.id)) missionsCmrCache.push(voyage);
+    remplirSelectMissionsCmr();
+    appliquerVoyageAuCmr(voyage);
+  }
+}
+document.getElementById('cmrNouveau').addEventListener('click', () => nouveauCmr());
+
+function remplirSelectMissionsCmr(){
+  const actuel = cmrMission.value;
+  cmrMission.innerHTML = '<option value="">— Aucun —</option>' + missionsCmrCache
+    .slice().sort((a, b) => String(b.dateDepart || '').localeCompare(String(a.dateDepart || '')))
+    .map(m => `<option value="${echapperHtmlAdmin(m.id)}">${echapperHtmlAdmin(`${m.dateDepart ? valeurColonnePdf({ type: 'date', champ: 'd' }, { d: m.dateDepart }) + ' · ' : ''}${m.villeDepart || '?'} → ${m.villeArrivee || '?'}${m.clientNom ? ' · ' + m.clientNom : ''}`)}</option>`).join('');
+  cmrMission.value = actuel;
+}
+
+let ecranCmrInitialise = false;
+function ouvrirEcranCmr(){
+  if(!ecranCmrInitialise){ ecranCmrInitialise = true; nouveauCmr(); }
+  quandFirebasePret(async () => {
+    const { collection, getDocs } = window._firestore;
+    try {
+      const [missions, cmrs] = await Promise.all([getDocs(collection(window._db, 'missions')), getDocs(collection(window._db, 'cmr'))]);
+      const ajoutes = missionsCmrCache.filter(m => !missions.docs.some(d => d.id === m.id));
+      missionsCmrCache = missions.docs.map(d => ({ id: d.id, ...d.data() })).concat(ajoutes);
+      remplirSelectMissionsCmr();
+      cmrListeCache = cmrs.docs.map(d => ({ id: d.id, ...d.data() }));
+      afficherListeCmr();
+    } catch (err) {
+      console.error('Chargement CMR :', err);
+      document.getElementById('cmrListe').innerHTML = `<p class="text-sm text-red-500">Impossible de lire les CMR (${echapperHtmlAdmin(err.code || err.message)}).</p>`;
+    }
+  });
+}
+
+function afficherListeCmr(){
+  const e = echapperHtmlAdmin;
+  const liste = cmrListeCache.slice().sort((a, b) => String(b.numero || '').localeCompare(String(a.numero || '')));
+  document.getElementById('cmrListeVide').classList.toggle('hidden', liste.length > 0);
+  document.getElementById('cmrListe').innerHTML = liste.map(c => `
+    <div class="carte-pro !p-3.5 flex flex-wrap items-center gap-3" data-cmr="${e(c.id)}">
+      <span class="font-mono-num font-bold text-amberdark">${e(c.numero || '—')}</span>
+      <div class="flex-1 min-w-[180px]">
+        <p class="text-sm font-semibold text-navy dark:text-white">${e(c.lieuPriseEnCharge || '?')} <span class="text-amber">→</span> ${e(c.lieuLivraison || '?')}</p>
+        <p class="text-xs text-slate-500 dark:text-cream/60">${dateCourte(c.datePriseEnCharge)} · ${e(c.expediteurNom || '—')} → ${e(c.destinataireNom || '—')}</p>
+      </div>
+      ${c.factureNumero ? `<span class="badge-pro bg-teal/15 text-teal">Facturé ${e(c.factureNumero)}</span>` : '<span class="badge-pro bg-slate-100 text-slate-600 dark:bg-white/10 dark:text-cream/70">Non facturé</span>'}
+      <button type="button" data-action-cmr="ouvrir" class="text-xs font-semibold text-teal hover:text-amberdark px-1.5">Ouvrir</button>
+      <button type="button" data-action-cmr="apercu" class="text-xs font-semibold text-teal hover:text-amberdark px-1.5">Aperçu</button>
+      <button type="button" data-action-cmr="pdf" class="text-xs font-semibold text-teal hover:text-amberdark px-1.5">PDF</button>
+      <button type="button" data-action-cmr="supprimer" class="text-xs text-slate-400 hover:text-red-500 px-1.5" title="Supprimer">✕</button>
+    </div>`).join('');
+}
+
+document.getElementById('cmrListe').addEventListener('click', async (e) => {
+  const bouton = e.target.closest('[data-action-cmr]');
+  if(!bouton) return;
+  const cmr = cmrListeCache.find(c => c.id === bouton.closest('[data-cmr]').dataset.cmr);
+  if(!cmr) return;
+  const action = bouton.dataset.actionCmr;
+  if(action === 'ouvrir'){
+    cmrIdCourant = cmr.id;
+    cmrFactureCourante = cmr.factureNumero || null;
+    remplirFormulaireCmr(cmr);
+    cmrEtat.textContent = `CMR ${cmr.numero} ouvert${cmr.factureNumero ? ' · facturé (' + cmr.factureNumero + ')' : ''}`;
+    formCmr.scrollIntoView({ behavior: 'auto', block: 'start' });
+  } else if(action === 'apercu'){
+    ouvrirApercuCmr(cmr);
+  } else if(action === 'pdf'){
+    bouton.disabled = true;
+    try { await genererPdfCmr(cmr); } catch (err) { alert(`Le PDF n'a pas pu être créé : ${err.message || err}`); }
+    bouton.disabled = false;
+  } else if(action === 'supprimer'){
+    if(!confirm(`Supprimer définitivement le CMR ${cmr.numero || ''} ?`)) return;
+    try {
+      const { doc, deleteDoc } = window._firestore;
+      await deleteDoc(doc(window._db, 'cmr', cmr.id));
+      cmrListeCache = cmrListeCache.filter(c => c.id !== cmr.id);
+      if(cmrIdCourant === cmr.id) nouveauCmr();
+      afficherListeCmr();
+    } catch (err) { alert('Suppression impossible (vérifie ta connexion et les règles Firestore).'); }
+  }
+});
+
+function prochainNumeroCmr(){
+  const prefixe = `CMR-${new Date().getFullYear()}-`;
+  const plusGrand = cmrListeCache.reduce((max, c) => {
+    const numero = String(c.numero || '');
+    const n = numero.startsWith(prefixe) ? parseInt(numero.slice(prefixe.length), 10) : 0;
+    return !isNaN(n) && n > max ? n : max;
+  }, 0);
+  return prefixe + String(plusGrand + 1).padStart(4, '0');
+}
+
+// Cases indispensables pour qu'un CMR soit valable
+function champsCmrManquants(){
+  const manquants = [];
+  formCmr.querySelectorAll('[required]').forEach(champ => {
+    champ.classList.add('champ-touche');
+    if(!champ.value.trim()) manquants.push(champ);
+  });
+  return manquants;
+}
+function verifierCmr(){
+  const manquants = champsCmrManquants();
+  const aMarchandise = Array.from(cmrLignes.querySelectorAll('[data-ligne="nature"]')).some(i => i.value.trim());
+  if(manquants.length || !aMarchandise){
+    cmrErreur.textContent = manquants.length
+      ? `Complète les cases obligatoires : ${manquants.map(c => c.placeholder || c.closest('.carte-pro')?.querySelector('.case-cmr-titre')?.textContent.trim() || c.name).join(', ')}.`
+      : 'Indique au moins la nature de la marchandise (case 9).';
+    cmrErreur.classList.remove('hidden');
+    (manquants[0] || cmrLignes.querySelector('[data-ligne="nature"]')).focus();
+    return false;
+  }
+  cmrErreur.classList.add('hidden');
+  return true;
+}
+
+let enregistrementCmrEnCours = false;
+async function enregistrerCmr(){
+  if(enregistrementCmrEnCours) return null;
+  if(!verifierCmr()) return null;
+  if(!window._db){ alert('Connexion à la base en cours… réessaie dans un instant.'); return null; }
+  enregistrementCmrEnCours = true;
+  const { collection, addDoc, doc, updateDoc, serverTimestamp } = window._firestore;
+  const donnees = lireFormulaireCmr();
+  try {
+    if(!donnees.numero) donnees.numero = prochainNumeroCmr();
+    formCmr.elements.numero.value = donnees.numero;
+    if(cmrIdCourant){
+      await updateDoc(doc(window._db, 'cmr', cmrIdCourant), { ...donnees, dateModification: serverTimestamp() });
+      const i = cmrListeCache.findIndex(c => c.id === cmrIdCourant);
+      if(i >= 0) cmrListeCache[i] = { ...cmrListeCache[i], ...donnees };
+    } else {
+      const ref = await addDoc(collection(window._db, 'cmr'), { ...donnees, dateCreation: serverTimestamp() });
+      cmrIdCourant = ref.id;
+      cmrListeCache.push({ id: ref.id, ...donnees });
+    }
+    cmrEtat.textContent = `✓ CMR ${donnees.numero} enregistré`;
+    afficherListeCmr();
+    return { id: cmrIdCourant, ...donnees, factureNumero: cmrFactureCourante };
+  } catch (err) {
+    console.error('Enregistrement CMR :', err);
+    cmrErreur.textContent = "Le CMR n'a pas pu être enregistré (vérifie ta connexion et la règle « cmr » de Firestore).";
+    cmrErreur.classList.remove('hidden');
+    return null;
+  } finally {
+    enregistrementCmrEnCours = false;
+  }
+}
+document.getElementById('cmrEnregistrerBtn').addEventListener('click', enregistrerCmr);
+
+// ---------- Feuille A4 du CMR (même rendu pour l'aperçu et le PDF) ----------
+function construireFeuilleCmr(c){
+  const e = (v) => echapperHtmlAdmin(v ?? '');
+  const date = (iso) => { const m = String(iso || '').match(/^(\d{4})-(\d{2})-(\d{2})/); return m ? `${m[3]}/${m[2]}/${m[1]}` : ''; };
+  const logo = document.querySelector('img[alt="Logo BOUA Trans"]');
+  const lignes = (c.lignes || []).slice();
+  while(lignes.length < 8) lignes.push({});
+  const somme = (cle) => (c.lignes || []).reduce((t, l) => t + (Number(l[cle]) || 0), 0);
+  const nombre = (v, dec = 0) => v === '' || v === undefined || v === null ? '' : Number(v).toLocaleString('fr-FR', { maximumFractionDigits: dec || 3 });
+  const casePleine = (num, libelle, contenu, classe = '') => `<div class="cmr-case ${classe}"><div class="lib"><b>${num}</b>${libelle}</div><div class="val">${contenu}</div></div>`;
+  const affranchissement = c.affranchissement === 'non_franco' ? 'Non franco · Debido (port dû)' : 'Franco · Pagado (port payé)';
+
+  return `<div class="cmr-feuille">
+    <div class="cmr-entete">
+      ${logo ? `<img src="${logo.src}" alt="">` : '<strong>BOUA Trans</strong>'}
+      <div class="cmr-titre">
+        <h1>LETTRE DE VOITURE INTERNATIONALE</h1>
+        <h1 style="font-size:12px;font-weight:600">CARTA DE PORTE INTERNACIONAL</h1>
+        <p>Ce transport est soumis, nonobstant toute clause contraire, à la Convention relative au contrat de transport international de marchandises par route (CMR).<br>Este transporte queda sometido, no obstante toda cláusula contraria, al Convenio CMR.</p>
+      </div>
+      <div class="cmr-numero"><div class="big">CMR</div><div class="num">${e(c.numero || 'BROUILLON')}</div></div>
+    </div>
+
+    <div class="cmr-grille">
+      ${casePleine(1, 'Expéditeur (nom, adresse, pays) · Remitente', `<strong>${e(c.expediteurNom)}</strong>${c.expediteurAdresse ? '\n' + e(c.expediteurAdresse) : ''}`)}
+      <div class="cmr-case"><div class="lib"><b>16</b>Transporteur (nom, adresse, pays) · Porteador</div>
+        <div class="val"><strong>${e(c.transporteurNom || TRANSPORTEUR_CMR)}</strong>${c.transporteurAdresse ? '\n' + e(c.transporteurAdresse) : ''}</div>
+        <div class="dni">${LIGNE_DNI_CMR}</div>
+      </div>
+      ${casePleine(2, 'Destinataire (nom, adresse, pays) · Consignatario', `<strong>${e(c.destinataireNom)}</strong>${c.destinataireAdresse ? '\n' + e(c.destinataireAdresse) : ''}`)}
+      ${casePleine(17, 'Transporteurs successifs · Porteadores sucesivos', `${e(c.transporteursSuccessifs)}${(c.immatTracteur || c.immatRemorque) ? `${c.transporteursSuccessifs ? '\n' : ''}Immatriculation · Matrícula : <strong>${e(c.immatTracteur || '—')}</strong> / <strong>${e(c.immatRemorque || '—')}</strong>` : ''}`)}
+      ${casePleine(3, 'Lieu prévu pour la livraison · Lugar de entrega', `<strong>${e(c.lieuLivraison)}</strong>${c.paysLivraison ? ' — ' + e(c.paysLivraison) : ''}`)}
+      ${casePleine(18, 'Réserves et observations du transporteur · Reservas y observaciones', e(c.reserves))}
+      ${casePleine(4, 'Lieu et date de la prise en charge · Lugar y fecha de carga', `<strong>${e(c.lieuPriseEnCharge)}</strong>${c.paysPriseEnCharge ? ' — ' + e(c.paysPriseEnCharge) : ''}\nLe · Fecha : <strong>${date(c.datePriseEnCharge)}</strong>`)}
+      ${casePleine(19, 'Conventions particulières · Estipulaciones particulares', e(c.conventions))}
+      ${casePleine(5, 'Documents annexés · Documentos anexos', e(c.documentsAnnexes), 'pleine')}
+
+      <div class="cmr-marchandises">
+        <table>
+          <thead><tr>
+            <th style="width:17%"><b>6</b>Marques et numéros<br>Marcas y números</th>
+            <th style="width:9%"><b>7</b>Nombre de colis<br>Número de bultos</th>
+            <th style="width:14%"><b>8</b>Mode d'emballage<br>Clase de embalaje</th>
+            <th><b>9</b>Nature de la marchandise<br>Naturaleza de la mercancía</th>
+            <th style="width:9%"><b>10</b>N° statistique<br>Nº estadístico</th>
+            <th style="width:11%"><b>11</b>Poids brut kg<br>Peso bruto kg</th>
+            <th style="width:9%;border-right:none"><b>12</b>Cubage m³<br>Volumen m³</th>
+          </tr></thead>
+          <tbody>${lignes.map(l => `<tr><td>${e(l.marques)}</td><td class="n">${nombre(l.colis)}</td><td>${e(l.emballage)}</td><td>${e(l.nature)}</td><td></td><td class="n">${nombre(l.poids)}</td><td class="n" style="border-right:none">${nombre(l.volume, 3)}</td></tr>`).join('')}</tbody>
+          <tfoot><tr><td>Total</td><td class="n">${somme('colis') ? nombre(somme('colis')) : ''}</td><td></td><td></td><td></td><td class="n">${somme('poids') ? nombre(somme('poids')) : ''}</td><td class="n" style="border-right:none">${somme('volume') ? nombre(somme('volume'), 3) : ''}</td></tr></tfoot>
+        </table>
+      </div>
+
+      ${casePleine(13, "Instructions de l'expéditeur · Instrucciones del remitente", e(c.instructions))}
+      ${casePleine('14 · 15', "Prescriptions d'affranchissement · Remboursement", `${affranchissement}${c.remboursement ? '\nRemboursement · Reembolso : <strong>' + e(c.remboursement) + '</strong>' : ''}`)}
+      ${casePleine(20, 'Prix du transport · Precio del transporte', (c.prixHT !== null && c.prixHT !== undefined && c.prixHT !== '') ? `<strong>${e(formatEuros.format(Number(c.prixHT)))}</strong> HT${c.factureA ? '\nÀ payer par · A pagar por : ' + e(c.factureA) : ''}` : (c.factureA ? 'À payer par · A pagar por : ' + e(c.factureA) : ''))}
+      ${casePleine(21, 'Établi à · Formalizado en', `<strong>${e(c.etabliA)}</strong>${c.etabliLe ? '   le · el  <strong>' + date(c.etabliLe) + '</strong>' : ''}`)}
+
+      <div class="cmr-signatures">
+        <div class="cmr-case"><div class="lib"><b>22</b>Signature et timbre de l'expéditeur<br>Firma y sello del remitente</div></div>
+        <div class="cmr-case"><div class="lib"><b>23</b>Signature et timbre du transporteur<br>Firma y sello del transportista</div><div class="val" style="margin-top:4px">${e(c.transporteurNom || TRANSPORTEUR_CMR)}</div></div>
+        <div class="cmr-case"><div class="lib"><b>24</b>Marchandises reçues · Recibo de la mercancía<br>Lieu, date, signature et timbre du destinataire</div></div>
+      </div>
+    </div>
+    <div class="cmr-pied"><span>BOUA Trans · Avenida Castilla-La Mancha 122, 45210 Yuncos (Toledo), España</span><span>Exemplaire 1 : expéditeur · 2 : destinataire · 3 : transporteur</span></div>
+  </div>`;
+}
+
+let cmrApercuDonnees = null;
+function ajusterZoomApercu(){
+  const cadre = document.getElementById('cmrApercuCadre');
+  cadre.style.zoom = Math.min(1, (window.innerWidth - 32) / 794);
+}
+function ouvrirApercuCmr(donnees){
+  cmrApercuDonnees = donnees;
+  document.getElementById('cmrApercuCadre').innerHTML = construireFeuilleCmr(donnees);
+  document.getElementById('cmrApercuNumero').textContent = donnees.numero || '(brouillon)';
+  ajusterZoomApercu();
+  cmrApercuModal.classList.remove('hidden');
+}
+function fermerApercuCmr(){ cmrApercuModal.classList.add('hidden'); }
+window.addEventListener('resize', () => { if(!cmrApercuModal.classList.contains('hidden')) ajusterZoomApercu(); });
+document.getElementById('cmrApercuFermer').addEventListener('click', fermerApercuCmr);
+cmrApercuModal.addEventListener('click', (e) => { if(e.target === cmrApercuModal) fermerApercuCmr(); });
+document.addEventListener('keydown', (e) => { if(e.key === 'Escape' && !cmrApercuModal.classList.contains('hidden')) fermerApercuCmr(); });
+document.getElementById('cmrApercuBtn').addEventListener('click', () => {
+  ouvrirApercuCmr({ id: cmrIdCourant, ...lireFormulaireCmr() });
+});
+
+// PDF du CMR : la feuille est rendue hors écran à sa taille réelle (A4), puis capturée
+async function genererPdfCmr(donnees){
+  const conteneur = document.createElement('div');
+  conteneur.style.cssText = 'position:fixed;left:-10000px;top:0;width:794px;z-index:-1;pointer-events:none;';
+  conteneur.innerHTML = construireFeuilleCmr(donnees);
+  document.body.appendChild(conteneur);
+  try {
+    if(document.fonts && document.fonts.ready) await document.fonts.ready;
+    return await exporterElementEnPdf(conteneur.firstElementChild, nomFichierPdf(`CMR_${donnees.numero || 'brouillon'}`), { unePage: true, marge: 0, fond: '#ffffff' });
+  } finally {
+    conteneur.remove();
+  }
+}
+
+async function telechargerCmrPdf(){
+  let donnees;
+  const complet = champsCmrManquants().length === 0 && Array.from(cmrLignes.querySelectorAll('[data-ligne="nature"]')).some(i => i.value.trim());
+  if(complet){
+    donnees = await enregistrerCmr(); // numéro attribué + copie gardée dans la base
+    if(!donnees) donnees = { id: cmrIdCourant, ...lireFormulaireCmr() };
+  } else {
+    if(!confirm('Certaines cases obligatoires sont vides.\nTélécharger quand même un CMR à compléter à la main ?')) return;
+    cmrErreur.classList.add('hidden');
+    donnees = { id: cmrIdCourant, ...lireFormulaireCmr() };
+  }
+  return genererPdfCmr(donnees);
+}
+
+async function avecBoutonOccupe(bouton, texteAttente, action){
+  if(bouton.disabled) return;
+  const texte = bouton.textContent;
+  bouton.disabled = true;
+  bouton.textContent = texteAttente;
+  try { await action(); }
+  catch (err) { console.error(err); alert(`Le PDF n'a pas pu être créé : ${err.message || err}`); }
+  finally { bouton.disabled = false; bouton.textContent = texte; }
+}
+document.getElementById('cmrPdfBtn').addEventListener('click', (e) => avecBoutonOccupe(e.currentTarget, 'PDF en cours…', telechargerCmrPdf));
+document.getElementById('cmrApercuPdf').addEventListener('click', (e) => avecBoutonOccupe(e.currentTarget, 'PDF en cours…', () => genererPdfCmr(cmrApercuDonnees || lireFormulaireCmr())));
+
+// Facturation : crée la facture (numéro BT-AAAA-NNNN suivant) à partir du CMR
+document.getElementById('cmrFacturerBtn').addEventListener('click', async (e) => {
+  const bouton = e.currentTarget;
+  if(bouton.disabled) return;
+  if(cmrFactureCourante && !confirm(`Ce CMR a déjà été facturé (${cmrFactureCourante}). Créer une nouvelle facture quand même ?`)) return;
+  bouton.disabled = true;
+  try {
+    const cmr = await enregistrerCmr();
+    if(!cmr) return;
+    const { collection, getDocs, addDoc, doc, updateDoc, serverTimestamp } = window._firestore;
+    const factures = await getDocs(collection(window._db, 'factures'));
+    const numero = prochainNumeroFacture(factures.docs.map(d => d.data()));
+    const facture = {
+      numero,
+      clientNom: cmr.factureA || cmr.expediteurNom,
+      dateEmission: aujourdHuiISO(),
+      montantHT: cmr.prixHT || 0,
+      tauxTVA: 21,
+      statut: 'en_attente',
+      cmrId: cmr.id,
+      cmrNumero: cmr.numero,
+      description: `Transport ${cmr.lieuPriseEnCharge} → ${cmr.lieuLivraison} (CMR ${cmr.numero})`
+    };
+    if(cmr.missionId) facture.missionId = cmr.missionId;
+    const ref = await addDoc(collection(window._db, 'factures'), { ...facture, dateCreation: serverTimestamp() });
+    await updateDoc(doc(window._db, 'cmr', cmr.id), { factureNumero: numero, factureId: ref.id });
+    cmrFactureCourante = numero;
+    const i = cmrListeCache.findIndex(c => c.id === cmr.id);
+    if(i >= 0) cmrListeCache[i] = { ...cmrListeCache[i], factureNumero: numero, factureId: ref.id };
+    afficherListeCmr();
+    cmrEtat.innerHTML = `✓ Facture <strong class="font-mono-num">${echapperHtmlAdmin(numero)}</strong> créée${facture.montantHT ? '' : ' (montant à compléter)'} · <button type="button" id="cmrVoirFacture" class="underline text-teal font-semibold">voir les factures</button>`;
+    document.getElementById('cmrVoirFacture').addEventListener('click', () => allerSurOnglet('factures'));
+  } catch (err) {
+    console.error('Facturation CMR :', err);
+    alert("La facture n'a pas pu être créée (vérifie ta connexion et les règles Firestore).");
+  } finally {
+    bouton.disabled = false;
+  }
+});
 
 </script>
 
