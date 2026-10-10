@@ -5,7 +5,7 @@
 // (même une petite). C'est ce qui force les navigateurs des visiteurs
 // à récupérer la nouvelle version plutôt que de servir l'ancienne
 // depuis le cache indéfiniment.
-const CACHE_VERSION = "v5";
+const CACHE_VERSION = "v6";
 const CACHE_NAME = `boua-trans-${CACHE_VERSION}`;
 
 // Fichiers essentiels mis en cache dès l'installation, pour que le
