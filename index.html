@@ -1038,6 +1038,42 @@
       </button>
     </div>
 
+    <!-- PUBLIER PAR LIEN : on colle l'adresse d'une vidéo ou d'une photo
+         (YouTube, TikTok, Instagram, Facebook, X/Twitter, image en ligne).
+         La plateforme est reconnue toute seule, rien d'autre à remplir. -->
+    <h3 class="text-xs font-bold uppercase tracking-widest text-amberdark mb-3">Publier par lien — vidéos et photos des réseaux sociaux</h3>
+    <div id="adminLiens" class="carte-pro mb-8">
+      <div class="flex flex-wrap items-center gap-2 mb-3 text-xl" aria-hidden="true">
+        <span title="YouTube">▶️</span><span title="TikTok">🎵</span><span title="Instagram">📸</span><span title="Facebook">📘</span><span title="X / Twitter">𝕏</span><span title="Photo ou vidéo en ligne">🖼️</span>
+        <span class="text-sm text-slate-500 dark:text-cream/60 ml-1">Colle le lien d'une vidéo ou d'une photo : YouTube, TikTok, Instagram, Facebook, X (Twitter) ou une image en ligne. Un lien par ligne pour en publier plusieurs.</span>
+      </div>
+      <div class="flex gap-2 mb-3">
+        <textarea id="lienUrls" rows="3" class="champ-pro font-mono-num !text-sm" placeholder="https://www.youtube.com/watch?v=…&#10;https://www.tiktok.com/@compte/video/…&#10;https://www.instagram.com/reel/…"></textarea>
+        <button type="button" id="lienColler" class="shrink-0 self-start bg-navy dark:bg-white/10 text-cream hover:text-amber font-semibold text-sm px-4 py-3 rounded-xl transition" title="Coller le lien copié">📋 Coller</button>
+      </div>
+      <div class="grid sm:grid-cols-3 gap-3 mb-3">
+        <div class="sm:col-span-2">
+          <label class="etiquette-pro" for="lienTitre">Titre (facultatif)</label>
+          <input id="lienTitre" class="champ-pro" placeholder="Ex : Livraison à Valencia">
+        </div>
+        <div>
+          <label class="etiquette-pro" for="lienAlbum">Album de la galerie</label>
+          <select id="lienAlbum" class="champ-pro">
+            <option value="general">Général</option>
+            <option value="camions">Camions</option>
+            <option value="voyages">Voyages</option>
+            <option value="chauffeurs">Chauffeurs</option>
+          </select>
+        </div>
+      </div>
+      <div id="lienDetection" class="space-y-1.5 mb-3"></div>
+      <div id="lienApercu" class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-4"></div>
+      <div class="flex flex-wrap items-center gap-3">
+        <button type="button" id="lienPublier" disabled class="bg-amber hover:bg-amberdark disabled:opacity-40 disabled:cursor-not-allowed text-navy font-bold px-6 py-3 rounded-full transition">Publier sur le site</button>
+        <span id="lienEtat" class="text-sm text-slate-500 dark:text-cream/60"></span>
+      </div>
+    </div>
+
     <h3 class="text-xs font-bold uppercase tracking-widest text-teal mb-3">Sur le site — visible par tous</h3>
     <div class="grid grid-cols-2 lg:grid-cols-6 gap-4 mb-8">
       <button type="button" data-cible="medias" class="text-left bg-white dark:bg-navylight border-2 border-amber/60 hover:border-amber rounded-2xl p-5 transition">
@@ -3510,7 +3546,8 @@ function apercuMedia(m){
     const id = extraireIdYouTube(m.url);
     return htmlApercu(id ? `https://img.youtube.com/vi/${id}/default.jpg` : '', '▶️');
   }
-  return `<span class="text-2xl">${m.type === 'video' ? '🎬' : '🔗'}</span>`;
+  const icones = { video: '🎬', tiktok: '🎵', instagram: '📸', facebook: '📘', twitter: '𝕏' };
+  return `<span class="text-2xl" title="${echapperHtml(m.type || '')}">${icones[m.type] || '🔗'}</span>`;
 }
 
 function libelleVoyage(m){
@@ -5063,6 +5100,13 @@ async function validerLigneRapide(champs){
   if(!aSaisi) return; // rien de saisi : on ne crée pas une ligne faite uniquement de valeurs par défaut
 
   if(vueActive === 'factures' && !donnees.numero) donnees.numero = prochainNumeroFacture(Array.from(donneesChargees.values()));
+  if(vueActive === 'medias' && donnees.url && !estFichierBase(donnees.url)){
+    const lien = analyserLienMedia(donnees.url);
+    if(lien && !lien.erreur){
+      donnees.url = lien.url;
+      if(!donnees.type || donnees.type === 'photo') donnees.type = lien.type;
+    }
+  }
 
   const { collection, addDoc, doc, setDoc, serverTimestamp } = window._firestore;
   try {
@@ -5643,7 +5687,7 @@ function creerCarteMedia(m){
   }
 
   if(m.type === 'facebook'){
-    const estVideo = /\/videos\/|watch\/?\?v=/.test(url);
+    const estVideo = /\/videos\/|watch\/?\?v=|\/reel\//.test(url);
     const src = estVideo
       ? `https://www.facebook.com/plugins/video.php?href=${encodeURIComponent(urlBrute)}&show_text=false`
       : `https://www.facebook.com/plugins/post.php?href=${encodeURIComponent(urlBrute)}&show_text=false`;
@@ -5690,15 +5734,15 @@ function assurerScriptEmbed(id, src){
   document.body.appendChild(s);
 }
 
-function chargerScriptsReseauxSociauxSiNecessaire(){
-  if(galerieGridEl.querySelector('.instagram-media')){
+function chargerScriptsReseauxSociauxSiNecessaire(conteneur = galerieGridEl){
+  if(conteneur.querySelector('.instagram-media')){
     if(window.instgrm && window.instgrm.Embeds){
       window.instgrm.Embeds.process();
     } else {
       assurerScriptEmbed('script-embed-instagram', 'https://www.instagram.com/embed.js');
     }
   }
-  if(galerieGridEl.querySelector('.twitter-tweet')){
+  if(conteneur.querySelector('.twitter-tweet')){
     if(window.twttr && window.twttr.widgets){
       window.twttr.widgets.load();
     } else {
@@ -5708,7 +5752,7 @@ function chargerScriptsReseauxSociauxSiNecessaire(){
   // TikTok ne propose pas d'API de re-scan publique : on recharge son
   // script à chaque rendu contenant du TikTok (sans effet sur les
   // blockquotes déjà transformés, donc sans danger de double-affichage).
-  if(galerieGridEl.querySelector('.tiktok-embed')){
+  if(conteneur.querySelector('.tiktok-embed')){
     const ancienScript = document.getElementById('script-embed-tiktok');
     if(ancienScript) ancienScript.remove();
     assurerScriptEmbed('script-embed-tiktok', 'https://www.tiktok.com/embed.js');
@@ -6097,6 +6141,167 @@ async function chercherDocumentsPOD(){
 
 podBtn.addEventListener('click', chercherDocumentsPOD);
 podInput.addEventListener('keydown', (e) => { if(e.key === 'Enter') chercherDocumentsPOD(); });
+
+/* ============================================================
+   PUBLIER PAR LIEN (YouTube, TikTok, Instagram, Facebook, X, image)
+   L'administrateur colle une ou plusieurs adresses : la plateforme
+   est reconnue, un aperçu s'affiche, puis un clic publie dans la
+   galerie du site (collection "medias", onglet Médias de l'admin).
+   ============================================================ */
+const PLATEFORMES_LIEN = {
+  youtube:   { nom: 'YouTube',     icone: '▶️' },
+  tiktok:    { nom: 'TikTok',      icone: '🎵' },
+  instagram: { nom: 'Instagram',   icone: '📸' },
+  facebook:  { nom: 'Facebook',    icone: '📘' },
+  twitter:   { nom: 'X / Twitter', icone: '𝕏' },
+  photo:     { nom: 'Photo en ligne', icone: '🖼️' },
+  video:     { nom: 'Vidéo en ligne', icone: '🎬' }
+};
+
+// Reconnaît la plateforme et remet le lien sous la forme attendue par l'intégration.
+// Renvoie { type, url } ou { erreur }.
+function analyserLienMedia(brut){
+  let texte = String(brut || '').trim();
+  if(!texte) return null;
+  if(!/^https?:\/\//i.test(texte) && /^[\w-]+(\.[\w-]+)+\//.test(texte)) texte = 'https://' + texte;
+  let u;
+  try { u = new URL(texte); } catch (e) { return { url: texte, erreur: "Ce n'est pas une adresse web valide." }; }
+  if(!/^https?:$/.test(u.protocol)) return { url: texte, erreur: "Seuls les liens http(s) sont acceptés." };
+  u.protocol = 'https:';
+  const hote = u.hostname.replace(/^(www|m|mobile|web)\./, '').toLowerCase();
+  const chemin = u.pathname;
+
+  if(hote === 'youtu.be' || hote.endsWith('youtube.com') || hote === 'youtube-nocookie.com'){
+    let id = hote === 'youtu.be' ? chemin.split('/')[1] : (u.searchParams.get('v') || (chemin.match(/\/(?:shorts|embed|live|v)\/([A-Za-z0-9_-]{6,})/) || [])[1]);
+    if(!id || !/^[A-Za-z0-9_-]{6,}$/.test(id)) return { type: 'youtube', url: texte, erreur: "Lien YouTube sans vidéo : ouvre la vidéo puis copie son adresse." };
+    return { type: 'youtube', url: `https://www.youtube.com/watch?v=${id}` };
+  }
+  if(hote.endsWith('tiktok.com')){
+    const m = chemin.match(/^\/@([^/]+)\/(video|photo)\/(\d+)/);
+    if(m) return { type: 'tiktok', url: `https://www.tiktok.com/@${m[1]}/video/${m[3]}` };
+    if(/^(vm|vt)\./.test(u.hostname) || /^\/t\//.test(chemin)) return { type: 'tiktok', url: texte, erreur: "Lien TikTok raccourci : ouvre-le dans le navigateur, puis copie l'adresse complète (…/@compte/video/…)." };
+    return { type: 'tiktok', url: texte, erreur: "Lien TikTok sans vidéo : copie l'adresse d'une vidéo précise." };
+  }
+  if(hote === 'instagram.com' || hote === 'instagr.am'){
+    const m = chemin.match(/^\/(?:[\w.]+\/)?(p|reel|reels|tv)\/([A-Za-z0-9_-]+)/);
+    if(!m) return { type: 'instagram', url: texte, erreur: "Lien Instagram sans publication : copie l'adresse d'une photo ou d'un reel." };
+    return { type: 'instagram', url: `https://www.instagram.com/${m[1] === 'reels' ? 'reel' : m[1]}/${m[2]}/` };
+  }
+  if(hote === 'twitter.com' || hote === 'x.com'){
+    const m = chemin.match(/^\/([\w]+)\/status(?:es)?\/(\d+)/);
+    if(!m) return { type: 'twitter', url: texte, erreur: "Lien X/Twitter sans publication : copie l'adresse d'un post précis." };
+    return { type: 'twitter', url: `https://twitter.com/${m[1]}/status/${m[2]}` };
+  }
+  if(hote.endsWith('facebook.com') || hote === 'fb.watch' || hote === 'fb.com'){
+    if(hote === 'fb.watch') return { type: 'facebook', url: texte, erreur: "Lien Facebook raccourci (fb.watch) : ouvre-le, puis copie l'adresse complète de la vidéo." };
+    if(chemin === '/' || chemin === '') return { type: 'facebook', url: texte, erreur: "Lien Facebook sans publication : copie l'adresse d'une vidéo ou d'un post." };
+    u.hash = '';
+    return { type: 'facebook', url: u.toString() };
+  }
+  if(/\.(jpe?g|png|webp|gif|avif)$/i.test(chemin)) return { type: 'photo', url: u.toString() };
+  if(/\.(mp4|webm|mov|m4v)$/i.test(chemin)) return { type: 'video', url: u.toString() };
+  if(hote === 'firebasestorage.googleapis.com'){
+    const nom = decodeURIComponent(chemin);
+    if(/\.(mp4|webm|mov|m4v)$/i.test(nom)) return { type: 'video', url: u.toString() };
+    return { type: 'photo', url: u.toString() };
+  }
+  return { url: texte, erreur: "Lien non reconnu : YouTube, TikTok, Instagram, Facebook, X/Twitter, ou une image (.jpg, .png…) / vidéo (.mp4) en ligne." };
+}
+
+const lienUrls = document.getElementById('lienUrls');
+const lienDetection = document.getElementById('lienDetection');
+const lienApercu = document.getElementById('lienApercu');
+const lienPublier = document.getElementById('lienPublier');
+const lienEtat = document.getElementById('lienEtat');
+let liensAnalyses = [];
+let minuterieApercuLien = null;
+
+function liensValides(){ return liensAnalyses.filter(l => l && !l.erreur); }
+
+function analyserZoneLiens(){
+  const lignes = lienUrls.value.split(/[\s]+/).map(l => l.trim()).filter(Boolean);
+  const vus = new Set();
+  liensAnalyses = lignes.map(analyserLienMedia).filter(l => {
+    if(!l) return false;
+    if(!l.erreur && vus.has(l.url)) return false; // même lien collé deux fois
+    vus.add(l.url);
+    return true;
+  });
+  const e = echapperHtmlAdmin;
+  lienDetection.innerHTML = liensAnalyses.map(l => {
+    const p = PLATEFORMES_LIEN[l.type] || { nom: 'Lien', icone: '🔗' };
+    return l.erreur
+      ? `<p class="text-sm text-red-500 flex gap-2"><span>⚠️</span><span><b>${e(p.nom)}</b> — ${e(l.erreur)}<br><span class="font-mono-num text-xs opacity-70 break-all">${e(l.url)}</span></span></p>`
+      : `<p class="text-sm text-teal flex gap-2" data-lien-ok><span>${p.icone}</span><span><b>${e(p.nom)}</b> reconnu <span class="font-mono-num text-xs text-slate-400 break-all">${e(l.url)}</span></span></p>`;
+  }).join('');
+  const nb = liensValides().length;
+  lienPublier.disabled = nb === 0;
+  lienPublier.textContent = nb > 1 ? `Publier ces ${nb} liens sur le site` : 'Publier sur le site';
+  lienEtat.textContent = '';
+  clearTimeout(minuterieApercuLien);
+  minuterieApercuLien = setTimeout(afficherApercuLiens, 400); // aperçu après la frappe
+}
+
+function afficherApercuLiens(){
+  const titre = document.getElementById('lienTitre').value.trim();
+  lienApercu.innerHTML = liensValides().map(l => creerCarteMedia({ ...l, titre })).join('');
+  chargerScriptsReseauxSociauxSiNecessaire(lienApercu);
+}
+
+lienUrls.addEventListener('input', analyserZoneLiens);
+document.getElementById('lienTitre').addEventListener('input', () => { clearTimeout(minuterieApercuLien); minuterieApercuLien = setTimeout(afficherApercuLiens, 400); });
+lienApercu.addEventListener('click', (e) => {
+  const facade = e.target.closest('.youtube-facade');
+  if(facade) facade.outerHTML = `<div class="galerie-carte rounded-xl overflow-hidden aspect-video"><iframe class="w-full h-full" src="https://www.youtube-nocookie.com/embed/${encodeURIComponent(facade.dataset.videoId)}?autoplay=1" title="Vidéo YouTube" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen></iframe></div>`;
+});
+
+document.getElementById('lienColler').addEventListener('click', async () => {
+  try {
+    const texte = await navigator.clipboard.readText();
+    if(!texte.trim()){ lienEtat.textContent = 'Le presse-papiers est vide : copie d\'abord le lien.'; return; }
+    lienUrls.value = (lienUrls.value.trim() ? lienUrls.value.trim() + '\n' : '') + texte.trim();
+    analyserZoneLiens();
+  } catch (err) {
+    lienUrls.focus();
+    lienEtat.textContent = 'Appuie longuement dans la case puis « Coller » (ton navigateur bloque le collage automatique).';
+  }
+});
+
+lienPublier.addEventListener('click', async () => {
+  const aPublier = liensValides();
+  if(!aPublier.length || lienPublier.disabled) return;
+  if(!window._db){ lienEtat.textContent = 'Connexion à la base en cours… réessaie dans un instant.'; return; }
+  lienPublier.disabled = true;
+  lienEtat.textContent = 'Publication…';
+  const { collection, getDocs, addDoc, serverTimestamp } = window._firestore;
+  try {
+    const existants = (await getDocs(collection(window._db, 'medias'))).docs.map(d => d.data());
+    const dejaLa = new Set(existants.map(m => String(m.url || '')));
+    let rang = existants.reduce((max, m) => Math.max(max, Number(m.ordre) || 0), 0);
+    const titre = document.getElementById('lienTitre').value.trim();
+    const album = document.getElementById('lienAlbum').value;
+    let publies = 0, doublons = 0;
+    for(const l of aPublier){
+      if(dejaLa.has(l.url)){ doublons++; continue; }
+      await addDoc(collection(window._db, 'medias'), {
+        type: l.type, url: l.url, album, titre, visible: true, ordre: ++rang,
+        source: 'lien', datePublication: aujourdHuiISO(), dateCreation: serverTimestamp()
+      });
+      dejaLa.add(l.url);
+      publies++;
+    }
+    lienUrls.value = '';
+    document.getElementById('lienTitre').value = '';
+    analyserZoneLiens();
+    lienApercu.innerHTML = '';
+    lienEtat.innerHTML = `${publies ? `✓ ${publies} lien${publies > 1 ? 's' : ''} publié${publies > 1 ? 's' : ''} dans la galerie du site.` : ''}${doublons ? ` ${doublons} déjà publié${doublons > 1 ? 's' : ''} (ignoré${doublons > 1 ? 's' : ''}).` : ''} <button type="button" data-vers-onglet="medias" class="underline font-semibold text-teal">Voir l'onglet Médias</button>`;
+  } catch (err) {
+    console.error('Publication par lien :', err);
+    lienEtat.textContent = `Échec de la publication : ${messageErreurPublication(err)}`;
+  } finally {
+    lienPublier.disabled = liensValides().length === 0;
+  }
+});
 
 /* ============================================================
    MOTEUR PDF GLOBAL
