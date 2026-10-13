@@ -239,7 +239,7 @@
     <ul class="hidden md:flex items-center gap-8 text-sm font-medium text-cream/85">
       <li><a href="#devis" class="hover:text-amber transition" data-i18n="nav.devis">Devis</a></li>
       <li><a href="#carrieres" class="hover:text-amber transition" data-i18n="nav.carrieres">Carrières</a></li>
-      <li><a href="#fret" class="hover:text-amber transition" data-i18n="nav.fret">Bourse de fret</a></li>
+      <li><a href="#fret" class="hover:text-amber transition" data-i18n="nav.fret">Transporteurs</a></li>
       <li><a href="#galerie" class="hover:text-amber transition" data-i18n="nav.galerie">Galerie</a></li>
       <li><a href="#actualites" class="hover:text-amber transition" data-i18n="nav.actualites">Actualités</a></li>
       <li><a href="#contact" class="hover:text-amber transition" data-i18n="nav.contact">Contact</a></li>
@@ -288,7 +288,7 @@
   <ul id="mobileMenu" class="hidden md:hidden flex-col gap-1 px-5 pb-5 text-cream/90 bg-navy">
     <li><a href="#devis" class="block py-2.5 border-b border-white/10" data-i18n="nav.devis">Devis</a></li>
     <li><a href="#carrieres" class="block py-2.5 border-b border-white/10" data-i18n="nav.carrieres">Carrières</a></li>
-    <li><a href="#fret" class="block py-2.5 border-b border-white/10" data-i18n="nav.fret">Bourse de fret</a></li>
+    <li><a href="#fret" class="block py-2.5 border-b border-white/10" data-i18n="nav.fret">Transporteurs</a></li>
     <li><a href="#galerie" class="block py-2.5 border-b border-white/10" data-i18n="nav.galerie">Galerie</a></li>
     <li><a href="#actualites" class="block py-2.5 border-b border-white/10" data-i18n="nav.actualites">Actualités</a></li>
     <li><a href="#contact" class="block py-2.5 border-b border-white/10" data-i18n="nav.contact">Contact</a></li>
@@ -604,119 +604,38 @@
 </section>
 
 <!-- ============================================================
-     BOURSE DE FRET (façon Mercatrans) : chargements, camions libres,
-     entreprises — publiés par les chargeurs et transporteurs eux-mêmes.
+     BOURSE DE FRET + ASSISTANT DE RECHERCHE IA
+     Réservé aux transporteurs partenaires.
      ============================================================ -->
 <section id="fret" class="py-20 md:py-24 bg-navy text-cream">
   <div class="max-w-6xl mx-auto px-5">
-    <div class="flex flex-wrap items-end justify-between gap-5 mb-8">
-      <div class="max-w-xl">
-        <span class="font-mono-num text-xs tracking-widest uppercase text-amber block mb-2" data-i18n="bourse.eyebrow">Bourse de fret BOUA Trans</span>
-        <h2 class="text-3xl md:text-4xl font-bold text-white" data-i18n="bourse.titre">Chargements et camions disponibles</h2>
-        <p class="text-cream/65 mt-3" data-i18n="bourse.lead">Trajets locaux, nationaux et internationaux. Chargeurs et transporteurs publient leurs offres gratuitement et se contactent directement.</p>
-      </div>
-      <button type="button" id="bourseOuvrirForm" class="bg-amber hover:bg-amberdark text-navy font-bold px-6 py-3.5 rounded-full transition" data-i18n="bourse.publier">+ Publier une offre gratuite</button>
+    <div class="max-w-xl mb-10">
+      <span class="font-mono-num text-xs tracking-widest uppercase text-amber block mb-2">Espace transporteurs</span>
+      <h2 class="text-3xl md:text-4xl font-bold text-white">Bourse de fret</h2>
+      <p class="text-cream/65 mt-3">Consultez les chargements disponibles ou décrivez ce que vous cherchez en langage naturel.</p>
     </div>
 
-    <!-- Compteurs -->
-    <div id="bourseCompteurs" class="flex flex-wrap gap-x-8 gap-y-2 mb-6 text-sm text-cream/70"></div>
-
-    <!-- Onglets -->
-    <div class="inline-flex flex-wrap bg-white/[0.06] border border-white/10 rounded-full p-1 mb-5" role="tablist">
-      <button type="button" class="bourse-onglet px-5 py-2 rounded-full text-sm font-semibold transition" data-onglet-bourse="carga">📦 <span data-i18n="bourse.cargas">Chargements</span></button>
-      <button type="button" class="bourse-onglet px-5 py-2 rounded-full text-sm font-semibold transition" data-onglet-bourse="camion">🚛 <span data-i18n="bourse.camions">Camions disponibles</span></button>
-      <button type="button" class="bourse-onglet px-5 py-2 rounded-full text-sm font-semibold transition" data-onglet-bourse="entreprises">🏢 <span data-i18n="bourse.entreprises">Entreprises</span></button>
+    <!-- ASSISTANT DE RECHERCHE IA -->
+    <div class="bg-white/[0.05] border border-white/10 rounded-2xl p-6 md:p-7 mb-10 backdrop-blur">
+      <label for="iaSearchInput" class="flex items-center gap-2 text-sm font-semibold text-amber mb-3">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M12 3v3M12 18v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M3 12h3M18 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1"/><circle cx="12" cy="12" r="4"/></svg>
+        Assistant de recherche IA
+      </label>
+      <form id="iaSearchForm" class="flex flex-col sm:flex-row gap-3">
+        <input type="text" id="iaSearchInput" placeholder="Ex : Je cherche un chargement de 10 tonnes au départ de Paris"
+          class="flex-1 px-4 py-3.5 rounded-lg border border-white/15 bg-navylight text-cream placeholder:text-cream/40 focus:outline-none focus:border-amber">
+        <button type="submit" id="iaSearchBtn" class="bg-amber hover:bg-amberdark text-navy font-semibold px-7 py-3.5 rounded-lg transition">Rechercher</button>
+      </form>
+      <p id="iaSearchInterpretation" class="text-xs text-cream/50 mt-3 hidden"></p>
     </div>
 
-    <!-- Recherche + filtres -->
-    <div class="bg-white/[0.05] border border-white/10 rounded-2xl p-4 md:p-5 mb-6">
-      <div class="flex flex-col md:flex-row gap-3 mb-3">
-        <input type="search" id="bourseRecherche" autocomplete="off" placeholder="Ex : Madrid → Lyon 20 t frigo · de Toledo a Valencia"
-          class="flex-1 px-4 py-3 rounded-lg border border-white/15 bg-navylight text-cream placeholder:text-cream/40 focus:outline-none focus:border-amber">
-        <select id="bourseVehicule" class="px-3 py-3 rounded-lg border border-white/15 bg-navylight text-cream focus:outline-none focus:border-amber">
-          <option value="">Tous les véhicules</option>
-        </select>
-        <input type="date" id="bourseDate" title="Chargement à partir du" class="px-3 py-3 rounded-lg border border-white/15 bg-navylight text-cream focus:outline-none focus:border-amber">
-      </div>
-      <div class="flex flex-wrap items-center gap-2">
-        <button type="button" class="bourse-portee text-xs font-semibold px-3.5 py-1.5 rounded-full border border-white/15 transition" data-portee="">Toutes portées</button>
-        <button type="button" class="bourse-portee text-xs font-semibold px-3.5 py-1.5 rounded-full border border-white/15 transition" data-portee="local">📍 Local</button>
-        <button type="button" class="bourse-portee text-xs font-semibold px-3.5 py-1.5 rounded-full border border-white/15 transition" data-portee="national">🇪🇸 National</button>
-        <button type="button" class="bourse-portee text-xs font-semibold px-3.5 py-1.5 rounded-full border border-white/15 transition" data-portee="international">🌍 International</button>
-        <span id="bourseInterpretation" class="text-xs text-cream/50 ml-auto"></span>
-      </div>
+    <!-- TABLEAU DE BORD DES OFFRES DE FRET -->
+    <div id="fretList" class="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
+      <!-- Rempli dynamiquement par renderFretOffres() dans le JS -->
     </div>
-
-    <div id="fretList" class="grid sm:grid-cols-2 lg:grid-cols-3 gap-5"></div>
-    <div id="bourseSentinelle" class="hidden h-10"></div>
     <p id="fretEmpty" class="hidden text-cream/50 text-sm mt-4">Aucune offre ne correspond à cette recherche pour le moment.</p>
-    <p class="text-xs text-cream/40 mt-8">Les coordonnées sont publiées par les annonceurs eux-mêmes, avec leur accord. BOUA Trans n'est pas partie aux transports conclus entre annonceurs. <button type="button" id="bourseOuvrirRetrait" class="underline hover:text-amber">Retirer mon offre</button></p>
   </div>
 </section>
-
-<!-- Fenêtre : publier une offre dans la bourse -->
-<div id="bourseModal" class="hidden fixed inset-0 z-[80] bg-black/70 overflow-y-auto">
-  <div class="min-h-full flex items-start sm:items-center justify-center p-4">
-    <form id="bourseForm" novalidate class="bg-white dark:bg-navylight text-navy dark:text-cream w-full max-w-2xl rounded-2xl shadow-2xl p-6 md:p-8 relative">
-      <button type="button" data-fermer-bourse aria-label="Fermer" class="absolute top-4 right-4 text-slate-400 hover:text-amber text-xl leading-none">✕</button>
-      <h3 class="text-xl font-bold mb-1">Publier une offre</h3>
-      <p class="text-sm text-slate-500 dark:text-cream/60 mb-5">Gratuit. Votre offre est visible par tous les visiteurs de la bourse.</p>
-
-      <div class="grid grid-cols-2 gap-2 mb-5" role="radiogroup">
-        <label class="cursor-pointer"><input type="radio" name="typeOffre" value="carga" class="peer sr-only" checked>
-          <span class="block text-center border-2 border-slate-200 dark:border-white/15 peer-checked:border-amber peer-checked:bg-amber/10 rounded-xl px-3 py-3 font-semibold">📦 J'ai un chargement</span></label>
-        <label class="cursor-pointer"><input type="radio" name="typeOffre" value="camion" class="peer sr-only">
-          <span class="block text-center border-2 border-slate-200 dark:border-white/15 peer-checked:border-amber peer-checked:bg-amber/10 rounded-xl px-3 py-3 font-semibold">🚛 J'ai un camion libre</span></label>
-      </div>
-
-      <div class="grid sm:grid-cols-2 gap-4">
-        <div><label class="etiquette-pro" for="bfVilleDepart">Ville de départ <span class="requis">*</span></label><input id="bfVilleDepart" name="villeDepart" required class="champ-pro" placeholder="Ex : Yuncos (Toledo)"></div>
-        <div><label class="etiquette-pro" for="bfPaysDepart">Pays de départ</label><select id="bfPaysDepart" name="paysDepart" class="champ-pro"></select></div>
-        <div><label class="etiquette-pro" for="bfVilleArrivee">Ville d'arrivée <span class="requis">*</span></label><input id="bfVilleArrivee" name="villeArrivee" required class="champ-pro" placeholder="Ex : Valencia"></div>
-        <div><label class="etiquette-pro" for="bfPaysArrivee">Pays d'arrivée</label><select id="bfPaysArrivee" name="paysArrivee" class="champ-pro"></select></div>
-        <div><label class="etiquette-pro" for="bfPortee">Portée</label>
-          <select id="bfPortee" name="portee" class="champ-pro"><option value="national">National</option><option value="local">Local (même zone)</option><option value="international">International</option></select></div>
-        <div><label class="etiquette-pro" for="bfDate">Date de chargement <span class="requis">*</span></label><input id="bfDate" name="dateChargement" type="date" required class="champ-pro"></div>
-        <div><label class="etiquette-pro" for="bfVehicule">Véhicule <span class="requis">*</span></label><select id="bfVehicule" name="vehicule" required class="champ-pro"><option value="">— Choisir —</option></select></div>
-        <div class="grid grid-cols-2 gap-2">
-          <div><label class="etiquette-pro" for="bfPoids">Poids (t)</label><input id="bfPoids" name="poids" type="number" min="0" step="0.1" class="champ-pro"></div>
-          <div><label class="etiquette-pro" for="bfPrix">Prix (€)</label><input id="bfPrix" name="prix" type="number" min="0" step="1" class="champ-pro" placeholder="À débattre"></div>
-        </div>
-        <div class="sm:col-span-2"><label class="etiquette-pro" for="bfMarchandise">Marchandise / détails</label><input id="bfMarchandise" name="marchandise" class="champ-pro" placeholder="Ex : 33 palettes, produits secs, quai de chargement"></div>
-      </div>
-
-      <h4 class="font-bold mt-6 mb-3">Vos coordonnées</h4>
-      <div class="grid sm:grid-cols-2 gap-4">
-        <div><label class="etiquette-pro" for="bfEntreprise">Entreprise <span class="requis">*</span></label><input id="bfEntreprise" name="entreprise" required class="champ-pro" autocomplete="organization"></div>
-        <div><label class="etiquette-pro" for="bfContact">Personne à contacter</label><input id="bfContact" name="contactNom" class="champ-pro" autocomplete="name"></div>
-        <div><label class="etiquette-pro" for="bfTelephone">Téléphone <span class="requis">*</span></label><input id="bfTelephone" name="telephone" type="tel" required class="champ-pro" autocomplete="tel" placeholder="+34 600 00 00 00"></div>
-        <div><label class="etiquette-pro" for="bfEmail">Email</label><input id="bfEmail" name="email" type="email" class="champ-pro" autocomplete="email"></div>
-      </div>
-      <label class="flex items-start gap-2.5 mt-4 text-sm text-slate-600 dark:text-cream/70">
-        <input type="checkbox" id="bfConsentement" name="consentement" required class="mt-1 w-4 h-4 accent-amber">
-        <span>J'accepte que ces coordonnées soient affichées publiquement avec mon offre, pour être contacté par les visiteurs de la bourse. <span class="requis text-amberdark">*</span></span>
-      </label>
-      <p id="bfErreur" class="hidden text-sm font-medium text-red-500 mt-4"></p>
-      <button type="submit" id="bfEnvoyer" class="w-full mt-5 bg-amber hover:bg-amberdark text-navy font-bold py-3.5 rounded-full transition">Publier mon offre</button>
-      <div id="bfSucces" class="hidden mt-5 rounded-xl bg-teal/10 border border-teal/30 p-4 text-sm"></div>
-    </form>
-  </div>
-</div>
-
-<!-- Fenêtre : retirer une offre (référence + code reçus à la publication) -->
-<div id="bourseRetraitModal" class="hidden fixed inset-0 z-[80] bg-black/70 flex items-center justify-center p-4">
-  <form id="bourseRetraitForm" class="bg-white dark:bg-navylight text-navy dark:text-cream w-full max-w-sm rounded-2xl shadow-2xl p-6 relative">
-    <button type="button" data-fermer-retrait aria-label="Fermer" class="absolute top-4 right-4 text-slate-400 hover:text-amber text-xl leading-none">✕</button>
-    <h3 class="text-lg font-bold mb-1">Retirer mon offre</h3>
-    <p class="text-sm text-slate-500 dark:text-cream/60 mb-4">Indiquez la référence et le code reçus lors de la publication.</p>
-    <label class="etiquette-pro" for="brReference">Référence</label>
-    <input id="brReference" class="champ-pro font-mono-num uppercase mb-3" placeholder="BF-XXXXXX" required>
-    <label class="etiquette-pro" for="brCode">Code de retrait</label>
-    <input id="brCode" class="champ-pro font-mono-num mb-3" inputmode="numeric" placeholder="000000" required>
-    <p id="brMessage" class="hidden text-sm font-medium mb-3"></p>
-    <button type="submit" class="w-full bg-navy dark:bg-amber text-cream dark:text-navy font-bold py-3 rounded-full">Retirer l'offre</button>
-  </form>
-</div>
 
 
 <!-- ============================================================
@@ -1555,27 +1474,6 @@
     </p>
 
     <!-- Tuiles de synthèse (totaux) : affichées pour Rentabilité et Factures -->
-    <!-- Outils de la Bourse de fret (affichés seulement sur cet onglet) -->
-    <div id="adminBourseOutils" class="hidden carte-pro mb-5">
-      <div class="flex flex-wrap items-center justify-between gap-3 mb-3">
-        <label class="flex items-center gap-2.5 text-sm font-semibold text-navy dark:text-cream cursor-pointer">
-          <input type="checkbox" id="bourseAutoPublication" class="w-4 h-4 accent-amber" checked>
-          Publier tout de suite les offres envoyées depuis le site
-          <span id="bourseAutoEtat" class="text-xs font-normal text-slate-500 dark:text-cream/50"></span>
-        </label>
-        <button type="button" id="bourseToutApprouver" class="text-sm font-semibold bg-teal text-white hover:opacity-90 px-4 py-2 rounded-full">✅ Publier toutes les offres en attente</button>
-      </div>
-      <p class="text-xs text-slate-500 dark:text-cream/60 mb-2">Chercher aussi des chargements sur les autres bourses, avec ton propre compte (nouvel onglet) :</p>
-      <div class="flex flex-wrap gap-2">
-        <a href="https://www.mercatrans.com/" target="_blank" rel="noopener" class="text-xs font-semibold border border-slate-200 dark:border-white/15 hover:border-amber hover:text-amberdark px-3 py-1.5 rounded-full">Mercatrans ↗</a>
-        <a href="https://www.timocom.es/" target="_blank" rel="noopener" class="text-xs font-semibold border border-slate-200 dark:border-white/15 hover:border-amber hover:text-amberdark px-3 py-1.5 rounded-full">Timocom ↗</a>
-        <a href="https://www.wtransnet.com/" target="_blank" rel="noopener" class="text-xs font-semibold border border-slate-200 dark:border-white/15 hover:border-amber hover:text-amberdark px-3 py-1.5 rounded-full">Wtransnet ↗</a>
-        <a href="https://www.teleroute.com/" target="_blank" rel="noopener" class="text-xs font-semibold border border-slate-200 dark:border-white/15 hover:border-amber hover:text-amberdark px-3 py-1.5 rounded-full">Teleroute ↗</a>
-        <a href="https://www.trans.eu/" target="_blank" rel="noopener" class="text-xs font-semibold border border-slate-200 dark:border-white/15 hover:border-amber hover:text-amberdark px-3 py-1.5 rounded-full">Trans.eu ↗</a>
-        <a href="https://www.cargoffer.com/" target="_blank" rel="noopener" class="text-xs font-semibold border border-slate-200 dark:border-white/15 hover:border-amber hover:text-amberdark px-3 py-1.5 rounded-full">Cargoffer ↗</a>
-      </div>
-    </div>
-
     <div id="adminResume" class="hidden grid grid-cols-2 lg:grid-cols-5 gap-3 mb-5"></div>
 
     <!-- Envoi de fichiers en lot (Médias, Documents) : on choisit les fichiers
@@ -2518,274 +2416,49 @@ partenaireForm.addEventListener('submit', async function(e){
 });
 
 /* ================================================================
-   BOURSE DE FRET — façon Mercatrans (Firestore, collection "fret")
+   BOURSE DE FRET — TEMPS RÉEL (Firestore, collection "fret")
    ================================================================
-   Chargeurs et transporteurs publient eux-mêmes leurs offres
-   (chargement à transporter, ou camion libre), avec leurs coordonnées
-   et leur accord pour qu'elles soient affichées. Tout est en temps réel.
-   Champs : typeOffre ("carga" | "camion"), villeDepart, paysDepart,
-   villeArrivee, paysArrivee, portee ("local" | "national" | "international"),
-   dateChargement (AAAA-MM-JJ), vehicule, poids (t), prix (€), marchandise,
-   entreprise, contactNom, telephone, email, consentement, statut
-   ("en_attente" | "publiee" | "refusee" | "retiree"), reference, codeRetraitHash.
-   Les anciennes offres (sans typeOffre ni statut) restent affichées.
-   Réglage contenus/bourse { autoPublication } : si false, les offres du
-   site attendent la validation de l'admin.
+   onSnapshot() ouvre une connexion permanente à Firestore : dès qu'un
+   document est ajouté, modifié ou supprimé dans la collection "fret"
+   (par exemple depuis le tableau de bord admin), CETTE page se met à
+   jour toute seule, sans que le visiteur ait besoin de recharger.
    ================================================================ */
-const VEHICULES_BOURSE = [
-  ['bache', 'Bâché / tautliner'], ['frigo', 'Frigorifique'], ['plateau', 'Plateau'], ['fourgon', 'Fourgon / porteur'],
-  ['porte_voitures', 'Porte-voitures'], ['citerne', 'Citerne'], ['benne', 'Benne'], ['porte_conteneur', 'Porte-conteneur'],
-  ['megatrailer', 'Mega / jumbo'], ['autre', 'Autre']
-];
-const PORTEES_BOURSE = { local: '📍 Local', national: '🇪🇸 National', international: '🌍 International' };
-const libelleVehiculeBourse = (v) => (VEHICULES_BOURSE.find(x => x[0] === v) || [v, v || ''])[1];
-
-let fretDataActuelle = [];
-let ongletBourse = 'carga';
-let porteeBourse = '';
-let listeBourse = [];
-let nombreAffichesBourse = 0;
-const LOT_BOURSE = DEFILEMENT_INFINI_POSSIBLE ? 12 : Infinity;
+let fretDataActuelle = []; // toujours à jour grâce à l'écoute temps réel ci-dessous
 
 const fretListEl = document.getElementById('fretList');
 const fretEmptyEl = document.getElementById('fretEmpty');
-const bourseRecherche = document.getElementById('bourseRecherche');
-const bourseVehicule = document.getElementById('bourseVehicule');
-const bourseDate = document.getElementById('bourseDate');
-const bourseInterpretation = document.getElementById('bourseInterpretation');
-const bourseSentinelle = document.getElementById('bourseSentinelle');
 
-bourseVehicule.insertAdjacentHTML('beforeend', VEHICULES_BOURSE.map(([v, l]) => `<option value="${v}">${l}</option>`).join(''));
-
-function normaliserTexte(t){ return String(t || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, ''); }
-
-// Portée déduite des pays : pays différents → international
-function porteeOffre(o){
-  if(o.portee && PORTEES_BOURSE[o.portee]) return o.portee;
-  if(o.paysDepart && o.paysArrivee && o.paysDepart !== o.paysArrivee) return 'international';
-  return 'national';
-}
-function typeOffre(o){ return o.typeOffre === 'camion' ? 'camion' : 'carga'; }
-function estPubliee(o){ return !o.statut || o.statut === 'publiee'; }
-// Une offre dont la date de chargement est passée depuis plus de 2 jours n'est plus montrée
-function estEncoreValable(o){
-  const d = String(o.dateChargement || '').match(/^\d{4}-\d{2}-\d{2}$/) ? o.dateChargement : null;
-  if(!d) return true;
-  const limite = new Date(); limite.setDate(limite.getDate() - 2);
-  return d >= limite.toISOString().slice(0, 10);
-}
-function offresVisibles(){ return fretDataActuelle.filter(o => estPubliee(o) && estEncoreValable(o)); }
-
-// Recherche "intelligente" en langage naturel (français ou espagnol) :
-// "Madrid → Lyon", "de Toledo a Valencia", "desde Sevilla hacia Porto 20 t frigo"…
-function analyserRechercheBourse(texte){
-  const t = normaliserTexte(texte).replace(/\s+/g, ' ').trim();
-  const criteres = { depart: null, arrivee: null, poids: null, vehicule: null, portee: null, mots: [] };
-  if(!t) return criteres;
-  let reste = t;
-  const tonnes = reste.match(/(\d+(?:[.,]\d+)?)\s*(?:t|tn|tonnes?|toneladas?)\b/);
-  if(tonnes){ criteres.poids = parseFloat(tonnes[1].replace(',', '.')); reste = reste.replace(tonnes[0], ' '); }
-  const motsVehicule = { frigo: 'frigo', frigorifique: 'frigo', frigorifico: 'frigo', refrigerado: 'frigo', bache: 'bache', tautliner: 'bache', lona: 'bache', lonas: 'bache', plateau: 'plateau', plataforma: 'plateau', fourgon: 'fourgon', furgon: 'fourgon', citerne: 'citerne', cisterna: 'citerne', benne: 'benne', basculante: 'benne', portacoches: 'porte_voitures', 'porte-voitures': 'porte_voitures', conteneur: 'porte_conteneur', contenedor: 'porte_conteneur', mega: 'megatrailer', jumbo: 'megatrailer' };
-  Object.keys(motsVehicule).forEach(m => { const re = new RegExp(`\\b${m}\\b`); if(re.test(reste)){ criteres.vehicule = motsVehicule[m]; reste = reste.replace(re, ' '); } });
-  const motsPortee = { local: 'local', national: 'national', nacional: 'national', international: 'international', internacional: 'international' };
-  Object.keys(motsPortee).forEach(m => { const re = new RegExp(`\\b${m}\\b`); if(re.test(reste)){ criteres.portee = motsPortee[m]; reste = reste.replace(re, ' '); } });
-  reste = reste.replace(/\b(je cherche|cherche|busco|un|une|des|de la|du|chargement|chargements|carga|cargas|camion|camions|trajet|viaje|transporte?)\b/g, ' ').replace(/\s+/g, ' ').trim();
-  const fleche = reste.match(/^(.+?)\s*(?:→|->|>|\s-\s)\s*(.+)$/);
-  const deA = reste.match(/(?:^|\s)(?:de|desde|depuis|au depart de|origen)\s+(.+?)\s+(?:a|à|vers|hacia|pour|para|hasta|jusqu'a|destino)\s+(.+)$/);
-  if(fleche){ criteres.depart = fleche[1].trim(); criteres.arrivee = fleche[2].trim(); }
-  else if(deA){ criteres.depart = deA[1].trim(); criteres.arrivee = deA[2].trim(); }
-  else {
-    const seulDepart = reste.match(/(?:^|\s)(?:de|desde|depuis|au depart de)\s+(.+)$/);
-    const seuleArrivee = reste.match(/(?:^|\s)(?:vers|hacia|pour|para|hasta|a|à)\s+(.+)$/);
-    if(seulDepart) criteres.depart = seulDepart[1].trim();
-    else if(seuleArrivee) criteres.arrivee = seuleArrivee[1].trim();
-    else if(reste) criteres.mots = reste.split(' ').filter(m => m.length > 1);
+function renderFretOffres(liste){
+  if(liste.length === 0){
+    fretListEl.innerHTML = '';
+    fretEmptyEl.classList.remove('hidden');
+    fretEmptyEl.textContent = "Aucune offre de fret disponible pour le moment.";
+    return;
   }
-  return criteres;
-}
-
-function correspondRecherche(o, c){
-  const depart = normaliserTexte(`${o.villeDepart} ${o.paysDepart || ''}`);
-  const arrivee = normaliserTexte(`${o.villeArrivee} ${o.paysArrivee || ''}`);
-  if(c.depart && !depart.includes(c.depart)) return false;
-  if(c.arrivee && !arrivee.includes(c.arrivee)) return false;
-  if(c.vehicule && o.vehicule !== c.vehicule) return false;
-  if(c.portee && porteeOffre(o) !== c.portee) return false;
-  if(c.poids && o.poids !== undefined && o.poids !== '' && Math.abs(Number(o.poids) - c.poids) > 5) return false;
-  if(c.mots.length){
-    const tout = normaliserTexte([o.villeDepart, o.paysDepart, o.villeArrivee, o.paysArrivee, o.marchandise, o.entreprise, libelleVehiculeBourse(o.vehicule), o.reference].join(' '));
-    if(!c.mots.every(m => tout.includes(m))) return false;
-  }
-  return true;
-}
-
-function dateCourteBourse(iso){
-  const m = String(iso || '').match(/^(\d{4})-(\d{2})-(\d{2})/);
-  if(!m) return iso ? String(iso) : '';
-  return new Date(+m[1], +m[2] - 1, +m[3]).toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric', month: 'short' });
-}
-function telephonePourLien(t){ return String(t || '').replace(/[^+0-9]/g, ''); }
-function whatsappPourLien(t){
-  let n = String(t || '').replace(/\D/g, '').replace(/^00/, '');
-  if(n.length === 9 && /^[6789]/.test(n)) n = '34' + n; // numéro espagnol sans indicatif
-  return n;
-}
-
-function boutonsContact(o){
-  const e = echapperHtml;
-  const ref = o.reference ? ` (${o.reference})` : '';
-  const sujet = encodeURIComponent(`Bourse de fret BOUA Trans${ref} : ${o.villeDepart || ''} → ${o.villeArrivee || ''}`);
-  const message = encodeURIComponent(`Bonjour, je vous contacte au sujet de votre offre${ref} ${o.villeDepart || ''} → ${o.villeArrivee || ''} vue sur la bourse de fret BOUA Trans.`);
-  const boutons = [];
-  if(o.telephone){
-    boutons.push(`<a href="tel:${e(telephonePourLien(o.telephone))}" class="flex-1 text-center text-xs font-bold bg-amber hover:bg-amberdark text-navy px-3 py-2 rounded-full transition">📞 Appeler</a>`);
-    const wa = whatsappPourLien(o.telephone);
-    if(wa.length >= 8) boutons.push(`<a href="https://wa.me/${e(wa)}?text=${message}" target="_blank" rel="noopener" class="flex-1 text-center text-xs font-bold bg-[#25D366] hover:opacity-90 text-white px-3 py-2 rounded-full transition">WhatsApp</a>`);
-  }
-  if(o.email) boutons.push(`<a href="mailto:${e(o.email)}?subject=${sujet}&body=${message}" class="flex-1 text-center text-xs font-bold border border-white/25 hover:border-amber hover:text-amber px-3 py-2 rounded-full transition">✉️ Email</a>`);
-  if(!boutons.length) boutons.push(`<a href="#contact" class="flex-1 text-center text-xs font-bold border border-white/25 hover:border-amber hover:text-amber px-3 py-2 rounded-full transition">Contacter BOUA Trans</a>`);
-  return `<div class="flex gap-2 mt-4">${boutons.join('')}</div>`;
-}
-
-function carteOffre(o){
-  const e = echapperHtml;
-  const portee = porteeOffre(o);
-  const pays = (p) => p && p !== 'Espagne' ? ` <span class="text-cream/50 text-xs">(${e(p)})</span>` : '';
-  const poids = o.poids !== undefined && o.poids !== null && o.poids !== '' ? `${e(String(o.poids).replace('.', ','))} ${e(o.unite || 't')}` : '';
-  const prix = o.prix !== undefined && o.prix !== null && o.prix !== '' ? `${Number(o.prix).toLocaleString('fr-FR')} €` : 'Prix à débattre';
-  const date = o.dateChargement ? dateCourteBourse(o.dateChargement) : (o.date ? e(o.date) : '');
-  return `
-    <article class="bg-white/[0.06] border border-white/10 rounded-xl p-5 flex flex-col" data-offre="${e(o.id)}">
-      <div class="flex items-center justify-between gap-2 mb-3">
-        <span class="text-[0.68rem] font-bold uppercase tracking-wide px-2.5 py-1 rounded-full ${typeOffre(o) === 'camion' ? 'bg-teal/25 text-teal' : 'bg-amber/20 text-amber'}">${typeOffre(o) === 'camion' ? '🚛 Camion libre' : '📦 Chargement'}</span>
-        <span class="text-[0.68rem] font-semibold text-cream/60">${PORTEES_BOURSE[portee]}</span>
+  fretEmptyEl.classList.add('hidden');
+  fretListEl.innerHTML = liste.map(offre => `
+    <div class="bg-white/[0.06] border border-white/10 rounded-xl p-6">
+      <div class="flex items-center justify-between mb-3">
+        <span class="font-mono-num text-xs text-amber">${echapperHtml(offre.date)}</span>
+        <span class="text-xs font-semibold bg-teal/20 text-teal px-2.5 py-1 rounded-full">${echapperHtml(offre.vehicule)}</span>
       </div>
-      <h3 class="font-bold text-white text-lg leading-snug">${e(o.villeDepart || '—')}${pays(o.paysDepart)} <span class="text-amber">→</span> ${e(o.villeArrivee || '—')}${pays(o.paysArrivee)}</h3>
-      <p class="text-sm text-cream/70 mt-1">${[date ? `📅 ${date}` : '', o.vehicule ? `🚚 ${e(libelleVehiculeBourse(o.vehicule))}` : '', poids ? `⚖️ ${poids}` : ''].filter(Boolean).join(' · ')}</p>
-      ${o.marchandise ? `<p class="text-sm text-cream/60 mt-2 line-clamp-2">${e(o.marchandise)}</p>` : ''}
-      <div class="mt-auto pt-4">
-        <div class="flex items-end justify-between gap-2 border-t border-white/10 pt-3">
-          <div class="min-w-0">
-            <p class="text-sm font-semibold text-white truncate">${e(o.entreprise || 'BOUA Trans')}</p>
-            ${o.contactNom ? `<p class="text-xs text-cream/50 truncate">${e(o.contactNom)}</p>` : ''}
-            ${o.telephone ? `<p class="text-xs font-mono-num text-cream/70">${e(o.telephone)}</p>` : ''}
-          </div>
-          <span class="${o.prix !== undefined && o.prix !== null && o.prix !== '' ? 'font-mono-num text-lg font-bold text-amber' : 'text-xs font-semibold text-cream/60'} whitespace-nowrap">${prix}</span>
-        </div>
-        ${boutonsContact(o)}
-        ${o.reference ? `<p class="text-[0.65rem] font-mono-num text-cream/35 mt-2">Réf. ${e(o.reference)}</p>` : ''}
+      <h3 class="font-semibold text-white mb-1">${echapperHtml(offre.villeDepart || '—')} → ${echapperHtml(offre.villeArrivee || '—')}</h3>
+      <p class="text-sm text-cream/60 mb-4">${offre.poids != null && offre.poids !== '' ? `${echapperHtml(offre.poids)} ${echapperHtml(offre.unite || 't')} de marchandise` : 'Poids à préciser'}</p>
+      <div class="flex items-center justify-between">
+        <span class="font-mono-num text-xl font-bold text-amber">${offre.prix != null && offre.prix !== '' ? echapperHtml(offre.prix) + ' €' : 'Prix sur demande'}</span>
+        <button class="text-sm font-semibold text-cream hover:text-amber transition">Contacter →</button>
       </div>
-    </article>`;
+    </div>
+  `).join('');
 }
 
-// Annuaire : les entreprises présentes dans la bourse, avec leurs routes
-function entreprisesDeLaBourse(offres){
-  const parEntreprise = new Map();
-  offres.forEach(o => {
-    const nom = String(o.entreprise || '').trim();
-    if(!nom) return;
-    const cle = normaliserTexte(nom);
-    if(!parEntreprise.has(cle)) parEntreprise.set(cle, { nom, contactNom: o.contactNom, telephone: o.telephone, email: o.email, offres: [] });
-    const fiche = parEntreprise.get(cle);
-    fiche.offres.push(o);
-    if(!fiche.telephone && o.telephone) fiche.telephone = o.telephone;
-    if(!fiche.email && o.email) fiche.email = o.email;
-    if(!fiche.contactNom && o.contactNom) fiche.contactNom = o.contactNom;
-  });
-  return [...parEntreprise.values()].sort((a, b) => b.offres.length - a.offres.length || a.nom.localeCompare(b.nom));
-}
-function carteEntreprise(f){
-  const e = echapperHtml;
-  const portees = [...new Set(f.offres.map(porteeOffre))];
-  const routes = f.offres.slice(0, 6).map(o => `<li class="text-xs text-cream/70">${typeOffre(o) === 'camion' ? '🚛' : '📦'} ${e(o.villeDepart || '?')} → ${e(o.villeArrivee || '?')}</li>`).join('');
-  return `
-    <article class="bg-white/[0.06] border border-white/10 rounded-xl p-5 flex flex-col">
-      <div class="flex items-start justify-between gap-2">
-        <h3 class="font-bold text-white text-lg">🏢 ${e(f.nom)}</h3>
-        <span class="text-xs font-bold text-amber whitespace-nowrap">${f.offres.length} offre${f.offres.length > 1 ? 's' : ''}</span>
-      </div>
-      <p class="text-xs text-cream/60 mt-1">${portees.map(p => PORTEES_BOURSE[p]).join(' · ')}</p>
-      ${f.contactNom || f.telephone ? `<p class="text-sm text-cream/80 mt-2">${e(f.contactNom || '')}${f.contactNom && f.telephone ? ' · ' : ''}<span class="font-mono-num">${e(f.telephone || '')}</span></p>` : ''}
-      <ul class="mt-3 space-y-1">${routes}${f.offres.length > 6 ? `<li class="text-xs text-cream/40">+ ${f.offres.length - 6} autre(s)</li>` : ''}</ul>
-      <div class="mt-auto">${boutonsContact({ ...f, villeDepart: '', villeArrivee: '' })}</div>
-    </article>`;
-}
-
-function afficherSuiteBourse(combien){
-  const lot = listeBourse.slice(nombreAffichesBourse, nombreAffichesBourse + (combien || LOT_BOURSE));
-  if(!lot.length) return;
-  fretListEl.insertAdjacentHTML('beforeend', lot.map(ongletBourse === 'entreprises' ? carteEntreprise : carteOffre).join(''));
-  nombreAffichesBourse += lot.length;
-  bourseSentinelle.classList.toggle('hidden', nombreAffichesBourse >= listeBourse.length);
-  defilementBourse.relancer();
-}
-const defilementBourse = creerDefilementInfini(bourseSentinelle, () => afficherSuiteBourse());
-
-function renderFretOffres(conserverPosition){
-  const dejaAffiches = conserverPosition ? nombreAffichesBourse : 0;
-  const criteres = analyserRechercheBourse(bourseRecherche.value);
-  const portee = porteeBourse || criteres.portee;
-  const vehicule = bourseVehicule.value || criteres.vehicule;
-  const depuis = bourseDate.value;
-  const visibles = offresVisibles();
-  let filtrees = visibles.filter(o => correspondRecherche(o, { ...criteres, portee, vehicule })
-    && (!depuis || !o.dateChargement || o.dateChargement >= depuis));
-
-  // Compteurs (sur toutes les offres visibles)
-  const nbCargas = visibles.filter(o => typeOffre(o) === 'carga').length;
-  const nbCamions = visibles.filter(o => typeOffre(o) === 'camion').length;
-  document.getElementById('bourseCompteurs').innerHTML =
-    `<span><b class="text-amber font-mono-num text-lg">${nbCargas}</b> chargement${nbCargas > 1 ? 's' : ''}</span>`
-    + `<span><b class="text-amber font-mono-num text-lg">${nbCamions}</b> camion${nbCamions > 1 ? 's' : ''} disponible${nbCamions > 1 ? 's' : ''}</span>`
-    + `<span><b class="text-amber font-mono-num text-lg">${entreprisesDeLaBourse(visibles).length}</b> entreprise(s)</span>`;
-
-  if(ongletBourse === 'entreprises') listeBourse = entreprisesDeLaBourse(filtrees);
-  else listeBourse = filtrees.filter(o => typeOffre(o) === ongletBourse)
-    .sort((a, b) => String(a.dateChargement || '9999').localeCompare(String(b.dateChargement || '9999')) || ((b.dateCreation?.seconds || 0) - (a.dateCreation?.seconds || 0)));
-
-  const compris = [criteres.depart && `départ : ${criteres.depart}`, criteres.arrivee && `arrivée : ${criteres.arrivee}`, criteres.poids && `≈ ${criteres.poids} t`, criteres.vehicule && libelleVehiculeBourse(criteres.vehicule), criteres.portee && PORTEES_BOURSE[criteres.portee]].filter(Boolean).join(' · ');
-  bourseInterpretation.textContent = bourseRecherche.value.trim() ? `${compris ? 'Compris : ' + compris + ' — ' : ''}${listeBourse.length} résultat(s)` : '';
-
-  fretListEl.innerHTML = '';
-  nombreAffichesBourse = 0;
-  bourseSentinelle.classList.add('hidden');
-  fretEmptyEl.classList.toggle('hidden', listeBourse.length > 0);
-  fretEmptyEl.textContent = visibles.length
-    ? 'Aucune offre ne correspond à cette recherche pour le moment.'
-    : 'Aucune offre pour le moment. Publiez la première, c\'est gratuit !';
-  afficherSuiteBourse(Math.max(LOT_BOURSE, dejaAffiches));
-}
-
-function activerOngletBourse(nom){
-  ongletBourse = nom;
-  document.querySelectorAll('.bourse-onglet').forEach(b => {
-    const actif = b.dataset.ongletBourse === nom;
-    b.classList.toggle('bg-amber', actif); b.classList.toggle('text-navy', actif); b.classList.toggle('text-cream/70', !actif);
-  });
-  renderFretOffres();
-}
-function activerPorteeBourse(valeur){
-  porteeBourse = valeur;
-  document.querySelectorAll('.bourse-portee').forEach(b => {
-    const actif = b.dataset.portee === valeur;
-    b.classList.toggle('bg-amber', actif); b.classList.toggle('text-navy', actif); b.classList.toggle('border-amber', actif);
-  });
-  renderFretOffres();
-}
-document.querySelectorAll('.bourse-onglet').forEach(b => b.addEventListener('click', () => activerOngletBourse(b.dataset.ongletBourse)));
-document.querySelectorAll('.bourse-portee').forEach(b => b.addEventListener('click', () => activerPorteeBourse(b.dataset.portee)));
-let minuterieBourse = null;
-bourseRecherche.addEventListener('input', () => { clearTimeout(minuterieBourse); minuterieBourse = setTimeout(() => renderFretOffres(), 250); });
-bourseVehicule.addEventListener('change', () => renderFretOffres());
-bourseDate.addEventListener('change', () => renderFretOffres());
-activerOngletBourse('carga');
-activerPorteeBourse('');
-
+// Écoute en direct de la collection "fret". Se déclenche une première fois
+// immédiatement (chargement initial), puis à chaque changement côté serveur.
 quandFirebasePret(() => {
   const { collection, onSnapshot } = window._firestore;
   onSnapshot(collection(window._db, "fret"), (snapshot) => {
     fretDataActuelle = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
-    renderFretOffres(true);
+    renderFretOffres(fretDataActuelle);
   }, (err) => {
     console.error("Erreur d'écoute temps réel sur 'fret' :", err);
     fretEmptyEl.classList.remove('hidden');
@@ -2793,161 +2466,108 @@ quandFirebasePret(() => {
   });
 });
 
-// ---------- Publier une offre ----------
-const bourseModal = document.getElementById('bourseModal');
-const bourseForm = document.getElementById('bourseForm');
-const bfErreur = document.getElementById('bfErreur');
-const bfEnvoyer = document.getElementById('bfEnvoyer');
-const bfSucces = document.getElementById('bfSucces');
-remplirSelectPays(document.getElementById('bfPaysDepart'));
-remplirSelectPays(document.getElementById('bfPaysArrivee'));
-document.getElementById('bfVehicule').insertAdjacentHTML('beforeend', VEHICULES_BOURSE.map(([v, l]) => `<option value="${v}">${l}</option>`).join(''));
+/* ================================================================
+   ASSISTANT DE RECHERCHE IA
+   ================================================================
+   Fonctionnement prévu :
+   1. On envoie la phrase tapée par le transporteur à une API IA
+      (à brancher via VOTRE_CLE_API_IA ci-dessous) qui extrait les
+      critères de recherche sous forme de JSON structuré.
+   2. Tant que la clé API n'est pas configurée, une extraction locale
+      simplifiée (mots-clés + regex) prend le relais, pour que la
+      démo reste utilisable sans dépendance externe.
+   ================================================================ */
+const IA_API_URL = "https://api.VOTRE_FOURNISSEUR_IA.com/v1/chat/completions"; // à remplacer par l'URL réelle du fournisseur choisi
+const VOTRE_CLE_API_IA = ""; // colle ta clé API ici (ex : clé OpenAI, Anthropic, Mistral...)
 
-function ouvrirFormBourse(){
-  bourseForm.reset();
-  document.getElementById('bfPaysDepart').value = 'Espagne';
-  document.getElementById('bfPaysArrivee').value = 'Espagne';
-  document.getElementById('bfDate').value = aujourdHuiISOPublic();
-  bfErreur.classList.add('hidden');
-  bfSucces.classList.add('hidden');
-  bfEnvoyer.classList.remove('hidden');
-  bfEnvoyer.disabled = false;
-  bourseModal.classList.remove('hidden');
-  document.getElementById('bfVilleDepart').focus();
-}
-function fermerFormBourse(){ bourseModal.classList.add('hidden'); }
-function aujourdHuiISOPublic(){ const d = new Date(); return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 10); }
-document.getElementById('bourseOuvrirForm').addEventListener('click', ouvrirFormBourse);
-bourseModal.addEventListener('click', (e) => { if(e.target === bourseModal || e.target.closest('[data-fermer-bourse]') || e.target === bourseModal.firstElementChild) fermerFormBourse(); });
+const iaSearchForm = document.getElementById('iaSearchForm');
+const iaSearchInput = document.getElementById('iaSearchInput');
+const iaSearchInterpretation = document.getElementById('iaSearchInterpretation');
+const iaSearchBtn = document.getElementById('iaSearchBtn');
 
-// Portée : forcée sur "International" quand les pays diffèrent
-function ajusterPorteeForm(){
-  const pd = document.getElementById('bfPaysDepart').value, pa = document.getElementById('bfPaysArrivee').value;
-  const champ = document.getElementById('bfPortee');
-  if(pd !== pa){ champ.value = 'international'; champ.disabled = true; }
-  else { if(champ.value === 'international') champ.value = 'national'; champ.disabled = false; }
-}
-document.getElementById('bfPaysDepart').addEventListener('change', ajusterPorteeForm);
-document.getElementById('bfPaysArrivee').addEventListener('change', ajusterPorteeForm);
-
-const MESSAGES_BOURSE = {
-  bfVilleDepart: 'Indiquez la ville de départ.', bfVilleArrivee: "Indiquez la ville d'arrivée.", bfDate: 'Indiquez la date de chargement.',
-  bfVehicule: 'Choisissez le type de véhicule.', bfEntreprise: "Indiquez le nom de l'entreprise.", bfTelephone: 'Indiquez un téléphone pour être contacté.',
-  bfConsentement: 'Cochez la case pour accepter l\'affichage de vos coordonnées.'
-};
-bourseForm.addEventListener('input', (e) => { if(e.target.setCustomValidity) e.target.setCustomValidity(''); bfErreur.classList.add('hidden'); });
-
-function genererReferenceBourse(){
-  const lettres = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-  let r = 'BF-';
-  const alea = crypto.getRandomValues(new Uint8Array(6));
-  alea.forEach(n => { r += lettres[n % lettres.length]; });
-  return r;
-}
-
-// Le code de retrait n'est jamais enregistré en clair : seulement son empreinte
-async function empreinteCodeRetrait(reference, code){
-  const octets = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(`${reference}:${code}`));
-  return [...new Uint8Array(octets)].map(o => o.toString(16).padStart(2, '0')).join('');
-}
-
-let envoiBourseEnCours = false;
-bourseForm.addEventListener('submit', async (e) => {
+iaSearchForm.addEventListener('submit', async function(e){
   e.preventDefault();
-  if(envoiBourseEnCours) return;
-  for(const [id, message] of Object.entries(MESSAGES_BOURSE)){
-    const champ = document.getElementById(id);
-    const vide = champ.type === 'checkbox' ? !champ.checked : !champ.value.trim();
-    champ.setCustomValidity(vide ? message : '');
-  }
-  const tel = document.getElementById('bfTelephone');
-  if(tel.value.trim() && telephonePourLien(tel.value).replace('+', '').length < 9) tel.setCustomValidity('Numéro de téléphone incomplet.');
-  const email = document.getElementById('bfEmail');
-  if(email.value.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.value.trim())) email.setCustomValidity('Adresse email invalide.');
-  const invalide = bourseForm.querySelector(':invalid');
-  if(invalide){ bfErreur.textContent = invalide.validationMessage; bfErreur.classList.remove('hidden'); invalide.focus(); return; }
-  if(!window._db){ bfErreur.textContent = 'Connexion en cours… réessayez dans un instant.'; bfErreur.classList.remove('hidden'); return; }
+  const question = iaSearchInput.value.trim();
+  if(!question) return;
 
-  const f = bourseForm.elements;
-  ajusterPorteeForm();
-  const offre = {
-    typeOffre: f.typeOffre.value === 'camion' ? 'camion' : 'carga',
-    villeDepart: f.villeDepart.value.trim(), paysDepart: f.paysDepart.value,
-    villeArrivee: f.villeArrivee.value.trim(), paysArrivee: f.paysArrivee.value,
-    portee: f.paysDepart.value !== f.paysArrivee.value ? 'international' : document.getElementById('bfPortee').value,
-    dateChargement: f.dateChargement.value, vehicule: f.vehicule.value,
-    entreprise: f.entreprise.value.trim(), telephone: f.telephone.value.trim(),
-    consentement: true, source: 'site',
-    reference: genererReferenceBourse()
+  iaSearchBtn.disabled = true;
+  iaSearchInterpretation.classList.remove('hidden');
+  iaSearchInterpretation.textContent = "Analyse de votre demande...";
+
+  let criteres;
+  try {
+    criteres = await interpreterRechercheIA(question);
+  } catch (err) {
+    console.error("Erreur d'analyse de la recherche :", err);
+    criteres = {};
+  }
+
+  // La recherche IA filtre désormais les offres réelles chargées en temps réel
+  // (fretDataActuelle), et non plus un tableau de démonstration figé.
+  const resultats = fretDataActuelle.filter(offre => {
+    // Une offre peut être incomplète (saisie en cours dans l'admin) : champ manquant = pas de correspondance
+    const okDepart = !criteres.villeDepart || String(offre.villeDepart || '').toLowerCase().includes(String(criteres.villeDepart).toLowerCase());
+    const okArrivee = !criteres.villeArrivee || String(offre.villeArrivee || '').toLowerCase().includes(String(criteres.villeArrivee).toLowerCase());
+    const okPoids = !criteres.poids || Math.abs(Number(offre.poids) - criteres.poids) <= 5; // tolérance de +/- 5 tonnes
+    return okDepart && okArrivee && okPoids;
+  });
+
+  const resume = [
+    criteres.villeDepart ? `départ : ${criteres.villeDepart}` : null,
+    criteres.villeArrivee ? `arrivée : ${criteres.villeArrivee}` : null,
+    criteres.poids ? `poids ≈ ${criteres.poids} t` : null
+  ].filter(Boolean).join(' · ');
+
+  iaSearchInterpretation.textContent = resume
+    ? `Recherche comprise : ${resume} — ${resultats.length} offre(s) trouvée(s)`
+    : `Aucun critère clair détecté — affichage de toutes les offres`;
+
+  renderFretOffres(resultats.length || resume ? resultats : fretDataActuelle);
+  iaSearchBtn.disabled = false;
+});
+
+// Extrait les critères de recherche (ville de départ, ville d'arrivée, poids) à partir d'une phrase libre
+async function interpreterRechercheIA(texte){
+  // --- OPTION 1 : appel à une vraie API IA (dès que VOTRE_CLE_API_IA est renseignée) ---
+  if(VOTRE_CLE_API_IA){
+    try {
+      const reponse = await fetch(IA_API_URL, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${VOTRE_CLE_API_IA}`
+        },
+        body: JSON.stringify({
+          messages: [
+            { role: "system", content: "Extrait villeDepart, villeArrivee et poids (en tonnes, nombre) de la demande de transport. Réponds uniquement en JSON." },
+            { role: "user", content: texte }
+          ]
+        })
+      });
+      const donnees = await reponse.json();
+      // Adapte cette ligne au format de réponse exact de ton fournisseur IA
+      return JSON.parse(donnees.choices[0].message.content);
+    } catch (err) {
+      console.error("Erreur API IA, bascule sur l'analyse locale :", err);
+    }
+  }
+
+  // --- OPTION 2 : extraction locale simplifiée (mots-clés + regex), utilisée par défaut ---
+  const texteMin = texte.toLowerCase();
+  const critereDepart = texteMin.match(/(?:de|depuis|au départ de)\s+([a-zàâäéèêëïîôöùûüç\-]+)/i);
+  const critereArrivee = texteMin.match(/(?:vers|à destination de|pour|jusqu'à)\s+([a-zàâäéèêëïîôöùûüç\-]+)/i);
+  const critereTonnage = texteMin.match(/(\d+(?:[.,]\d+)?)\s*t(?:onnes?)?/i);
+
+  return {
+    villeDepart: critereDepart ? capitaliser(critereDepart[1]) : null,
+    villeArrivee: critereArrivee ? capitaliser(critereArrivee[1]) : null,
+    poids: critereTonnage ? parseFloat(critereTonnage[1].replace(',', '.')) : null
   };
-  const codeRetrait = String(100000 + (crypto.getRandomValues(new Uint32Array(1))[0] % 900000));
-  if(f.poids.value !== '') offre.poids = Number(f.poids.value);
-  if(f.prix.value !== '') offre.prix = Number(f.prix.value);
-  if(f.marchandise.value.trim()) offre.marchandise = f.marchandise.value.trim();
-  if(f.contactNom.value.trim()) offre.contactNom = f.contactNom.value.trim();
-  if(f.email.value.trim()) offre.email = f.email.value.trim().toLowerCase();
+}
 
-  envoiBourseEnCours = true;
-  bfEnvoyer.disabled = true;
-  bfEnvoyer.textContent = 'Publication…';
-  try {
-    const { collection, addDoc, doc, getDoc, serverTimestamp } = window._firestore;
-    let auto = true;
-    try { const reglage = await getDoc(doc(window._db, 'contenus', 'bourse')); if(reglage.exists() && reglage.data().autoPublication === false) auto = false; } catch (err) { /* réglage illisible : publication directe */ }
-    offre.statut = auto ? 'publiee' : 'en_attente';
-    offre.codeRetraitHash = await empreinteCodeRetrait(offre.reference, codeRetrait);
-    await addDoc(collection(window._db, 'fret'), { ...offre, dateCreation: serverTimestamp() });
-    bfEnvoyer.classList.add('hidden');
-    bfSucces.innerHTML = `<p class="font-bold text-teal mb-1">✓ ${auto ? 'Votre offre est en ligne.' : 'Offre reçue : elle sera en ligne après vérification.'}</p>
-      <p>Référence : <b class="font-mono-num">${echapperHtml(offre.reference)}</b> · Code de retrait : <b class="font-mono-num">${echapperHtml(codeRetrait)}</b></p>
-      <p class="text-xs text-slate-500 dark:text-cream/60 mt-1">Notez ce code : il vous permettra de retirer l'offre quand le transport est conclu.</p>`;
-    bfSucces.classList.remove('hidden');
-    if(auto){ activerOngletBourse(offre.typeOffre); }
-  } catch (err) {
-    console.error('Publication bourse :', err);
-    bfErreur.textContent = "L'offre n'a pas pu être publiée. Vérifiez votre connexion et réessayez.";
-    bfErreur.classList.remove('hidden');
-    bfEnvoyer.disabled = false;
-  } finally {
-    envoiBourseEnCours = false;
-    bfEnvoyer.textContent = 'Publier mon offre';
-  }
-});
-
-// ---------- Retirer une offre (référence + code) ----------
-const bourseRetraitModal = document.getElementById('bourseRetraitModal');
-const brMessage = document.getElementById('brMessage');
-document.getElementById('bourseOuvrirRetrait').addEventListener('click', () => {
-  document.getElementById('bourseRetraitForm').reset();
-  brMessage.classList.add('hidden');
-  bourseRetraitModal.classList.remove('hidden');
-});
-bourseRetraitModal.addEventListener('click', (e) => { if(e.target === bourseRetraitModal || e.target.closest('[data-fermer-retrait]')) bourseRetraitModal.classList.add('hidden'); });
-document.getElementById('bourseRetraitForm').addEventListener('submit', async (e) => {
-  e.preventDefault();
-  const reference = document.getElementById('brReference').value.trim().toUpperCase();
-  const code = document.getElementById('brCode').value.trim();
-  const montrer = (texte, okk) => { brMessage.textContent = texte; brMessage.className = `text-sm font-medium mb-3 ${okk ? 'text-teal' : 'text-red-500'}`; };
-  if(!reference || !code){ montrer('Indiquez la référence et le code.'); return; }
-  try {
-    const { collection, getDocs, query, where, doc, updateDoc } = window._firestore;
-    const snap = await getDocs(query(collection(window._db, 'fret'), where('reference', '==', reference)));
-    const empreinte = await empreinteCodeRetrait(reference, code);
-    const trouvee = snap.docs.find(d => d.data().codeRetraitHash === empreinte);
-    if(!trouvee){ montrer('Référence ou code incorrect.'); return; }
-    await updateDoc(doc(window._db, 'fret', trouvee.id), { statut: 'retiree' });
-    montrer('✓ Offre retirée de la bourse.', true);
-  } catch (err) {
-    console.error('Retrait bourse :', err);
-    montrer('Impossible de retirer l\'offre pour le moment.');
-  }
-});
-document.addEventListener('keydown', (e) => {
-  if(e.key !== 'Escape') return;
-  if(!bourseModal.classList.contains('hidden')) fermerFormBourse();
-  if(!bourseRetraitModal.classList.contains('hidden')) bourseRetraitModal.classList.add('hidden');
-});
-
+function capitaliser(mot){
+  return mot.charAt(0).toUpperCase() + mot.slice(1);
+}
 
 /* ================================================================
    MULTILINGUE — FRANÇAIS / ESPAGNOL
@@ -2963,14 +2583,7 @@ const traductions = {
     "nav.devis": "Devis",
     "nav.suivi": "Suivi",
     "nav.carrieres": "Carrières",
-    "nav.fret": "Bourse de fret",
-    "bourse.eyebrow": "Bourse de fret BOUA Trans",
-    "bourse.titre": "Chargements et camions disponibles",
-    "bourse.lead": "Trajets locaux, nationaux et internationaux. Chargeurs et transporteurs publient leurs offres gratuitement et se contactent directement.",
-    "bourse.publier": "+ Publier une offre gratuite",
-    "bourse.cargas": "Chargements",
-    "bourse.camions": "Camions disponibles",
-    "bourse.entreprises": "Entreprises",
+    "nav.fret": "Transporteurs",
     "nav.galerie": "Galerie",
     "nav.actualites": "Actualités",
     "nav.contact": "Contact",
@@ -2995,14 +2608,7 @@ const traductions = {
     "nav.devis": "Presupuesto",
     "nav.suivi": "Seguimiento",
     "nav.carrieres": "Empleo",
-    "nav.fret": "Bolsa de cargas",
-    "bourse.eyebrow": "Bolsa de cargas BOUA Trans",
-    "bourse.titre": "Cargas y camiones disponibles",
-    "bourse.lead": "Rutas locales, nacionales e internacionales. Cargadores y transportistas publican sus ofertas gratis y se contactan directamente.",
-    "bourse.publier": "+ Publicar una oferta gratis",
-    "bourse.cargas": "Cargas",
-    "bourse.camions": "Camiones disponibles",
-    "bourse.entreprises": "Empresas",
+    "nav.fret": "Transportistas",
     "nav.galerie": "Galería",
     "nav.actualites": "Noticias",
     "nav.contact": "Contacto",
@@ -4001,23 +3607,12 @@ const SCHEMAS_ADMIN = {
     { champ: 'factureUrl', label: 'Facture', type: 'fichier', dossier: 'commandes' }
   ],
   fret: [
-    { champ: 'statut', label: 'État', type: 'select', options: ['publiee', 'en_attente', 'refusee', 'retiree'], optionLabels: ['✅ Publiée', '⏳ En attente', '⛔ Refusée', 'Retirée'], defaut: 'publiee' },
-    { champ: 'typeOffre', label: 'Type', type: 'select', options: ['carga', 'camion'], optionLabels: ['📦 Chargement', '🚛 Camion libre'], defaut: 'carga' },
     { champ: 'villeDepart', label: 'Départ', type: 'text' },
-    { champ: 'paysDepart', label: 'Pays départ', type: 'select', options: PAYS_DESSERVIS, defaut: 'Espagne' },
     { champ: 'villeArrivee', label: 'Arrivée', type: 'text' },
-    { champ: 'paysArrivee', label: 'Pays arrivée', type: 'select', options: PAYS_DESSERVIS, defaut: 'Espagne' },
-    { champ: 'portee', label: 'Portée', type: 'select', options: ['local', 'national', 'international'], optionLabels: ['Local', 'National', 'International'], defaut: 'national' },
-    { champ: 'dateChargement', label: 'Chargement le', type: 'date' },
-    { champ: 'vehicule', label: 'Véhicule', type: 'select', options: VEHICULES_BOURSE.map(v => v[0]), optionLabels: VEHICULES_BOURSE.map(v => v[1]) },
     { champ: 'poids', label: 'Poids (t)', type: 'number' },
+    { champ: 'vehicule', label: 'Véhicule', type: 'text' },
     { champ: 'prix', label: 'Prix (€)', type: 'number' },
-    { champ: 'marchandise', label: 'Marchandise', type: 'text' },
-    { champ: 'entreprise', label: 'Entreprise', type: 'text' },
-    { champ: 'contactNom', label: 'Contact', type: 'text' },
-    { champ: 'telephone', label: 'Téléphone', type: 'text' },
-    { champ: 'email', label: 'Email', type: 'text' },
-    { champ: 'reference', label: 'Réf.', type: 'text' }
+    { champ: 'date', label: 'Date', type: 'text' }
   ],
   departs: [
     { champ: 'destination', label: 'Destination', type: 'text' },
@@ -4167,17 +3762,6 @@ const SCHEMAS_ADMIN = {
                   rangement est décrite dans CIBLES_PUBLICATION)
    ---------------------------------------------------------------- */
 const VUES_ADMIN = {
-  fret: {
-    complet: true,
-    tri: (a, b) => (a.statut === 'en_attente' ? 0 : 1) - (b.statut === 'en_attente' ? 0 : 1) || ((b.dateCreation?.seconds || 0) - (a.dateCreation?.seconds || 0)),
-    resume: (lignes) => [
-      { label: '⏳ En attente', valeur: String(lignes.filter(d => d.statut === 'en_attente').length), negatif: lignes.some(d => d.statut === 'en_attente') },
-      { label: '✅ Publiées', valeur: String(lignes.filter(d => !d.statut || d.statut === 'publiee').length) },
-      { label: '📦 Chargements', valeur: String(lignes.filter(d => d.typeOffre !== 'camion').length) },
-      { label: '🚛 Camions libres', valeur: String(lignes.filter(d => d.typeOffre === 'camion').length) },
-      { label: '🏢 Entreprises', valeur: String(new Set(lignes.map(d => normaliserTexte(d.entreprise)).filter(Boolean)).size) }
-    ]
-  },
   missions: { references: ['vehicules', 'chauffeurs'] },
   faq: {
     complet: true,
@@ -4844,7 +4428,6 @@ function afficherEcranAdmin(nomVue){
   adminZoneTableau.classList.toggle('hidden', special);
   document.getElementById('adminAddBtn').classList.toggle('hidden', special); // "+ Ajouter" n'a de sens que sur un tableau
   if(nomVue === 'textes') afficherEditeurTextes();
-  preparerOutilsBourse(nomVue);
   if(nomVue === 'nouveauVoyage') ouvrirEcranVoyages(); else fermerEcranVoyages();
   if(nomVue === 'cmr') ouvrirEcranCmr();
 }
@@ -5517,11 +5100,6 @@ async function validerLigneRapide(champs){
   if(!aSaisi) return; // rien de saisi : on ne crée pas une ligne faite uniquement de valeurs par défaut
 
   if(vueActive === 'factures' && !donnees.numero) donnees.numero = prochainNumeroFacture(Array.from(donneesChargees.values()));
-  if(vueActive === 'fret'){
-    if(!donnees.reference) donnees.reference = genererReferenceBourse();
-    if(donnees.paysDepart && donnees.paysArrivee && donnees.paysDepart !== donnees.paysArrivee) donnees.portee = 'international';
-    donnees.source = 'admin';
-  }
   if(vueActive === 'medias' && donnees.url && !estFichierBase(donnees.url)){
     const lien = analyserLienMedia(donnees.url);
     if(lien && !lien.erreur){
@@ -6563,44 +6141,6 @@ async function chercherDocumentsPOD(){
 
 podBtn.addEventListener('click', chercherDocumentsPOD);
 podInput.addEventListener('keydown', (e) => { if(e.key === 'Enter') chercherDocumentsPOD(); });
-
-/* ---------- Bourse de fret : outils de l'onglet admin ---------- */
-const bourseAutoPublication = document.getElementById('bourseAutoPublication');
-const bourseAutoEtat = document.getElementById('bourseAutoEtat');
-function preparerOutilsBourse(nomVue){
-  document.getElementById('adminBourseOutils').classList.toggle('hidden', nomVue !== 'fret');
-  if(nomVue !== 'fret' || !window._db) return;
-  const { doc, getDoc } = window._firestore;
-  getDoc(doc(window._db, 'contenus', 'bourse'))
-    .then(snap => { bourseAutoPublication.checked = !(snap.exists() && snap.data().autoPublication === false); })
-    .catch(() => {});
-}
-bourseAutoPublication.addEventListener('change', async () => {
-  const { doc, setDoc } = window._firestore;
-  try {
-    await setDoc(doc(window._db, 'contenus', 'bourse'), { autoPublication: bourseAutoPublication.checked });
-    bourseAutoEtat.textContent = bourseAutoPublication.checked ? '✓ les offres apparaissent aussitôt' : '✓ chaque offre attend ta validation';
-  } catch (err) {
-    bourseAutoPublication.checked = !bourseAutoPublication.checked;
-    bourseAutoEtat.textContent = "Réglage non enregistré (vérifie la connexion).";
-  }
-});
-document.getElementById('bourseToutApprouver').addEventListener('click', async (e) => {
-  const bouton = e.currentTarget;
-  const enAttente = Array.from(donneesChargees.entries()).filter(([, d]) => d.statut === 'en_attente');
-  if(!enAttente.length){ alert('Aucune offre en attente.'); return; }
-  if(!confirm(`Publier ${enAttente.length} offre(s) en attente ?`)) return;
-  bouton.disabled = true;
-  const { doc, updateDoc } = window._firestore;
-  try {
-    for(const [id] of enAttente) await updateDoc(doc(window._db, 'fret', id), { statut: 'publiee' });
-    chargerCollection('fret', true);
-  } catch (err) {
-    alert('Certaines offres n\'ont pas pu être publiées (vérifie la connexion).');
-  } finally {
-    bouton.disabled = false;
-  }
-});
 
 /* ============================================================
    PUBLIER PAR LIEN (YouTube, TikTok, Instagram, Facebook, X, image)
