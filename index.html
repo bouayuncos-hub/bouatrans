@@ -997,6 +997,7 @@
       <button class="admin-tab" data-collection="publier">📤 Publier</button>
       <button class="admin-tab" data-collection="nouveauVoyage">🚚 Frets &amp; voyages</button>
       <button class="admin-tab" data-collection="cmr">📄 CMR</button>
+      <button class="admin-tab" data-collection="deca">🧾 DeCA</button>
       <button class="admin-tab" data-collection="devis">Devis</button>
       <button class="admin-tab" data-collection="candidatures">Candidatures</button>
       <button class="admin-tab" data-collection="commandes">Commandes / Suivi</button>
@@ -1465,6 +1466,110 @@
     <div class="flex-1 overflow-auto p-4 sm:p-8">
       <div id="cmrApercuCadre" class="mx-auto shadow-2xl" style="width:794px"></div>
     </div>
+  </div>
+
+  <!-- ÉCRAN "DeCA" : Documento electrónico de Control Administrativo (Orden FOM/2861/2012).
+       PDF natif généré depuis le formulaire, QR intégré vers une URL HTTPS de
+       téléchargement direct (/api/deca?id=…), documents scannés en annexe. -->
+  <div id="adminDeca" class="hidden max-w-6xl mx-auto px-5 py-8">
+    <div class="flex items-end justify-between flex-wrap gap-3 mb-6">
+      <div>
+        <h2 class="text-2xl font-bold text-navy dark:text-white mb-1">DeCA — documents de contrôle</h2>
+        <p class="text-sm text-slate-500 dark:text-cream/60">Crée le DeCA de chaque transport national : PDF officiel avec code QR, téléchargeable par le chauffeur et par l'inspection. Les documents scannés (albarán, ticket de pesée, CMR signé…) sont gardés en annexe.</p>
+      </div>
+      <button type="button" id="decaNouveau" class="text-sm font-semibold text-teal hover:text-amberdark">+ Nouveau DeCA</button>
+    </div>
+
+    <form id="formDeca" novalidate class="space-y-5">
+      <div class="carte-pro grid sm:grid-cols-3 gap-4">
+        <div class="sm:col-span-2">
+          <label class="etiquette-pro" for="decaMission">Remplir depuis un voyage (facultatif)</label>
+          <select id="decaMission" name="missionId" class="champ-pro"><option value="">— Aucun —</option></select>
+        </div>
+        <div>
+          <label class="etiquette-pro">N° du document</label>
+          <input name="numero" readonly class="champ-pro font-mono-num" placeholder="Attribué à la création">
+        </div>
+      </div>
+
+      <div class="grid md:grid-cols-2 gap-5">
+        <div class="carte-pro">
+          <p class="case-cmr-titre"><b>1</b> Cargador contractual · Chargeur</p>
+          <input name="cargadorNombre" required class="champ-pro mb-2" placeholder="Nombre o razón social *">
+          <input name="cargadorNif" required class="champ-pro mb-2 uppercase font-mono-num" placeholder="NIF / CIF *">
+          <input name="cargadorDomicilio" required class="champ-pro" placeholder="Domicilio (dirección, CP, localidad) *">
+        </div>
+        <div class="carte-pro border-2 !border-amber/70">
+          <p class="case-cmr-titre"><b>2</b> Transportista efectivo · Transporteur</p>
+          <input name="transportistaNombre" required class="champ-pro mb-2 font-semibold" value="LASSINE Diakité" placeholder="Nombre *">
+          <input name="transportistaNif" required class="champ-pro mb-2 uppercase font-mono-num" placeholder="NIF / DNI *">
+          <input name="transportistaDomicilio" required class="champ-pro mb-2" placeholder="Domicilio *">
+          <input name="transportistaAutorizacion" class="champ-pro" placeholder="N° autorización / tarjeta de transporte (facultatif)">
+          <p class="text-xs text-slate-500 dark:text-cream/50 mt-2">Tes données de transporteur sont mémorisées pour les prochains DeCA.</p>
+        </div>
+        <div class="carte-pro">
+          <p class="case-cmr-titre"><b>3</b> Origen y destino · Trajet</p>
+          <input name="origen" required class="champ-pro mb-2" placeholder="Lugar de origen (dirección, localidad) *">
+          <input name="destino" required class="champ-pro mb-3" placeholder="Lugar de destino (dirección, localidad) *">
+          <div class="grid grid-cols-2 gap-2">
+            <div><label class="etiquette-pro">Fecha de carga *</label><input name="fechaCarga" type="date" required class="champ-pro"></div>
+            <div><label class="etiquette-pro">Fecha de descarga</label><input name="fechaDescarga" type="date" class="champ-pro"></div>
+          </div>
+        </div>
+        <div class="carte-pro">
+          <p class="case-cmr-titre"><b>4</b> Mercancía · Marchandise</p>
+          <input name="mercancia" required class="champ-pro mb-2" placeholder="Naturaleza de la mercancía *">
+          <div class="grid grid-cols-2 gap-2">
+            <div><label class="etiquette-pro">Peso (kg) *</label><input name="pesoKg" type="number" min="0" step="1" required class="champ-pro"></div>
+            <div><label class="etiquette-pro">Bultos / palets</label><input name="bultos" class="champ-pro"></div>
+          </div>
+        </div>
+        <div class="carte-pro">
+          <p class="case-cmr-titre"><b>5</b> Vehículo y conductor</p>
+          <div class="grid grid-cols-2 gap-2 mb-2">
+            <input name="matricula" required class="champ-pro uppercase font-mono-num" placeholder="Matrícula vehículo *">
+            <input name="matriculaRemolque" class="champ-pro uppercase font-mono-num" placeholder="Matrícula remolque">
+          </div>
+          <div class="grid grid-cols-2 gap-2">
+            <input name="conductorNombre" class="champ-pro" placeholder="Conductor">
+            <input name="conductorDni" class="champ-pro uppercase font-mono-num" placeholder="DNI / NIE conductor">
+          </div>
+        </div>
+        <div class="carte-pro">
+          <p class="case-cmr-titre"><b>6</b> Observaciones</p>
+          <textarea name="observaciones" rows="3" class="champ-pro" placeholder="Condiciones del transporte, referencias, etc."></textarea>
+        </div>
+      </div>
+
+      <p id="decaErreur" class="hidden text-sm font-medium text-red-500"></p>
+      <div class="flex flex-wrap gap-3 sm:sticky sm:bottom-3 z-[5] bg-cream/90 dark:bg-navy/90 backdrop-blur rounded-2xl p-3 border border-slate-200 dark:border-white/10">
+        <button type="button" id="decaGenerer" class="bg-amber hover:bg-amberdark text-navy font-bold px-5 py-3 rounded-full transition">📄 Générer le DeCA + QR</button>
+        <span id="decaEtat" class="self-center text-sm text-slate-500 dark:text-cream/60"></span>
+      </div>
+    </form>
+
+    <!-- Liste des DeCA -->
+    <div class="mt-10">
+      <div class="flex flex-wrap items-center justify-between gap-3 mb-3">
+        <h3 class="text-lg font-bold text-navy dark:text-white">DeCA et documents de voyage</h3>
+        <input id="decaRecherche" type="search" placeholder="Chercher (n°, ville, matrícula, cargador…)" class="champ-pro !w-auto min-w-[240px] !py-2">
+      </div>
+      <div id="decaListe" class="space-y-3"></div>
+      <p id="decaListeVide" class="hidden text-sm text-slate-500 dark:text-cream/50">Aucun DeCA pour l'instant.</p>
+    </div>
+    <input type="file" id="decaScanCamera" accept="image/*,application/pdf" capture="environment" class="hidden">
+    <input type="file" id="decaScanFichier" accept="image/*,application/pdf" multiple class="hidden">
+  </div>
+
+  <!-- Code QR plein écran, à présenter à l'inspection -->
+  <div id="decaQrModal" class="hidden fixed inset-0 z-[95] bg-white flex flex-col items-center justify-center p-6 text-center">
+    <button type="button" id="decaQrFermer" aria-label="Fermer" class="absolute top-4 right-5 text-slate-500 hover:text-navy text-3xl leading-none">✕</button>
+    <p class="text-sm font-bold uppercase tracking-widest text-slate-500">Documento de Control (DeCA)</p>
+    <p id="decaQrNumero" class="font-mono-num text-2xl font-bold text-navy mt-1"></p>
+    <div id="decaQrImage" class="my-5 w-[min(80vw,60vh)] aspect-square"></div>
+    <p id="decaQrTrajet" class="text-lg font-semibold text-navy"></p>
+    <p class="text-sm text-slate-500 mt-1">Escanee el código para descargar el documento original (PDF).</p>
+    <p id="decaQrUrl" class="font-mono-num text-xs text-slate-400 mt-3 break-all max-w-xl"></p>
   </div>
 
   <div id="adminZoneTableau" class="max-w-6xl mx-auto px-5 py-8">
@@ -4418,18 +4523,20 @@ let ciblePublierActive = null;
 let publicationEnCours = false;
 
 // Deux onglets ne sont pas des tableaux : "publier" et "textes"
-const ECRANS_SPECIAUX = ['publier', 'textes', 'nouveauVoyage', 'cmr'];
+const ECRANS_SPECIAUX = ['publier', 'textes', 'nouveauVoyage', 'cmr', 'deca'];
 function afficherEcranAdmin(nomVue){
   const special = ECRANS_SPECIAUX.includes(nomVue);
   adminPublier.classList.toggle('hidden', nomVue !== 'publier');
   document.getElementById('adminTextes').classList.toggle('hidden', nomVue !== 'textes');
   document.getElementById('adminVoyagesFret').classList.toggle('hidden', nomVue !== 'nouveauVoyage');
   document.getElementById('adminCmr').classList.toggle('hidden', nomVue !== 'cmr');
+  document.getElementById('adminDeca').classList.toggle('hidden', nomVue !== 'deca');
   adminZoneTableau.classList.toggle('hidden', special);
   document.getElementById('adminAddBtn').classList.toggle('hidden', special); // "+ Ajouter" n'a de sens que sur un tableau
   if(nomVue === 'textes') afficherEditeurTextes();
   if(nomVue === 'nouveauVoyage') ouvrirEcranVoyages(); else fermerEcranVoyages();
   if(nomVue === 'cmr') ouvrirEcranCmr();
+  if(nomVue === 'deca') ouvrirEcranDeca();
 }
 
 function allerSurOnglet(nomVue){
@@ -6143,6 +6250,473 @@ podBtn.addEventListener('click', chercherDocumentsPOD);
 podInput.addEventListener('keydown', (e) => { if(e.key === 'Enter') chercherDocumentsPOD(); });
 
 /* ============================================================
+   DeCA — Documento electrónico de Control Administrativo
+   (Orden FOM/2861/2012, obligatoire en Espagne depuis le 5/10/2026
+   pour le transport national de marchandises).
+   - PDF natif généré à partir du formulaire (pas un scan), < 5 Mo,
+     avec dates de création / modification dans ses métadonnées ;
+   - code QR intégré vers une URL HTTPS unique de téléchargement direct :
+     https://<ton-site>/api/deca?id=… (fichier api/deca.js sur Vercel) ;
+   - une modification garde la même URL et le même QR, avec l'historique
+     des changements imprimé dans le PDF ;
+   - documents scannés (albarán, ticket de pesée…) gardés en annexe.
+   Collections : "deca" (données), "deca_pdf" (le PDF, en base64),
+   "documents" (annexes : categorie "voyage", decaId).
+   ============================================================ */
+const QR_LIB_URL = 'https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js';
+const CHAMPS_DECA = ['cargadorNombre', 'cargadorNif', 'cargadorDomicilio', 'transportistaNombre', 'transportistaNif', 'transportistaDomicilio', 'transportistaAutorizacion',
+  'origen', 'destino', 'fechaCarga', 'fechaDescarga', 'mercancia', 'pesoKg', 'bultos', 'matricula', 'matriculaRemolque', 'conductorNombre', 'conductorDni', 'observaciones', 'missionId'];
+const LIBELLES_DECA = {
+  cargadorNombre: 'Cargador', cargadorNif: 'NIF cargador', cargadorDomicilio: 'Domicilio cargador', transportistaNombre: 'Transportista', transportistaNif: 'NIF transportista',
+  transportistaDomicilio: 'Domicilio transportista', transportistaAutorizacion: 'Autorización', origen: 'Origen', destino: 'Destino', fechaCarga: 'Fecha de carga',
+  fechaDescarga: 'Fecha de descarga', mercancia: 'Mercancía', pesoKg: 'Peso (kg)', bultos: 'Bultos', matricula: 'Matrícula', matriculaRemolque: 'Matrícula remolque',
+  conductorNombre: 'Conductor', conductorDni: 'DNI conductor', observaciones: 'Observaciones'
+};
+const formDeca = document.getElementById('formDeca');
+const decaEtat = document.getElementById('decaEtat');
+const decaErreur = document.getElementById('decaErreur');
+const decaMission = document.getElementById('decaMission');
+let decaListeCache = [];
+let decaAnnexes = [];
+let decaMissions = [];
+let decaChauffeurs = [];
+let decaIdCourant = null;
+let decaScanCible = null;
+
+async function chargerQr(){ await chargerScriptPdf(QR_LIB_URL); return window.qrcode; }
+function matriceQr(texte){
+  const qr = window.qrcode(0, 'M');
+  qr.addData(texte);
+  qr.make();
+  return { n: qr.getModuleCount(), sombre: (l, c) => qr.isDark(l, c) };
+}
+function svgQr(texte){
+  const { n, sombre } = matriceQr(texte);
+  const marge = 4;
+  let chemin = '';
+  for(let l = 0; l < n; l++) for(let c = 0; c < n; c++) if(sombre(l, c)) chemin += `M${c + marge} ${l + marge}h1v1h-1z`;
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${n + 2 * marge} ${n + 2 * marge}" shape-rendering="crispEdges" class="w-full h-full"><rect width="100%" height="100%" fill="#fff"/><path d="${chemin}" fill="#000"/></svg>`;
+}
+function genererIdDeca(){
+  const car = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+  return [...crypto.getRandomValues(new Uint8Array(20))].map(n => car[n % car.length]).join('');
+}
+function urlPubliqueDeca(id){ return `${location.origin}/api/deca?id=${id}`; }
+function dateHeureEs(iso){
+  const d = new Date(iso);
+  return isNaN(d) ? '' : d.toLocaleString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Madrid' });
+}
+function dateEs(iso){ const m = String(iso || '').match(/^(\d{4})-(\d{2})-(\d{2})/); return m ? `${m[3]}/${m[2]}/${m[1]}` : ''; }
+function datePdfInfo(d){ // format des métadonnées PDF : D:AAAAMMJJHHmmSS+HH'mm'
+  const p = (x) => String(x).padStart(2, '0');
+  const o = -d.getTimezoneOffset();
+  return `D:${d.getFullYear()}${p(d.getMonth() + 1)}${p(d.getDate())}${p(d.getHours())}${p(d.getMinutes())}${p(d.getSeconds())}${o >= 0 ? '+' : '-'}${p(Math.floor(Math.abs(o) / 60))}'${p(Math.abs(o) % 60)}'`;
+}
+
+// Logo réduit (le PDF reste léger)
+let logoPdfDeca = null;
+async function logoPourPdf(){
+  if(logoPdfDeca !== null) return logoPdfDeca;
+  const img = document.querySelector('img[alt="Logo BOUA Trans"]');
+  logoPdfDeca = '';
+  if(!img) return logoPdfDeca;
+  try {
+    await (img.complete ? Promise.resolve() : new Promise(r => { img.onload = r; img.onerror = r; }));
+    const c = document.createElement('canvas'); c.width = c.height = 220;
+    const ctx = c.getContext('2d'); ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, 220, 220);
+    ctx.drawImage(img, 0, 0, 220, 220);
+    logoPdfDeca = c.toDataURL('image/jpeg', 0.85);
+  } catch (e) { logoPdfDeca = ''; }
+  return logoPdfDeca;
+}
+
+// ---------- PDF natif (texte vectoriel) ----------
+async function construirePdfDeca(d){
+  const jsPDF = await chargerOutilsPdf();
+  await chargerQr();
+  const pdf = new jsPDF({ unit: 'mm', format: 'a4', compress: true });
+  const T = (v) => textePdf(v);
+  const emission = new Date(d.emision), modification = new Date(d.modificacion || d.emision);
+  pdf.setProperties({ title: `DeCA ${d.numero}`, subject: 'Documento de Control Administrativo - Orden FOM/2861/2012', author: T(d.transportistaNombre), creator: 'BOUA Trans', keywords: `DeCA ${d.numero} ${d.url}` });
+  pdf.setCreationDate(emission);
+  pdf.__dateModification = modification; // ajoutée aux métadonnées par sortiePdfDeca()
+
+  const L = 210, M = 14;
+  // En-tête
+  const logo = await logoPourPdf();
+  if(logo) pdf.addImage(logo, 'JPEG', M, 12, 22, 22);
+  const xt = logo ? M + 26 : M;
+  pdf.setTextColor(15, 31, 56);
+  pdf.setFont('helvetica', 'bold'); pdf.setFontSize(14);
+  pdf.text('DOCUMENTO DE CONTROL ADMINISTRATIVO', xt, 18);
+  pdf.setFontSize(10.5); pdf.text('DeCA - Transporte público de mercancías por carretera', xt, 24);
+  pdf.setFont('helvetica', 'normal'); pdf.setFontSize(8.5); pdf.setTextColor(71, 85, 105);
+  pdf.text('Orden FOM/2861/2012 · Documento electrónico nativo', xt, 29.5);
+  pdf.setTextColor(199, 134, 42); pdf.setFont('courier', 'bold'); pdf.setFontSize(12);
+  pdf.text(`Nº ${T(d.numero)}`, xt, 36);
+
+  // QR (modules dessinés en vectoriel, par bandes horizontales)
+  const tailleQr = 40, xq = L - M - tailleQr, yq = 10;
+  const { n, sombre } = matriceQr(d.url);
+  const s = tailleQr / (n + 4);
+  pdf.setFillColor(255, 255, 255); pdf.rect(xq, yq, tailleQr, tailleQr, 'F');
+  pdf.setFillColor(0, 0, 0);
+  for(let l = 0; l < n; l++){
+    let debut = -1;
+    for(let c = 0; c <= n; c++){
+      const noir = c < n && sombre(l, c);
+      if(noir && debut < 0) debut = c;
+      if(!noir && debut >= 0){ pdf.rect(xq + (debut + 2) * s, yq + (l + 2) * s, (c - debut) * s, s, 'F'); debut = -1; }
+    }
+  }
+  pdf.setFont('helvetica', 'normal'); pdf.setFontSize(6.5); pdf.setTextColor(71, 85, 105);
+  pdf.text('Escanear para descargar', xq + tailleQr / 2, yq + tailleQr + 3, { align: 'center' });
+
+  pdf.setDrawColor(232, 163, 61); pdf.setLineWidth(0.8); pdf.line(M, 54, L - M, 54);
+
+  // Cadres de contenu
+  let y = 60;
+  const colonne = (L - 2 * M - 6) / 2;
+  const cadre = (x, yy, largeur, titre, lignes) => {
+    const contenu = [];
+    lignes.forEach(([lib, val]) => {
+      const texte = val === undefined || val === null || val === '' ? '-' : T(val);
+      pdf.setFontSize(9.5);
+      const morceaux = pdf.splitTextToSize(texte, largeur - 6 - (lib ? 0 : 0));
+      contenu.push({ lib: T(lib), morceaux });
+    });
+    const hauteur = 9 + contenu.reduce((h, c) => h + 3.6 + c.morceaux.length * 4.4 + 1.2, 0);
+    return { dessiner: (hFixe) => {
+      const h = hFixe || hauteur;
+      pdf.setDrawColor(15, 31, 56); pdf.setLineWidth(0.3); pdf.rect(x, yy, largeur, h);
+      pdf.setFillColor(15, 31, 56); pdf.rect(x, yy, largeur, 6.5, 'F');
+      pdf.setTextColor(255, 255, 255); pdf.setFont('helvetica', 'bold'); pdf.setFontSize(8.5);
+      pdf.text(T(titre), x + 3, yy + 4.5);
+      let yc = yy + 11;
+      contenu.forEach(c => {
+        pdf.setTextColor(100, 116, 139); pdf.setFont('helvetica', 'normal'); pdf.setFontSize(7);
+        pdf.text(c.lib.toUpperCase(), x + 3, yc);
+        pdf.setTextColor(15, 31, 56); pdf.setFont('helvetica', 'bold'); pdf.setFontSize(9.5);
+        pdf.text(c.morceaux, x + 3, yc + 4);
+        yc += 3.6 + c.morceaux.length * 4.4 + 1.2;
+      });
+    }, hauteur };
+  };
+  const rangee = (gauche, droite) => {
+    const a = cadre(M, y, colonne, gauche[0], gauche[1]);
+    const b = cadre(M + colonne + 6, y, colonne, droite[0], droite[1]);
+    const h = Math.max(a.hauteur, b.hauteur);
+    a.dessiner(h); b.dessiner(h);
+    y += h + 5;
+  };
+  rangee(['1. CARGADOR CONTRACTUAL', [['Nombre o razón social', d.cargadorNombre], ['NIF', d.cargadorNif], ['Domicilio', d.cargadorDomicilio]]],
+         ['2. TRANSPORTISTA EFECTIVO', [['Nombre o razón social', d.transportistaNombre], ['NIF', d.transportistaNif], ['Domicilio', d.transportistaDomicilio], ...(d.transportistaAutorizacion ? [['Autorización de transporte', d.transportistaAutorizacion]] : [])]]);
+  rangee(['3. ORIGEN', [['Lugar de origen', d.origen], ['Fecha de carga', dateEs(d.fechaCarga)]]],
+         ['4. DESTINO', [['Lugar de destino', d.destino], ['Fecha de descarga', dateEs(d.fechaDescarga) || 'No indicada']]]);
+  rangee(['5. MERCANCÍA', [['Naturaleza', d.mercancia], ['Peso', d.pesoKg !== '' && d.pesoKg !== undefined ? `${Number(d.pesoKg).toLocaleString('es-ES')} kg` : ''], ...(d.bultos ? [['Bultos / palets', d.bultos]] : [])]],
+         ['6. VEHÍCULO Y CONDUCTOR', [['Matrícula vehículo', d.matricula], ...(d.matriculaRemolque ? [['Matrícula remolque', d.matriculaRemolque]] : []), ['Conductor', [d.conductorNombre, d.conductorDni].filter(Boolean).join(' - ') || 'No indicado']]]);
+  if(d.observaciones){
+    const c = cadre(M, y, L - 2 * M, '7. OBSERVACIONES', [['Condiciones del transporte / observaciones', d.observaciones]]);
+    c.dessiner(); y += c.hauteur + 5;
+  }
+  if(d.historial && d.historial.length){
+    const lignes = d.historial.map(h => [`Modificación ${dateHeureEs(h.fecha)}`, h.cambios.join(' | ')]);
+    const c = cadre(M, y, L - 2 * M, 'HISTORIAL DE MODIFICACIONES', lignes);
+    if(y + c.hauteur > 270){ pdf.addPage(); y = 16; }
+    const c2 = cadre(M, y, L - 2 * M, 'HISTORIAL DE MODIFICACIONES', lignes);
+    c2.dessiner(); y += c2.hauteur + 5;
+  }
+
+  // Pied de page (sur chaque page)
+  const pages = pdf.internal.getNumberOfPages();
+  for(let p = 1; p <= pages; p++){
+    pdf.setPage(p);
+    pdf.setDrawColor(203, 213, 225); pdf.setLineWidth(0.2); pdf.line(M, 279, L - M, 279);
+    pdf.setFont('helvetica', 'normal'); pdf.setFontSize(7.2); pdf.setTextColor(71, 85, 105);
+    pdf.text(T(`Emitido: ${dateHeureEs(d.emision)}${d.version > 1 ? `  ·  Última modificación: ${dateHeureEs(d.modificacion)} (versión ${d.version})` : ''}`), M, 283);
+    pdf.text(T(`Descarga del original: ${d.url}`), M, 287);
+    pdf.text(`Página ${p}/${pages}`, L - M, 283, { align: 'right' });
+  }
+  return pdf;
+}
+
+// jsPDF n'écrit pas la date de modification (/ModDate) : on l'ajoute dans le
+// dictionnaire d'informations du PDF, puis on recalcule la table des objets (xref).
+function sortiePdfDeca(pdf){
+  let s = pdf.output();
+  s = s.replace(/(\/CreationDate \([^)]*\))/, `$1\n/ModDate (${datePdfInfo(pdf.__dateModification || new Date())})`);
+  const debutXref = s.lastIndexOf('\nxref\n') + 1;
+  const entete = s.slice(debutXref).match(/^xref\n0 (\d+)\n/);
+  if(!entete) return btoa(pdf.output());
+  const nombre = Number(entete[1]);
+  const corps = s.slice(0, debutXref);
+  let table = `xref\n0 ${nombre}\n0000000000 65535 f \n`;
+  for(let i = 1; i < nombre; i++){
+    const pos = corps.indexOf(`\n${i} 0 obj`);
+    if(pos < 0) return btoa(pdf.output());
+    table += `${String(pos + 1).padStart(10, '0')} 00000 n \n`;
+  }
+  const suite = s.slice(debutXref).replace(/^xref\n0 \d+\n(?:\d{10} \d{5} [fn] \n)+/, '');
+  return btoa(corps + table + suite.replace(/startxref\n\d+/, `startxref\n${debutXref}`));
+}
+
+// ---------- Formulaire ----------
+function lireFormDeca(){
+  const d = {};
+  CHAMPS_DECA.forEach(c => { const el = formDeca.elements[c]; d[c] = el ? el.value.trim() : ''; });
+  ['cargadorNif', 'transportistaNif', 'matricula', 'matriculaRemolque', 'conductorDni'].forEach(c => { d[c] = d[c].toUpperCase(); });
+  if(d.pesoKg !== '') d.pesoKg = Number(d.pesoKg);
+  return d;
+}
+function remplirFormDeca(d){
+  formDeca.reset();
+  CHAMPS_DECA.concat(['numero']).forEach(c => { const el = formDeca.elements[c]; if(el && d[c] !== undefined && d[c] !== null) el.value = d[c]; });
+  formDeca.querySelectorAll('.champ-touche').forEach(x => x.classList.remove('champ-touche'));
+  decaErreur.classList.add('hidden');
+}
+async function nouveauDeca(){
+  decaIdCourant = null;
+  remplirFormDeca({ fechaCarga: aujourdHuiISO() });
+  decaEtat.textContent = 'Nouveau DeCA';
+  // Données du transporteur mémorisées
+  try {
+    const { doc, getDoc } = window._firestore;
+    const snap = await getDoc(doc(window._db, 'contenus', 'deca'));
+    const t = snap.exists() ? snap.data() : {};
+    ['transportistaNombre', 'transportistaNif', 'transportistaDomicilio', 'transportistaAutorizacion', 'matricula', 'matriculaRemolque', 'conductorNombre', 'conductorDni'].forEach(c => { if(t[c]) formDeca.elements[c].value = t[c]; });
+  } catch (e) { /* facultatif */ }
+  if(!formDeca.elements.transportistaNombre.value) formDeca.elements.transportistaNombre.value = 'LASSINE Diakité';
+}
+document.getElementById('decaNouveau').addEventListener('click', () => { nouveauDeca(); formDeca.scrollIntoView({ block: 'start' }); });
+
+decaMission.addEventListener('change', () => {
+  const m = decaMissions.find(x => x.id === decaMission.value);
+  if(!m) return;
+  const f = formDeca.elements;
+  const siVide = (c, v) => { if(v !== undefined && v !== null && v !== '' && !f[c].value) f[c].value = v; };
+  if(m.villeDepart) f.origen.value = m.villeDepart;
+  if(m.villeArrivee) f.destino.value = m.villeArrivee;
+  if(m.dateDepart) f.fechaCarga.value = m.dateDepart;
+  if(m.dateArrivee) f.fechaDescarga.value = m.dateArrivee;
+  siVide('cargadorNombre', m.clientNom);
+  if(m.vehicule) f.matricula.value = String(m.vehicule).toUpperCase();
+  if(m.chauffeurEmail){ const ch = decaChauffeurs.find(c => String(c.email || '').toLowerCase() === String(m.chauffeurEmail).toLowerCase()); siVide('conductorNombre', ch ? ch.nom : ''); }
+  siVide('mercancia', m.typeCommerce && typeof libelleTypeCommerce === 'function' ? libelleTypeCommerce(m.typeCommerce) : '');
+  siVide('pesoKg', m.poidsKg);
+});
+
+function prochainNumeroDeca(){
+  const prefixe = `DC-${new Date().getFullYear()}-`;
+  const max = decaListeCache.reduce((mx, d) => {
+    const n = String(d.numero || '').startsWith(prefixe) ? parseInt(String(d.numero).slice(prefixe.length), 10) : 0;
+    return n > mx ? n : mx;
+  }, 0);
+  return prefixe + String(max + 1).padStart(4, '0');
+}
+
+let generationDecaEnCours = false;
+document.getElementById('decaGenerer').addEventListener('click', async (e) => {
+  const bouton = e.currentTarget;
+  if(generationDecaEnCours) return;
+  const manquants = [...formDeca.querySelectorAll('[required]')].filter(ch => { ch.classList.add('champ-touche'); return !ch.value.trim(); });
+  if(manquants.length){
+    decaErreur.textContent = `Champs obligatoires du DeCA manquants : ${manquants.map(m => m.placeholder.replace(' *', '') || m.name).join(', ')}.`;
+    decaErreur.classList.remove('hidden');
+    manquants[0].focus();
+    return;
+  }
+  if(location.protocol !== 'https:'){
+    decaErreur.textContent = "Ouvre l'admin depuis l'adresse https de ton site (ex : …vercel.app) : le code QR doit pointer vers une adresse https publique.";
+    decaErreur.classList.remove('hidden');
+    return;
+  }
+  decaErreur.classList.add('hidden');
+  generationDecaEnCours = true;
+  bouton.disabled = true;
+  bouton.textContent = 'Génération…';
+  try {
+    const { doc, setDoc, serverTimestamp } = window._firestore;
+    const saisie = lireFormDeca();
+    const maintenant = new Date().toISOString();
+    let d;
+    if(decaIdCourant){
+      const ancien = decaListeCache.find(x => x.id === decaIdCourant) || {};
+      const cambios = Object.keys(LIBELLES_DECA).filter(c => String(ancien[c] ?? '') !== String(saisie[c] ?? ''))
+        .map(c => `${LIBELLES_DECA[c]}: ${ancien[c] === undefined || ancien[c] === '' ? '-' : ancien[c]} -> ${saisie[c] === '' ? '-' : saisie[c]}`);
+      if(!cambios.length){ decaEtat.textContent = 'Aucune modification à enregistrer.'; return; }
+      d = { ...ancien, ...saisie, modificacion: maintenant, version: (ancien.version || 1) + 1, historial: [...(ancien.historial || []), { fecha: maintenant, cambios }] };
+    } else {
+      const id = genererIdDeca();
+      d = { ...saisie, id, numero: prochainNumeroDeca(), url: urlPubliqueDeca(id), emision: maintenant, modificacion: maintenant, version: 1, historial: [], statut: 'actif' };
+    }
+    const pdf = await construirePdfDeca(d);
+    const base64 = sortiePdfDeca(pdf);
+    if(base64.length > 950000) throw new Error('PDF trop lourd pour la base');
+    const { id, ...donnees } = d;
+    await setDoc(doc(window._db, 'deca_pdf', id), { contenu: base64, taille: Math.round(base64.length * 0.75), version: d.version, numero: d.numero, maj: serverTimestamp() });
+    await setDoc(doc(window._db, 'deca', id), { ...donnees, dateMaj: serverTimestamp() });
+    const memo = {};
+    ['transportistaNombre', 'transportistaNif', 'transportistaDomicilio', 'transportistaAutorizacion', 'matricula', 'matriculaRemolque', 'conductorNombre', 'conductorDni'].forEach(c => { memo[c] = d[c] || ''; });
+    setDoc(doc(window._db, 'contenus', 'deca'), memo).catch(() => {});
+    const i = decaListeCache.findIndex(x => x.id === id);
+    if(i >= 0) decaListeCache[i] = d; else decaListeCache.push(d);
+    decaIdCourant = id;
+    formDeca.elements.numero.value = d.numero;
+    afficherListeDeca();
+    decaEtat.innerHTML = `✓ DeCA <b class="font-mono-num">${echapperHtmlAdmin(d.numero)}</b> ${d.version > 1 ? `modifié (version ${d.version}, même QR)` : 'créé'} · <button type="button" class="underline font-semibold text-teal" data-deca-qr="${id}">Afficher le QR</button> · <button type="button" class="underline font-semibold text-teal" data-deca-voir="${id}">Voir le PDF</button>`;
+  } catch (err) {
+    console.error('Génération DeCA :', err);
+    decaErreur.textContent = `Le DeCA n'a pas pu être créé : ${err.message || err}`;
+    decaErreur.classList.remove('hidden');
+  } finally {
+    generationDecaEnCours = false;
+    bouton.disabled = false;
+    bouton.textContent = '📄 Générer le DeCA + QR';
+  }
+});
+
+// ---------- Liste ----------
+async function ouvrirEcranDeca(){
+  if(!formDeca.dataset.pret){ formDeca.dataset.pret = '1'; await nouveauDeca(); }
+  quandFirebasePret(async () => {
+    const { collection, getDocs } = window._firestore;
+    try {
+      const [decas, docs, missions, chauffeurs] = await Promise.all(['deca', 'documents', 'missions', 'chauffeurs'].map(n => getDocs(collection(window._db, n))));
+      decaListeCache = decas.docs.map(x => ({ id: x.id, ...x.data() }));
+      decaAnnexes = docs.docs.map(x => ({ id: x.id, ...x.data() })).filter(x => x.decaId);
+      decaMissions = missions.docs.map(x => ({ id: x.id, ...x.data() }));
+      decaChauffeurs = chauffeurs.docs.map(x => x.data());
+      const actuel = decaMission.value;
+      decaMission.innerHTML = '<option value="">— Aucun —</option>' + decaMissions.slice().sort((a, b) => String(b.dateDepart || '').localeCompare(String(a.dateDepart || '')))
+        .map(m => `<option value="${echapperHtmlAdmin(m.id)}">${echapperHtmlAdmin(`${m.dateDepart ? dateEs(m.dateDepart) + ' · ' : ''}${m.villeDepart || '?'} → ${m.villeArrivee || '?'}${m.clientNom ? ' · ' + m.clientNom : ''}`)}</option>`).join('');
+      decaMission.value = actuel;
+      afficherListeDeca();
+    } catch (err) {
+      console.error('Chargement DeCA :', err);
+      document.getElementById('decaListe').innerHTML = `<p class="text-sm text-red-500">Impossible de lire les DeCA (${echapperHtmlAdmin(err.code || err.message)}).</p>`;
+    }
+  });
+}
+
+function afficherListeDeca(){
+  const e = echapperHtmlAdmin;
+  const q = (document.getElementById('decaRecherche').value || '').toLowerCase();
+  const liste = decaListeCache
+    .filter(d => !q || [d.numero, d.origen, d.destino, d.matricula, d.cargadorNombre, d.mercancia].some(v => String(v || '').toLowerCase().includes(q)))
+    .sort((a, b) => String(b.numero || '').localeCompare(String(a.numero || '')));
+  document.getElementById('decaListeVide').classList.toggle('hidden', liste.length > 0);
+  document.getElementById('decaListe').innerHTML = liste.map(d => {
+    const annule = d.statut === 'annule';
+    const annexes = decaAnnexes.filter(a => a.decaId === d.id);
+    return `
+    <div class="carte-pro !p-4 ${annule ? 'opacity-60' : ''}" data-deca="${e(d.id)}">
+      <div class="flex flex-wrap items-center gap-3">
+        <span class="font-mono-num font-bold text-amberdark">${e(d.numero)}</span>
+        ${d.version > 1 ? `<span class="badge-pro bg-slate-100 text-slate-600 dark:bg-white/10 dark:text-cream/70">v${d.version}</span>` : ''}
+        ${annule ? '<span class="badge-pro bg-red-100 text-red-600">Annulé</span>' : '<span class="badge-pro bg-teal/15 text-teal">Actif</span>'}
+        <div class="flex-1 min-w-[200px]">
+          <p class="font-semibold text-navy dark:text-white">${e(d.origen)} <span class="text-amber">→</span> ${e(d.destino)}</p>
+          <p class="text-xs text-slate-500 dark:text-cream/60">📅 ${dateEs(d.fechaCarga)} · 🚛 ${e(d.matricula)} · ${e(d.cargadorNombre)} · ${e(d.mercancia)}${d.pesoKg ? ` · ${Number(d.pesoKg).toLocaleString('fr-FR')} kg` : ''}</p>
+        </div>
+      </div>
+      <div class="flex flex-wrap gap-2 mt-3">
+        <button type="button" data-deca-voir="${e(d.id)}" class="text-xs font-bold bg-amber hover:bg-amberdark text-navy px-3 py-1.5 rounded-full">📄 Afficher / télécharger le DeCA</button>
+        <button type="button" data-deca-qr="${e(d.id)}" class="text-xs font-bold bg-navy dark:bg-white/10 text-cream hover:text-amber px-3 py-1.5 rounded-full">▦ Afficher le code QR</button>
+        <a href="https://wa.me/?text=${encodeURIComponent(`DeCA ${d.numero} (${d.origen} → ${d.destino}) : ${d.url}`)}" target="_blank" rel="noopener" class="text-xs font-semibold border border-slate-200 dark:border-white/15 hover:border-amber px-3 py-1.5 rounded-full">💬 Envoyer au chauffeur</a>
+        ${annule ? '' : `<button type="button" data-deca-modifier="${e(d.id)}" class="text-xs font-semibold border border-slate-200 dark:border-white/15 hover:border-amber px-3 py-1.5 rounded-full">✏️ Modifier</button>
+        <button type="button" data-deca-scan="${e(d.id)}" class="text-xs font-semibold border border-slate-200 dark:border-white/15 hover:border-amber px-3 py-1.5 rounded-full">📷 Scanner un document</button>
+        <button type="button" data-deca-fichier="${e(d.id)}" class="text-xs font-semibold border border-slate-200 dark:border-white/15 hover:border-amber px-3 py-1.5 rounded-full">📎 Ajouter un fichier</button>
+        <button type="button" data-deca-annuler="${e(d.id)}" class="text-xs text-slate-400 hover:text-red-500 px-2 py-1.5">Annuler</button>`}
+      </div>
+      ${annexes.length ? `<div class="flex flex-wrap gap-2 mt-3 pt-3 border-t border-slate-100 dark:border-white/10">${annexes.map(a => `<button type="button" data-annexe="${e(a.url)}" class="text-xs bg-cream dark:bg-navy border border-slate-200 dark:border-white/10 hover:border-amber px-2.5 py-1 rounded-lg">📎 ${e(a.nom || 'Document')}</button>`).join('')}</div>` : ''}
+    </div>`;
+  }).join('');
+}
+document.getElementById('decaRecherche').addEventListener('input', afficherListeDeca);
+
+async function ouvrirPdfDeca(id){
+  const onglet = window.open('', '_blank');
+  try {
+    const { doc, getDoc } = window._firestore;
+    const snap = await getDoc(doc(window._db, 'deca_pdf', id));
+    if(!snap.exists()) throw new Error('PDF introuvable');
+    const binaire = atob(snap.data().contenu);
+    const octets = new Uint8Array(binaire.length);
+    for(let i = 0; i < binaire.length; i++) octets[i] = binaire.charCodeAt(i);
+    const adresse = URL.createObjectURL(new Blob([octets], { type: 'application/pdf' }));
+    if(onglet) onglet.location = adresse; else window.location.href = adresse;
+  } catch (err) {
+    if(onglet) onglet.close();
+    alert(`Impossible d'ouvrir le DeCA : ${err.message || err}`);
+  }
+}
+
+async function afficherQrDeca(id){
+  const d = decaListeCache.find(x => x.id === id);
+  if(!d) return;
+  try { await chargerQr(); } catch (err) { alert(err.message); return; }
+  document.getElementById('decaQrNumero').textContent = d.numero;
+  document.getElementById('decaQrTrajet').textContent = `${d.origen} → ${d.destino} · ${d.matricula}`;
+  document.getElementById('decaQrUrl').textContent = d.url;
+  document.getElementById('decaQrImage').innerHTML = svgQr(d.url);
+  document.getElementById('decaQrModal').classList.remove('hidden');
+}
+const fermerQrDeca = () => document.getElementById('decaQrModal').classList.add('hidden');
+document.getElementById('decaQrFermer').addEventListener('click', fermerQrDeca);
+document.addEventListener('keydown', (e) => { if(e.key === 'Escape') fermerQrDeca(); });
+
+document.getElementById('adminDeca').addEventListener('click', async (e) => {
+  const b = e.target.closest('[data-deca-voir],[data-deca-qr],[data-deca-modifier],[data-deca-scan],[data-deca-fichier],[data-deca-annuler],[data-annexe]');
+  if(!b) return;
+  if(b.dataset.decaVoir) return ouvrirPdfDeca(b.dataset.decaVoir);
+  if(b.dataset.decaQr) return afficherQrDeca(b.dataset.decaQr);
+  if(b.dataset.annexe) return ouvrirFichier(b.dataset.annexe);
+  if(b.dataset.decaModifier){
+    const d = decaListeCache.find(x => x.id === b.dataset.decaModifier);
+    decaIdCourant = d.id;
+    remplirFormDeca(d);
+    decaEtat.textContent = `Modification de ${d.numero} : l'URL et le QR restent les mêmes, l'historique est ajouté au PDF.`;
+    formDeca.scrollIntoView({ block: 'start' });
+    return;
+  }
+  if(b.dataset.decaScan){ decaScanCible = b.dataset.decaScan; document.getElementById('decaScanCamera').value = ''; document.getElementById('decaScanCamera').click(); return; }
+  if(b.dataset.decaFichier){ decaScanCible = b.dataset.decaFichier; document.getElementById('decaScanFichier').value = ''; document.getElementById('decaScanFichier').click(); return; }
+  if(b.dataset.decaAnnuler){
+    const d = decaListeCache.find(x => x.id === b.dataset.decaAnnuler);
+    if(!confirm(`Annuler le DeCA ${d.numero} ? Son lien de téléchargement ne fonctionnera plus. Il reste conservé dans la liste.`)) return;
+    const { doc, updateDoc } = window._firestore;
+    try { await updateDoc(doc(window._db, 'deca', d.id), { statut: 'annule' }); d.statut = 'annule'; afficherListeDeca(); }
+    catch (err) { alert("L'annulation n'a pas pu être enregistrée."); }
+  }
+});
+
+// Documents scannés / fichiers en annexe d'un DeCA
+async function ajouterAnnexesDeca(fichiers){
+  const d = decaListeCache.find(x => x.id === decaScanCible);
+  if(!d || !fichiers.length) return;
+  const { collection, addDoc } = window._firestore;
+  let faits = 0;
+  decaEtat.textContent = `Envoi de ${fichiers.length} document(s)…`;
+  for(const f of fichiers){
+    try {
+      const valeur = await publierFichier(f, 'voyages', (p) => { decaEtat.textContent = `Envoi… ${Math.round(p)} %`; }, false);
+      const nom = /^(image|photo|img|scan)[\s_-]?\d*\.\w+$/i.test(f.name) || !f.name ? `Scan ${new Date().toLocaleString('fr-FR')}` : nomSansExtension(f.name);
+      const annexe = { nom: `${d.numero} — ${nom}`, url: valeur, categorie: 'voyage', decaId: d.id, decaNumero: d.numero, dateAjout: aujourdHuiISO() };
+      const ref = await addDoc(collection(window._db, 'documents'), annexe);
+      decaAnnexes.push({ id: ref.id, ...annexe });
+      faits++;
+    } catch (err) {
+      console.error('Annexe DeCA :', err);
+      alert(`« ${f.name} » n'a pas pu être enregistré : ${messageErreurPublication(err)}`);
+    }
+  }
+  decaEtat.textContent = faits ? `✓ ${faits} document(s) ajouté(s) au DeCA ${d.numero}.` : '';
+  afficherListeDeca();
+}
+document.getElementById('decaScanCamera').addEventListener('change', (e) => ajouterAnnexesDeca([...e.target.files]));
+document.getElementById('decaScanFichier').addEventListener('change', (e) => ajouterAnnexesDeca([...e.target.files]));
+
+/* ============================================================
    PUBLIER PAR LIEN (YouTube, TikTok, Instagram, Facebook, X, image)
    L'administrateur colle une ou plusieurs adresses : la plateforme
    est reconnue, un aperçu s'affiche, puis un clic publie dans la
@@ -6517,6 +7091,7 @@ async function exporterVueActiveEnPdf(){
   if(vueActive === 'cmr') return telechargerCmrPdf();
   if(vueActive === 'nouveauVoyage') return exporterVoyagesEnPdf();
   if(vueActive === 'publier') return exporterElementEnPdf(document.getElementById('adminPublier'), nomFichierPdf('BOUA_Trans_Publier'));
+  if(vueActive === 'deca') return exporterElementEnPdf(document.getElementById('adminDeca'), nomFichierPdf('BOUA_Trans_DeCA'));
   if(vueActive === 'textes') return exporterElementEnPdf(document.getElementById('adminTextes'), nomFichierPdf('BOUA_Trans_Textes_du_site'));
   return exporterTableauAdminEnPdf();
 }
