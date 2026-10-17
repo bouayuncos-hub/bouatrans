@@ -1530,6 +1530,7 @@
             <input name="matricula" required class="champ-pro uppercase font-mono-num" placeholder="Matrícula vehículo *">
             <input name="matriculaRemolque" class="champ-pro uppercase font-mono-num" placeholder="Matrícula remolque">
           </div>
+          <select name="chauffeurEmail" id="decaChauffeurCompte" class="champ-pro mb-2"><option value="">Compte chauffeur (pour son Espace Chauffeur) — facultatif</option></select>
           <div class="grid grid-cols-2 gap-2">
             <input name="conductorNombre" class="champ-pro" placeholder="Conductor">
             <input name="conductorDni" class="champ-pro uppercase font-mono-num" placeholder="DNI / NIE conductor">
@@ -3198,6 +3199,7 @@ async function verifierEtOuvrirEspaceChauffeur(){
     afficherVueChauffeur('dashboard');
     // Les voyages portent l'email tel qu'il figure sur la fiche du chauffeur
     ecouterMesMissions(Array.from(new Set([fiche.email, emailConnecte])));
+    ecouterMesDeca(Array.from(new Set([fiche.email, emailConnecte])));
   } catch (err) {
     console.error("Erreur de vérification chauffeur :", err);
     afficherVueChauffeur('non-reconnu');
@@ -3288,6 +3290,7 @@ chauffeurSignupForm.addEventListener('submit', async (e) => {
 async function deconnecterChauffeur(){
   const { signOut } = window._authFns;
   if(arreterEcouteMissions) arreterEcouteMissions();
+  if(arreterEcouteDecaChauffeur){ arreterEcouteDecaChauffeur(); arreterEcouteDecaChauffeur = null; }
   await signOut(window._auth);
   fermerModaleChauffeur();
   afficherVueChauffeur('login');
@@ -6265,7 +6268,7 @@ podInput.addEventListener('keydown', (e) => { if(e.key === 'Enter') chercherDocu
    ============================================================ */
 const QR_LIB_URL = 'https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js';
 const CHAMPS_DECA = ['cargadorNombre', 'cargadorNif', 'cargadorDomicilio', 'transportistaNombre', 'transportistaNif', 'transportistaDomicilio', 'transportistaAutorizacion',
-  'origen', 'destino', 'fechaCarga', 'fechaDescarga', 'mercancia', 'pesoKg', 'bultos', 'matricula', 'matriculaRemolque', 'conductorNombre', 'conductorDni', 'observaciones', 'missionId'];
+  'origen', 'destino', 'fechaCarga', 'fechaDescarga', 'mercancia', 'pesoKg', 'bultos', 'matricula', 'matriculaRemolque', 'conductorNombre', 'conductorDni', 'observaciones', 'missionId', 'chauffeurEmail'];
 const LIBELLES_DECA = {
   cargadorNombre: 'Cargador', cargadorNif: 'NIF cargador', cargadorDomicilio: 'Domicilio cargador', transportistaNombre: 'Transportista', transportistaNif: 'NIF transportista',
   transportistaDomicilio: 'Domicilio transportista', transportistaAutorizacion: 'Autorización', origen: 'Origen', destino: 'Destino', fechaCarga: 'Fecha de carga',
@@ -6466,11 +6469,15 @@ function lireFormDeca(){
   CHAMPS_DECA.forEach(c => { const el = formDeca.elements[c]; d[c] = el ? el.value.trim() : ''; });
   ['cargadorNif', 'transportistaNif', 'matricula', 'matriculaRemolque', 'conductorDni'].forEach(c => { d[c] = d[c].toUpperCase(); });
   if(d.pesoKg !== '') d.pesoKg = Number(d.pesoKg);
+  d.chauffeurEmail = d.chauffeurEmail.toLowerCase();
   return d;
 }
 function remplirFormDeca(d){
   formDeca.reset();
   CHAMPS_DECA.concat(['numero']).forEach(c => { const el = formDeca.elements[c]; if(el && d[c] !== undefined && d[c] !== null) el.value = d[c]; });
+  // Listes pas encore chargées : la valeur voulue est reprise dès qu'elles le sont
+  formDeca.elements.chauffeurEmail.dataset.voulu = d.chauffeurEmail || '';
+  formDeca.elements.missionId.dataset.voulu = d.missionId || '';
   formDeca.querySelectorAll('.champ-touche').forEach(x => x.classList.remove('champ-touche'));
   decaErreur.classList.add('hidden');
 }
@@ -6500,7 +6507,11 @@ decaMission.addEventListener('change', () => {
   if(m.dateArrivee) f.fechaDescarga.value = m.dateArrivee;
   siVide('cargadorNombre', m.clientNom);
   if(m.vehicule) f.matricula.value = String(m.vehicule).toUpperCase();
-  if(m.chauffeurEmail){ const ch = decaChauffeurs.find(c => String(c.email || '').toLowerCase() === String(m.chauffeurEmail).toLowerCase()); siVide('conductorNombre', ch ? ch.nom : ''); }
+  if(m.chauffeurEmail){
+    const ch = decaChauffeurs.find(c => String(c.email || '').toLowerCase() === String(m.chauffeurEmail).toLowerCase());
+    siVide('conductorNombre', ch ? ch.nom : '');
+    if([...f.chauffeurEmail.options].some(o => o.value === String(m.chauffeurEmail).toLowerCase())) f.chauffeurEmail.value = String(m.chauffeurEmail).toLowerCase();
+  }
   siVide('mercancia', m.typeCommerce && typeof libelleTypeCommerce === 'function' ? libelleTypeCommerce(m.typeCommerce) : '');
   siVide('pesoKg', m.poidsKg);
 });
@@ -6525,6 +6536,15 @@ document.getElementById('decaGenerer').addEventListener('click', async (e) => {
     manquants[0].focus();
     return;
   }
+  const verif = lireFormDeca();
+  if(verif.fechaDescarga && verif.fechaDescarga < verif.fechaCarga){
+    decaErreur.textContent = 'La date de descarga ne peut pas être avant la date de carga.';
+    decaErreur.classList.remove('hidden');
+    formDeca.elements.fechaDescarga.focus();
+    return;
+  }
+  const avert = avertissementsDeca(verif);
+  if(avert.length && !confirm(`À vérifier avant de générer :\n\n• ${avert.join('\n• ')}\n\nGénérer quand même ?`)) return;
   if(location.protocol !== 'https:'){
     decaErreur.textContent = "Ouvre l'admin depuis l'adresse https de ton site (ex : …vercel.app) : le code QR doit pointer vers une adresse https publique.";
     decaErreur.classList.remove('hidden');
@@ -6546,6 +6566,14 @@ document.getElementById('decaGenerer').addEventListener('click', async (e) => {
       if(!cambios.length){ decaEtat.textContent = 'Aucune modification à enregistrer.'; return; }
       d = { ...ancien, ...saisie, modificacion: maintenant, version: (ancien.version || 1) + 1, historial: [...(ancien.historial || []), { fecha: maintenant, cambios }] };
     } else {
+      // Liste relue juste avant : jamais deux fois le même numéro, même depuis deux appareils
+      try {
+        const { collection, getDocs } = window._firestore;
+        const snap = await avecReessais(() => getDocs(collection(window._db, 'deca')));
+        const connus = new Map(decaListeCache.map(x => [x.id, x]));
+        snap.docs.forEach(x => connus.set(x.id, { id: x.id, ...x.data() }));
+        decaListeCache = [...connus.values()];
+      } catch (e) { /* on garde la liste en mémoire */ }
       const id = genererIdDeca();
       d = { ...saisie, id, numero: prochainNumeroDeca(), url: urlPubliqueDeca(id), emision: maintenant, modificacion: maintenant, version: 1, historial: [], statut: 'actif' };
     }
@@ -6553,8 +6581,11 @@ document.getElementById('decaGenerer').addEventListener('click', async (e) => {
     const base64 = sortiePdfDeca(pdf);
     if(base64.length > 950000) throw new Error('PDF trop lourd pour la base');
     const { id, ...donnees } = d;
-    await setDoc(doc(window._db, 'deca_pdf', id), { contenu: base64, taille: Math.round(base64.length * 0.75), version: d.version, numero: d.numero, maj: serverTimestamp() });
-    await setDoc(doc(window._db, 'deca', id), { ...donnees, dateMaj: serverTimestamp() });
+    decaEtat.textContent = 'Enregistrement en ligne…';
+    await avecReessais(() => setDoc(doc(window._db, 'deca_pdf', id), { contenu: base64, taille: Math.round(base64.length * 0.75), version: d.version, numero: d.numero, maj: serverTimestamp() }));
+    await avecReessais(() => setDoc(doc(window._db, 'deca', id), { ...donnees, dateMaj: serverTimestamp() }));
+    clearTimeout(minuterieBrouillonDeca);
+    effacerBrouillonDeca();
     const memo = {};
     ['transportistaNombre', 'transportistaNif', 'transportistaDomicilio', 'transportistaAutorizacion', 'matricula', 'matriculaRemolque', 'conductorNombre', 'conductorDni'].forEach(c => { memo[c] = d[c] || ''; });
     setDoc(doc(window._db, 'contenus', 'deca'), memo).catch(() => {});
@@ -6563,10 +6594,13 @@ document.getElementById('decaGenerer').addEventListener('click', async (e) => {
     decaIdCourant = id;
     formDeca.elements.numero.value = d.numero;
     afficherListeDeca();
+    delete etatLiensDeca[id];
+    verifierLienDeca(d, true); // contrôle automatique : le QR télécharge-t-il bien le PDF ?
     decaEtat.innerHTML = `✓ DeCA <b class="font-mono-num">${echapperHtmlAdmin(d.numero)}</b> ${d.version > 1 ? `modifié (version ${d.version}, même QR)` : 'créé'} · <button type="button" class="underline font-semibold text-teal" data-deca-qr="${id}">Afficher le QR</button> · <button type="button" class="underline font-semibold text-teal" data-deca-voir="${id}">Voir le PDF</button>`;
   } catch (err) {
     console.error('Génération DeCA :', err);
-    decaErreur.textContent = `Le DeCA n'a pas pu être créé : ${err.message || err}`;
+    decaErreur.textContent = `Le DeCA n'a pas pu être créé : ${err.message || err}. Ton formulaire est gardé sur cet appareil : réessaie quand la connexion revient.`;
+    sauverBrouillonDeca();
     decaErreur.classList.remove('hidden');
   } finally {
     generationDecaEnCours = false;
@@ -6577,7 +6611,20 @@ document.getElementById('decaGenerer').addEventListener('click', async (e) => {
 
 // ---------- Liste ----------
 async function ouvrirEcranDeca(){
-  if(!formDeca.dataset.pret){ formDeca.dataset.pret = '1'; await nouveauDeca(); }
+  if(!formDeca.dataset.pret){
+    formDeca.dataset.pret = '1';
+    const brouillon = lireBrouillonDeca();
+    if(brouillon && Object.entries(brouillon.d).some(([k, v]) => v !== '' && !['transportistaNombre', 'fechaCarga'].includes(k))){
+      remplirFormDeca(brouillon.d);
+      decaIdCourant = brouillon.id || null;
+      decaEtat.innerHTML = 'Brouillon restauré (saisie non terminée). <button type="button" id="decaEffacerBrouillon" class="underline text-teal font-semibold">Repartir de zéro</button>';
+      document.getElementById('decaEffacerBrouillon').addEventListener('click', () => { effacerBrouillonDeca(); nouveauDeca(); });
+    } else await nouveauDeca();
+  }
+  // Outils PDF et QR préchargés : la génération sera immédiate
+  Promise.all([chargerOutilsPdf(), chargerQr()]).catch(() => {
+    decaEtat.textContent = "⚠️ Les outils PDF/QR ne se chargent pas (connexion ?). Le bouton réessaiera automatiquement.";
+  });
   quandFirebasePret(async () => {
     const { collection, getDocs } = window._firestore;
     try {
@@ -6586,11 +6633,19 @@ async function ouvrirEcranDeca(){
       decaAnnexes = docs.docs.map(x => ({ id: x.id, ...x.data() })).filter(x => x.decaId);
       decaMissions = missions.docs.map(x => ({ id: x.id, ...x.data() }));
       decaChauffeurs = chauffeurs.docs.map(x => x.data());
+      const selCompte = document.getElementById('decaChauffeurCompte');
+      const compteActuel = selCompte.value;
+      selCompte.innerHTML = '<option value="">Compte chauffeur (pour son Espace Chauffeur) — facultatif</option>' + decaChauffeurs.filter(c => c.email)
+        .map(c => `<option value="${echapperHtmlAdmin(String(c.email).toLowerCase())}">${echapperHtmlAdmin(c.nom || c.email)} · ${echapperHtmlAdmin(String(c.email).toLowerCase())}</option>`).join('');
+      selCompte.value = selCompte.dataset.voulu || compteActuel;
+      selCompte.dataset.voulu = '';
       const actuel = decaMission.value;
       decaMission.innerHTML = '<option value="">— Aucun —</option>' + decaMissions.slice().sort((a, b) => String(b.dateDepart || '').localeCompare(String(a.dateDepart || '')))
         .map(m => `<option value="${echapperHtmlAdmin(m.id)}">${echapperHtmlAdmin(`${m.dateDepart ? dateEs(m.dateDepart) + ' · ' : ''}${m.villeDepart || '?'} → ${m.villeArrivee || '?'}${m.clientNom ? ' · ' + m.clientNom : ''}`)}</option>`).join('');
-      decaMission.value = actuel;
+      decaMission.value = decaMission.dataset.voulu || actuel;
+      decaMission.dataset.voulu = '';
       afficherListeDeca();
+      appliquerVoyageEnAttenteDeca();
     } catch (err) {
       console.error('Chargement DeCA :', err);
       document.getElementById('decaListe').innerHTML = `<p class="text-sm text-red-500">Impossible de lire les DeCA (${echapperHtmlAdmin(err.code || err.message)}).</p>`;
@@ -6622,7 +6677,9 @@ function afficherListeDeca(){
       <div class="flex flex-wrap gap-2 mt-3">
         <button type="button" data-deca-voir="${e(d.id)}" class="text-xs font-bold bg-amber hover:bg-amberdark text-navy px-3 py-1.5 rounded-full">📄 Afficher / télécharger le DeCA</button>
         <button type="button" data-deca-qr="${e(d.id)}" class="text-xs font-bold bg-navy dark:bg-white/10 text-cream hover:text-amber px-3 py-1.5 rounded-full">▦ Afficher le code QR</button>
-        <a href="https://wa.me/?text=${encodeURIComponent(`DeCA ${d.numero} (${d.origen} → ${d.destino}) : ${d.url}`)}" target="_blank" rel="noopener" class="text-xs font-semibold border border-slate-200 dark:border-white/15 hover:border-amber px-3 py-1.5 rounded-full">💬 Envoyer au chauffeur</a>
+        <a href="https://wa.me/?text=${encodeURIComponent(`DeCA ${d.numero} (${d.origen} → ${d.destino})\nCode QR à montrer au contrôle : ${lienCarteDeca(d.id)}\nPDF : ${d.url}`)}" target="_blank" rel="noopener" class="text-xs font-semibold border border-slate-200 dark:border-white/15 hover:border-amber px-3 py-1.5 rounded-full">💬 Envoyer au chauffeur</a>
+        <button type="button" data-deca-dupliquer="${e(d.id)}" class="text-xs font-semibold border border-slate-200 dark:border-white/15 hover:border-amber px-3 py-1.5 rounded-full">📑 Dupliquer</button>
+        ${annule ? '' : badgeLienDeca(d.id)}
         ${annule ? '' : `<button type="button" data-deca-modifier="${e(d.id)}" class="text-xs font-semibold border border-slate-200 dark:border-white/15 hover:border-amber px-3 py-1.5 rounded-full">✏️ Modifier</button>
         <button type="button" data-deca-scan="${e(d.id)}" class="text-xs font-semibold border border-slate-200 dark:border-white/15 hover:border-amber px-3 py-1.5 rounded-full">📷 Scanner un document</button>
         <button type="button" data-deca-fichier="${e(d.id)}" class="text-xs font-semibold border border-slate-200 dark:border-white/15 hover:border-amber px-3 py-1.5 rounded-full">📎 Ajouter un fichier</button>
@@ -6653,21 +6710,29 @@ async function ouvrirPdfDeca(id){
 
 async function afficherQrDeca(id){
   const d = decaListeCache.find(x => x.id === id);
-  if(!d) return;
-  try { await chargerQr(); } catch (err) { alert(err.message); return; }
-  document.getElementById('decaQrNumero').textContent = d.numero;
-  document.getElementById('decaQrTrajet').textContent = `${d.origen} → ${d.destino} · ${d.matricula}`;
-  document.getElementById('decaQrUrl').textContent = d.url;
-  document.getElementById('decaQrImage').innerHTML = svgQr(d.url);
-  document.getElementById('decaQrModal').classList.remove('hidden');
+  if(d) return afficherCarteDeca(d);
 }
-const fermerQrDeca = () => document.getElementById('decaQrModal').classList.add('hidden');
+const fermerQrDeca = () => {
+  document.getElementById('decaQrModal').classList.add('hidden');
+  if(/^#deca=/.test(location.hash)) history.replaceState(null, '', location.pathname + location.search);
+};
 document.getElementById('decaQrFermer').addEventListener('click', fermerQrDeca);
 document.addEventListener('keydown', (e) => { if(e.key === 'Escape') fermerQrDeca(); });
 
 document.getElementById('adminDeca').addEventListener('click', async (e) => {
-  const b = e.target.closest('[data-deca-voir],[data-deca-qr],[data-deca-modifier],[data-deca-scan],[data-deca-fichier],[data-deca-annuler],[data-annexe]');
+  const b = e.target.closest('[data-deca-voir],[data-deca-qr],[data-deca-modifier],[data-deca-scan],[data-deca-fichier],[data-deca-annuler],[data-annexe],[data-deca-tester],[data-deca-dupliquer]');
   if(!b) return;
+  if(b.dataset.decaTester){ const d = decaListeCache.find(x => x.id === b.dataset.decaTester); if(d){ const r = await verifierLienDeca(d, true); if(r !== 'ok') alert(MESSAGES_LIEN_DECA[r]); } return; }
+  if(b.dataset.decaDupliquer){
+    const src = decaListeCache.find(x => x.id === b.dataset.decaDupliquer);
+    decaIdCourant = null;
+    const copie = {}; CHAMPS_DECA.forEach(c => { copie[c] = src[c] ?? ''; });
+    remplirFormDeca({ ...copie, fechaCarga: aujourdHuiISO(), fechaDescarga: '', missionId: '' });
+    sauverBrouillonDeca();
+    decaEtat.textContent = `Copie de ${src.numero} : vérifie les dates et le chargement, puis génère le nouveau DeCA.`;
+    formDeca.scrollIntoView({ block: 'start' });
+    return;
+  }
   if(b.dataset.decaVoir) return ouvrirPdfDeca(b.dataset.decaVoir);
   if(b.dataset.decaQr) return afficherQrDeca(b.dataset.decaQr);
   if(b.dataset.annexe) return ouvrirFichier(b.dataset.annexe);
@@ -6715,6 +6780,207 @@ async function ajouterAnnexesDeca(fichiers){
 }
 document.getElementById('decaScanCamera').addEventListener('change', (e) => ajouterAnnexesDeca([...e.target.files]));
 document.getElementById('decaScanFichier').addEventListener('change', (e) => ajouterAnnexesDeca([...e.target.files]));
+
+/* ============================================================
+   DeCA — fiabilité renforcée
+   ============================================================ */
+// Réessaie une opération réseau (base de données) jusqu'à 3 fois
+async function avecReessais(operation, essais = 3){
+  let derniere;
+  for(let i = 0; i < essais; i++){
+    try { return await operation(); }
+    catch (err) { derniere = err; if(i < essais - 1) await new Promise(r => setTimeout(r, 700 * (i + 1) * (i + 1))); }
+  }
+  throw derniere;
+}
+
+// ---------- Contrôles de saisie (NIF / NIE / DNI / CIF, matrícula, dates) ----------
+function nifValide(valeur){
+  const v = String(valeur || '').toUpperCase().replace(/[\s.-]/g, '');
+  const lettres = 'TRWAGMYFPDXBNJZSQVHLCKE';
+  if(/^\d{8}[A-Z]$/.test(v)) return lettres[Number(v.slice(0, 8)) % 23] === v[8];
+  if(/^[XYZ]\d{7}[A-Z]$/.test(v)) return lettres[Number('XYZ'.indexOf(v[0]) + v.slice(1, 8)) % 23] === v[8];
+  if(/^[ABCDEFGHJNPQRSUVW]\d{7}[0-9A-J]$/.test(v)){
+    const chiffres = v.slice(1, 8).split('').map(Number);
+    let somme = 0;
+    chiffres.forEach((c, i) => { if(i % 2 === 0){ const d = c * 2; somme += Math.floor(d / 10) + (d % 10); } else somme += c; });
+    const controle = (10 - (somme % 10)) % 10;
+    return v[8] === String(controle) || v[8] === 'JABCDEFGHI'[controle];
+  }
+  return false;
+}
+function matriculaEspagnole(valeur){
+  const v = String(valeur || '').toUpperCase().replace(/[\s-]/g, '');
+  return /^\d{4}[BCDFGHJKLMNPRSTVWXYZ]{3}$/.test(v) || /^[A-Z]{1,2}\d{4}[A-Z]{1,2}$/.test(v) || /^R\d{4}[BCDFGHJKLMNPRSTVWXYZ]{3}$/.test(v) || /^E\d{4}[BCDFGHJKLMNPRSTVWXYZ]{3}$/.test(v);
+}
+function avertissementsDeca(d){
+  const a = [];
+  if(d.cargadorNif && !nifValide(d.cargadorNif)) a.push(`NIF du chargeur « ${d.cargadorNif} » : format ou lettre de contrôle incorrect`);
+  if(d.transportistaNif && !nifValide(d.transportistaNif)) a.push(`NIF du transporteur « ${d.transportistaNif} » : format ou lettre de contrôle incorrect`);
+  if(d.conductorDni && !nifValide(d.conductorDni)) a.push(`DNI/NIE du conducteur « ${d.conductorDni} » : format ou lettre de contrôle incorrect`);
+  if(d.matricula && !matriculaEspagnole(d.matricula)) a.push(`Immatriculation « ${d.matricula} » : ce n'est pas un format espagnol (normal si le véhicule est étranger)`);
+  if(d.matriculaRemolque && !matriculaEspagnole(d.matriculaRemolque)) a.push(`Immatriculation remorque « ${d.matriculaRemolque} » : format inhabituel`);
+  if(d.pesoKg !== '' && Number(d.pesoKg) > 44000) a.push(`Poids ${d.pesoKg} kg : au-delà de 44 t, vérifie la saisie (kg, pas tonnes)`);
+  if(d.pesoKg !== '' && Number(d.pesoKg) > 0 && Number(d.pesoKg) < 50) a.push(`Poids ${d.pesoKg} kg : très faible, as-tu saisi des tonnes au lieu de kg ?`);
+  return a;
+}
+
+// ---------- Brouillon gardé sur l'appareil (rien n'est perdu en cas de coupure) ----------
+const CLE_BROUILLON_DECA = 'boua-deca-brouillon';
+function sauverBrouillonDeca(){
+  try { localStorage.setItem(CLE_BROUILLON_DECA, JSON.stringify({ id: decaIdCourant, d: lireFormDeca(), t: Date.now() })); } catch (e) { /* stockage indisponible */ }
+}
+function effacerBrouillonDeca(){ try { localStorage.removeItem(CLE_BROUILLON_DECA); } catch (e) {} }
+function lireBrouillonDeca(){
+  try { const b = JSON.parse(localStorage.getItem(CLE_BROUILLON_DECA) || 'null'); return b && b.d && (Date.now() - b.t < 7 * 86400000) ? b : null; } catch (e) { return null; }
+}
+let minuterieBrouillonDeca = null;
+formDeca.addEventListener('input', () => { clearTimeout(minuterieBrouillonDeca); minuterieBrouillonDeca = setTimeout(sauverBrouillonDeca, 400); });
+
+// ---------- Vérification du lien public (le QR mène-t-il bien au PDF ?) ----------
+const etatLiensDeca = {};
+async function verifierLienDeca(d, silencieux){
+  etatLiensDeca[d.id] = 'test';
+  afficherListeDeca();
+  let resultat;
+  try {
+    const controleur = new AbortController();
+    const minuterie = setTimeout(() => controleur.abort(), 12000);
+    const rep = await fetch(d.url, { cache: 'no-store', signal: controleur.signal });
+    clearTimeout(minuterie);
+    const type = rep.headers.get('content-type') || '';
+    if(rep.ok && type.includes('application/pdf')) resultat = 'ok';
+    else if(rep.status === 410) resultat = 'annule';
+    else if(rep.ok || rep.status === 404 && !type.includes('text/plain')) resultat = 'api_absente';
+    else resultat = 'erreur';
+  } catch (err) { resultat = 'reseau'; }
+  etatLiensDeca[d.id] = resultat;
+  afficherListeDeca();
+  if(!silencieux && resultat !== 'ok') alert(MESSAGES_LIEN_DECA[resultat]);
+  return resultat;
+}
+const MESSAGES_LIEN_DECA = {
+  ok: 'Lien vérifié : le QR télécharge bien le PDF.',
+  annule: 'Ce DeCA est annulé : son lien est désactivé.',
+  api_absente: "Le lien du QR ne renvoie pas le PDF : le fichier « api/deca.js » n'est pas en ligne. Mets le dossier « api » (avec deca.js) sur GitHub, attends la fin du déploiement Vercel, puis teste à nouveau.",
+  erreur: 'Le lien répond avec une erreur. Réessaie dans un instant ; si cela continue, vérifie les règles Firestore (deca, deca_pdf).',
+  reseau: "Impossible de joindre le lien (pas de connexion, ou site pas encore déployé). Réessaie quand tu as du réseau."
+};
+function badgeLienDeca(id){
+  const etat = etatLiensDeca[id];
+  if(!etat) return `<button type="button" data-deca-tester="${echapperHtmlAdmin(id)}" class="text-xs font-semibold text-teal hover:text-amberdark px-2 py-1.5">🔎 Tester le lien du QR</button>`;
+  if(etat === 'test') return '<span class="text-xs text-slate-500 px-2 py-1.5">Test du lien…</span>';
+  if(etat === 'ok') return '<span class="text-xs font-semibold text-teal px-2 py-1.5">✓ Lien du QR vérifié</span>';
+  return `<button type="button" data-deca-tester="${echapperHtmlAdmin(id)}" class="text-xs font-semibold text-red-500 hover:underline px-2 py-1.5" title="${echapperHtmlAdmin(MESSAGES_LIEN_DECA[etat])}">⚠️ Lien du QR à vérifier — retester</button>`;
+}
+
+// ---------- Carte DeCA publique (pour le chauffeur) : /#deca=ID ----------
+const CLE_CARTES_DECA = 'boua-deca-cartes';
+function memoriserCarteDeca(d, svg){
+  try {
+    const cartes = JSON.parse(localStorage.getItem(CLE_CARTES_DECA) || '{}');
+    cartes[d.id] = { id: d.id, numero: d.numero, origen: d.origen, destino: d.destino, matricula: d.matricula, url: d.url, svg, t: Date.now() };
+    Object.keys(cartes).sort((a, b) => cartes[b].t - cartes[a].t).slice(30).forEach(k => delete cartes[k]); // 30 dernières
+    localStorage.setItem(CLE_CARTES_DECA, JSON.stringify(cartes));
+  } catch (e) { /* facultatif */ }
+}
+function carteDecaMemorisee(id){ try { return JSON.parse(localStorage.getItem(CLE_CARTES_DECA) || '{}')[id] || null; } catch (e) { return null; } }
+function lienCarteDeca(id){ return `${location.origin}/#deca=${id}`; }
+
+const decaQrModal = document.getElementById('decaQrModal');
+document.body.appendChild(decaQrModal); // utilisable aussi hors de l'admin (chauffeur, inspection)
+document.getElementById('decaQrUrl').insertAdjacentHTML('beforebegin', `
+  <div class="flex flex-wrap justify-center gap-3 mt-4">
+    <a id="decaQrPdf" href="#" target="_blank" rel="noopener" class="bg-amber hover:bg-amberdark text-navy font-bold px-5 py-2.5 rounded-full">📄 Ouvrir le PDF</a>
+    <a id="decaQrTelecharger" href="#" class="border-2 border-navy text-navy font-semibold px-5 py-2 rounded-full">⬇ Enregistrer sur le téléphone</a>
+  </div>
+  <p id="decaQrHorsLigne" class="hidden text-xs text-amberdark font-semibold mt-3">Mode hors ligne : QR enregistré sur ce téléphone.</p>`);
+
+async function afficherCarteDeca(d, horsLigne){
+  let svg = d.svg || '';
+  if(!svg){
+    try { await chargerQr(); svg = svgQr(d.url); }
+    catch (err) { const m = carteDecaMemorisee(d.id); if(m && m.svg){ svg = m.svg; horsLigne = true; } else { alert("Le code QR ne peut pas être affiché sans connexion la première fois. Ouvre-le une fois avec du réseau : il restera ensuite disponible hors ligne."); return; } }
+  }
+  memoriserCarteDeca(d, svg);
+  document.getElementById('decaQrNumero').textContent = d.numero || '';
+  document.getElementById('decaQrTrajet').textContent = [d.origen && d.destino ? `${d.origen} → ${d.destino}` : '', d.matricula].filter(Boolean).join(' · ');
+  document.getElementById('decaQrUrl').textContent = d.url;
+  document.getElementById('decaQrImage').innerHTML = svg;
+  document.getElementById('decaQrPdf').href = d.url;
+  document.getElementById('decaQrTelecharger').href = d.url + '&dl=1';
+  document.getElementById('decaQrHorsLigne').classList.toggle('hidden', !horsLigne);
+  decaQrModal.classList.remove('hidden');
+}
+
+
+async function ouvrirCarteDecaDepuisAdresse(){
+  const m = location.hash.match(/^#deca=([A-Za-z0-9]{10,40})$/);
+  if(!m) return;
+  const id = m[1];
+  const memo = carteDecaMemorisee(id);
+  if(memo && !navigator.onLine) return afficherCarteDeca(memo, true);
+  quandFirebasePret(async () => {
+    try {
+      const { doc, getDoc } = window._firestore;
+      const snap = await getDoc(doc(window._db, 'deca', id));
+      if(!snap.exists()){ if(memo) return afficherCarteDeca(memo, true); alert('DeCA introuvable.'); return; }
+      const d = { id, ...snap.data() };
+      if(d.statut === 'annule'){ alert(`Le DeCA ${d.numero} a été annulé.`); return; }
+      afficherCarteDeca(d);
+    } catch (err) {
+      if(memo) afficherCarteDeca(memo, true); else alert('Impossible de charger le DeCA (pas de connexion ?).');
+    }
+  });
+}
+window.addEventListener('hashchange', ouvrirCarteDecaDepuisAdresse);
+ouvrirCarteDecaDepuisAdresse();
+
+// ---------- Espace Chauffeur : « Mes DeCA » ----------
+document.getElementById('chauffeurMissionsList').insertAdjacentHTML('beforebegin', `
+  <div id="chauffeurDecaBloc" class="hidden mb-6">
+    <h4 class="text-sm font-bold uppercase tracking-wide text-amberdark mb-2">🧾 Mes DeCA (documents de contrôle)</h4>
+    <div id="chauffeurDecaListe" class="space-y-2"></div>
+  </div>`);
+let arreterEcouteDecaChauffeur = null;
+let decaChauffeurCache = [];
+function ecouterMesDeca(emails){
+  if(arreterEcouteDecaChauffeur) arreterEcouteDecaChauffeur();
+  const { collection, query, where, onSnapshot } = window._firestore;
+  const liste = emails.filter(Boolean).map(e => String(e).toLowerCase());
+  if(!liste.length) return;
+  arreterEcouteDecaChauffeur = onSnapshot(query(collection(window._db, 'deca'), where('chauffeurEmail', 'in', liste)), (snap) => {
+    decaChauffeurCache = snap.docs.map(x => ({ id: x.id, ...x.data() })).filter(d => d.statut !== 'annule')
+      .sort((a, b) => String(b.fechaCarga || '').localeCompare(String(a.fechaCarga || '')));
+    const e = echapperHtml;
+    document.getElementById('chauffeurDecaBloc').classList.toggle('hidden', !decaChauffeurCache.length);
+    document.getElementById('chauffeurDecaListe').innerHTML = decaChauffeurCache.slice(0, 15).map(d => `
+      <div class="flex flex-wrap items-center gap-2 border border-slate-200 dark:border-white/10 rounded-xl px-3 py-2.5">
+        <div class="flex-1 min-w-[160px]">
+          <p class="text-sm font-semibold text-navy dark:text-white">${e(d.origen)} → ${e(d.destino)}</p>
+          <p class="text-xs text-slate-500 dark:text-cream/60"><span class="font-mono-num">${e(d.numero)}</span> · ${dateEs(d.fechaCarga)} · ${e(d.matricula)}</p>
+        </div>
+        <button type="button" data-chauffeur-deca="${e(d.id)}" class="text-xs font-bold bg-navy text-cream px-3 py-1.5 rounded-full">▦ QR</button>
+        <a href="${e(d.url)}" target="_blank" rel="noopener" class="text-xs font-bold bg-amber text-navy px-3 py-1.5 rounded-full">PDF</a>
+      </div>`).join('');
+  }, (err) => console.error('Écoute des DeCA du chauffeur :', err));
+}
+document.getElementById('chauffeurDecaBloc').addEventListener('click', (e) => {
+  const b = e.target.closest('[data-chauffeur-deca]');
+  if(b){ const d = decaChauffeurCache.find(x => x.id === b.dataset.chauffeurDeca); if(d) afficherCarteDeca(d); }
+});
+
+// ---------- Frets & voyages : bouton « DeCA » sur chaque voyage ----------
+let decaVoyageEnAttente = null;
+function appliquerVoyageEnAttenteDeca(){
+  if(!decaVoyageEnAttente) return;
+  const id = decaVoyageEnAttente;
+  if(![...decaMission.options].some(o => o.value === id)) return; // liste pas encore chargée : on réessaiera
+  decaVoyageEnAttente = null;
+  decaMission.value = id;
+  decaMission.dispatchEvent(new Event('change'));
+  sauverBrouillonDeca();
+}
 
 /* ============================================================
    PUBLIER PAR LIEN (YouTube, TikTok, Instagram, Facebook, X, image)
@@ -6892,20 +7158,27 @@ const BIBLIOTHEQUES_PDF = {
   html2canvas: 'https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js'
 };
 const scriptsPdfCharges = {};
+// Charge un outil (jsPDF, QR…) : jsdelivr d'abord, unpkg en secours si jsdelivr ne répond pas
+function chargerUnScript(src){
+  return new Promise((resolve, reject) => {
+    const script = document.createElement('script');
+    script.src = src;
+    script.async = true;
+    const minuterie = setTimeout(() => { script.remove(); reject(new Error('délai dépassé')); }, 15000);
+    script.onload = () => { clearTimeout(minuterie); resolve(); };
+    script.onerror = () => { clearTimeout(minuterie); script.remove(); reject(new Error('échec')); };
+    document.head.appendChild(script);
+  });
+}
 function chargerScriptPdf(url){
   if(!scriptsPdfCharges[url]){
-    scriptsPdfCharges[url] = new Promise((resolve, reject) => {
-      const script = document.createElement('script');
-      script.src = url;
-      script.async = true;
-      script.onload = resolve;
-      script.onerror = () => {
+    const secours = url.replace('https://cdn.jsdelivr.net/npm/', 'https://unpkg.com/');
+    scriptsPdfCharges[url] = chargerUnScript(url)
+      .catch(() => secours !== url ? chargerUnScript(secours) : Promise.reject())
+      .catch(() => {
         delete scriptsPdfCharges[url]; // on pourra réessayer au prochain clic
-        script.remove();
-        reject(new Error("Impossible de charger l'outil PDF (vérifie ta connexion internet)."));
-      };
-      document.head.appendChild(script);
-    });
+        throw new Error("Impossible de charger l'outil PDF (vérifie ta connexion internet).");
+      });
   }
   return scriptsPdfCharges[url];
 }
@@ -7234,6 +7507,7 @@ function afficherTableauVoyages(){
       <select data-statut-voyage="${e(v.id)}" class="champ-pro !w-auto !py-1.5 !text-xs font-semibold" aria-label="Statut du voyage">
         ${Object.entries(STATUTS_VOYAGE).map(([cle, s]) => `<option value="${cle}" ${cle === statut ? 'selected' : ''}>${s.label}</option>`).join('')}
       </select>
+      <button type="button" data-deca-voyage="${e(v.id)}" class="text-xs font-bold text-amberdark hover:text-teal px-2 py-1" title="Préparer le DeCA de ce voyage">🧾 DeCA</button>
       <button type="button" data-cmr-voyage="${e(v.id)}" class="text-xs font-bold text-teal hover:text-amberdark px-2 py-1" title="Préparer le CMR de ce voyage">📄 CMR</button>
     </div>`;
   }).join('') + (liste.length > nombreVoyagesAffiches
@@ -7250,6 +7524,15 @@ voyagesRecherche.addEventListener('input', () => { nombreVoyagesAffiches = 30; a
 
 voyagesListe.addEventListener('click', (e) => {
   if(e.target.id === 'voyagesPlus'){ nombreVoyagesAffiches += 30; afficherTableauVoyages(); return; }
+  const boutonDeca = e.target.closest('[data-deca-voyage]');
+  if(boutonDeca){
+    decaVoyageEnAttente = boutonDeca.dataset.decaVoyage;
+    decaIdCourant = null;
+    formDeca.dataset.pret = '1';
+    allerSurOnglet('deca');
+    nouveauDeca().then(() => appliquerVoyageEnAttenteDeca());
+    return;
+  }
   const boutonCmr = e.target.closest('[data-cmr-voyage]');
   if(boutonCmr){
     const voyage = voyagesCache.find(v => v.id === boutonCmr.dataset.cmrVoyage);
