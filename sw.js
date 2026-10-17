@@ -5,7 +5,7 @@
 // (même une petite). C'est ce qui force les navigateurs des visiteurs
 // à récupérer la nouvelle version plutôt que de servir l'ancienne
 // depuis le cache indéfiniment.
-const CACHE_VERSION = "v10";
+const CACHE_VERSION = "v11";
 const CACHE_NAME = `boua-trans-${CACHE_VERSION}`;
 
 // Fichiers essentiels mis en cache dès l'installation, pour que le
@@ -81,6 +81,12 @@ self.addEventListener("fetch", (event) => {
   // (Firebase, Google Fonts API, etc.) — seulement les fichiers du site.
   if (url.origin !== self.location.origin) {
     return; // laisse la requête suivre son cours normal, sans interception
+  }
+
+  // Fonctions serveur (ex : /api/deca, PDF des documents de contrôle) :
+  // toujours la version à jour, jamais de cache.
+  if (url.pathname.startsWith("/api/")) {
+    return;
   }
 
   // 1. Navigation (chargement/rechargement de la page)
