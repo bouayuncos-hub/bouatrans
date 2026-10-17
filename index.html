@@ -1563,6 +1563,29 @@
   </div>
 
   <!-- Code QR plein écran, à présenter à l'inspection -->
+  <div id="decaEnvoiModal" class="hidden fixed inset-0 z-[96] bg-black/60 flex items-center justify-center p-4">
+    <div class="bg-white dark:bg-navylight text-navy dark:text-cream w-full max-w-md rounded-2xl shadow-2xl p-6 relative">
+      <button type="button" id="decaEnvoiFermer" aria-label="Fermer" class="absolute top-4 right-4 text-slate-400 hover:text-amber text-xl leading-none">✕</button>
+      <h3 class="text-lg font-bold mb-1">Envoyer le DeCA <span id="decaEnvoiNumero" class="font-mono-num text-amberdark"></span></h3>
+      <p id="decaEnvoiTrajet" class="text-sm text-slate-500 dark:text-cream/60 mb-4"></p>
+      <label class="etiquette-pro" for="decaEnvoiTel">Numéro de téléphone</label>
+      <input id="decaEnvoiTel" type="tel" inputmode="tel" autocomplete="tel" class="champ-pro mb-1" placeholder="Ex : 612 34 56 78 ou +33 6 12 34 56 78">
+      <p class="text-xs text-slate-400 mb-3">Sans indicatif, un numéro espagnol (+34) est utilisé.</p>
+      <div class="grid grid-cols-2 gap-2 mb-4">
+        <button type="button" id="decaEnvoiWhatsapp" class="bg-[#25D366] hover:opacity-90 text-white font-bold text-sm py-2.5 rounded-full">WhatsApp</button>
+        <button type="button" id="decaEnvoiSms" class="bg-navy dark:bg-white/10 text-cream font-bold text-sm py-2.5 rounded-full">💬 SMS</button>
+      </div>
+      <label class="etiquette-pro" for="decaEnvoiEmail">Adresse e-mail</label>
+      <input id="decaEnvoiEmail" type="email" autocomplete="email" class="champ-pro mb-2" placeholder="chauffeur@exemple.com">
+      <button type="button" id="decaEnvoiMail" class="w-full bg-amber hover:bg-amberdark text-navy font-bold text-sm py-2.5 rounded-full mb-4">✉️ Envoyer par e-mail</button>
+      <div class="flex flex-wrap gap-2 border-t border-slate-200 dark:border-white/10 pt-4">
+        <button type="button" id="decaEnvoiPartager" class="hidden flex-1 border-2 border-navy dark:border-cream/40 font-semibold text-sm py-2 rounded-full">📲 Autre application…</button>
+        <button type="button" id="decaEnvoiCopier" class="flex-1 border-2 border-slate-200 dark:border-white/15 font-semibold text-sm py-2 rounded-full">🔗 Copier le message</button>
+      </div>
+      <p id="decaEnvoiEtat" class="text-sm font-medium mt-3 min-h-[1.25rem]"></p>
+    </div>
+  </div>
+
   <div id="decaQrModal" class="hidden fixed inset-0 z-[95] bg-white flex flex-col items-center justify-center p-6 text-center">
     <button type="button" id="decaQrFermer" aria-label="Fermer" class="absolute top-4 right-5 text-slate-500 hover:text-navy text-3xl leading-none">✕</button>
     <p class="text-sm font-bold uppercase tracking-widest text-slate-500">Documento de Control (DeCA)</p>
@@ -6677,7 +6700,7 @@ function afficherListeDeca(){
       <div class="flex flex-wrap gap-2 mt-3">
         <button type="button" data-deca-voir="${e(d.id)}" class="text-xs font-bold bg-amber hover:bg-amberdark text-navy px-3 py-1.5 rounded-full">📄 Afficher / télécharger le DeCA</button>
         <button type="button" data-deca-qr="${e(d.id)}" class="text-xs font-bold bg-navy dark:bg-white/10 text-cream hover:text-amber px-3 py-1.5 rounded-full">▦ Afficher le code QR</button>
-        <a href="https://wa.me/?text=${encodeURIComponent(`DeCA ${d.numero} (${d.origen} → ${d.destino})\nCode QR à montrer au contrôle : ${lienCarteDeca(d.id)}\nPDF : ${d.url}`)}" target="_blank" rel="noopener" class="text-xs font-semibold border border-slate-200 dark:border-white/15 hover:border-amber px-3 py-1.5 rounded-full">💬 Envoyer au chauffeur</a>
+        <button type="button" data-deca-envoyer="${e(d.id)}" class="text-xs font-bold bg-teal text-white hover:opacity-90 px-3 py-1.5 rounded-full">📤 Envoyer (WhatsApp, SMS, e-mail)</button>
         <button type="button" data-deca-dupliquer="${e(d.id)}" class="text-xs font-semibold border border-slate-200 dark:border-white/15 hover:border-amber px-3 py-1.5 rounded-full">📑 Dupliquer</button>
         ${annule ? '' : badgeLienDeca(d.id)}
         ${annule ? '' : `<button type="button" data-deca-modifier="${e(d.id)}" class="text-xs font-semibold border border-slate-200 dark:border-white/15 hover:border-amber px-3 py-1.5 rounded-full">✏️ Modifier</button>
@@ -6720,8 +6743,9 @@ document.getElementById('decaQrFermer').addEventListener('click', fermerQrDeca);
 document.addEventListener('keydown', (e) => { if(e.key === 'Escape') fermerQrDeca(); });
 
 document.getElementById('adminDeca').addEventListener('click', async (e) => {
-  const b = e.target.closest('[data-deca-voir],[data-deca-qr],[data-deca-modifier],[data-deca-scan],[data-deca-fichier],[data-deca-annuler],[data-annexe],[data-deca-tester],[data-deca-dupliquer]');
+  const b = e.target.closest('[data-deca-voir],[data-deca-qr],[data-deca-modifier],[data-deca-scan],[data-deca-fichier],[data-deca-annuler],[data-annexe],[data-deca-tester],[data-deca-dupliquer],[data-deca-envoyer]');
   if(!b) return;
+  if(b.dataset.decaEnvoyer) return ouvrirEnvoiDeca(b.dataset.decaEnvoyer);
   if(b.dataset.decaTester){ const d = decaListeCache.find(x => x.id === b.dataset.decaTester); if(d){ const r = await verifierLienDeca(d, true); if(r !== 'ok') alert(MESSAGES_LIEN_DECA[r]); } return; }
   if(b.dataset.decaDupliquer){
     const src = decaListeCache.find(x => x.id === b.dataset.decaDupliquer);
@@ -6780,6 +6804,95 @@ async function ajouterAnnexesDeca(fichiers){
 }
 document.getElementById('decaScanCamera').addEventListener('change', (e) => ajouterAnnexesDeca([...e.target.files]));
 document.getElementById('decaScanFichier').addEventListener('change', (e) => ajouterAnnexesDeca([...e.target.files]));
+
+/* ---------- Envoyer un DeCA : WhatsApp, SMS ou e-mail à un numéro / une adresse ---------- */
+const decaEnvoiModal = document.getElementById('decaEnvoiModal');
+document.body.appendChild(decaEnvoiModal);
+let decaEnvoiCourant = null;
+const decaEnvoiEtat = document.getElementById('decaEnvoiEtat');
+
+function numeroInternational(brut){
+  let n = String(brut || '').trim();
+  const plus = n.startsWith('+');
+  n = n.replace(/\D/g, '');
+  if(!plus && n.startsWith('00')) n = n.slice(2);
+  else if(!plus && n.length === 9 && /^[6789]/.test(n)) n = '34' + n; // numéro espagnol sans indicatif
+  return n.length >= 10 && n.length <= 15 ? n : '';
+}
+function messageEnvoiDeca(d){
+  return `BOUA Trans — DeCA ${d.numero}\n${d.origen} → ${d.destino}${d.fechaCarga ? ' · ' + dateEs(d.fechaCarga) : ''}${d.matricula ? ' · ' + d.matricula : ''}\n\nCode QR à montrer au contrôle : ${lienCarteDeca(d.id)}\nDocument PDF : ${d.url}`;
+}
+function montrerEtatEnvoi(texte, erreur){
+  decaEnvoiEtat.textContent = texte;
+  decaEnvoiEtat.className = `text-sm font-medium mt-3 min-h-[1.25rem] ${erreur ? 'text-red-500' : 'text-teal'}`;
+}
+function ouvrirEnvoiDeca(id){
+  const d = decaListeCache.find(x => x.id === id);
+  if(!d) return;
+  decaEnvoiCourant = d;
+  const chauffeur = decaChauffeurs.find(c => d.chauffeurEmail && String(c.email || '').toLowerCase() === d.chauffeurEmail);
+  document.getElementById('decaEnvoiNumero').textContent = d.numero;
+  document.getElementById('decaEnvoiTrajet').textContent = `${d.origen} → ${d.destino}${d.conductorNombre ? ' · ' + d.conductorNombre : ''}`;
+  document.getElementById('decaEnvoiTel').value = d.envoiTelephone || (chauffeur && chauffeur.telephone) || '';
+  document.getElementById('decaEnvoiEmail').value = d.envoiEmail || d.chauffeurEmail || '';
+  document.getElementById('decaEnvoiPartager').classList.toggle('hidden', !navigator.share);
+  montrerEtatEnvoi('');
+  decaEnvoiModal.classList.remove('hidden');
+}
+function ouvrirLienExterne(url){ window.location.href = url; } // sms:, mailto: → application du téléphone
+function fermerEnvoiDeca(){ decaEnvoiModal.classList.add('hidden'); }
+document.getElementById('decaEnvoiFermer').addEventListener('click', fermerEnvoiDeca);
+decaEnvoiModal.addEventListener('click', (e) => { if(e.target === decaEnvoiModal) fermerEnvoiDeca(); });
+document.addEventListener('keydown', (e) => { if(e.key === 'Escape' && !decaEnvoiModal.classList.contains('hidden')) fermerEnvoiDeca(); });
+
+// Le dernier numéro / e-mail utilisé est retenu pour ce DeCA
+function retenirDestinataireDeca(champ, valeur){
+  const d = decaEnvoiCourant;
+  if(!d || !valeur || d[champ] === valeur) return;
+  d[champ] = valeur;
+  const { doc, updateDoc } = window._firestore;
+  updateDoc(doc(window._db, 'deca', d.id), { [champ]: valeur }).catch(() => {});
+}
+function lireTelephoneEnvoi(){
+  const champ = document.getElementById('decaEnvoiTel');
+  const n = numeroInternational(champ.value);
+  if(!n){ montrerEtatEnvoi('Numéro de téléphone incomplet ou invalide.', true); champ.focus(); return ''; }
+  retenirDestinataireDeca('envoiTelephone', champ.value.trim());
+  return n;
+}
+document.getElementById('decaEnvoiWhatsapp').addEventListener('click', () => {
+  const n = lireTelephoneEnvoi(); if(!n) return;
+  window.open(`https://wa.me/${n}?text=${encodeURIComponent(messageEnvoiDeca(decaEnvoiCourant))}`, '_blank', 'noopener');
+  montrerEtatEnvoi('WhatsApp s\'ouvre avec le message prêt : appuie sur Envoyer.');
+});
+document.getElementById('decaEnvoiSms').addEventListener('click', () => {
+  const n = lireTelephoneEnvoi(); if(!n) return;
+  ouvrirLienExterne(`sms:+${n}?&body=${encodeURIComponent(messageEnvoiDeca(decaEnvoiCourant))}`);
+  montrerEtatEnvoi('L\'application SMS s\'ouvre avec le message prêt (sur téléphone).');
+});
+document.getElementById('decaEnvoiMail').addEventListener('click', () => {
+  const champ = document.getElementById('decaEnvoiEmail');
+  const adresse = champ.value.trim();
+  if(!/^[^\s@,;]+@[^\s@,;]+\.[^\s@,;]+$/.test(adresse)){ montrerEtatEnvoi('Adresse e-mail invalide.', true); champ.focus(); return; }
+  retenirDestinataireDeca('envoiEmail', adresse.toLowerCase());
+  const d = decaEnvoiCourant;
+  ouvrirLienExterne(`mailto:${encodeURIComponent(adresse)}?subject=${encodeURIComponent(`DeCA ${d.numero} — ${d.origen} → ${d.destino}`)}&body=${encodeURIComponent(messageEnvoiDeca(d))}`);
+  montrerEtatEnvoi('Ta messagerie s\'ouvre avec l\'e-mail prêt : vérifie puis envoie.');
+});
+document.getElementById('decaEnvoiPartager').addEventListener('click', async () => {
+  const d = decaEnvoiCourant;
+  try { await navigator.share({ title: `DeCA ${d.numero}`, text: messageEnvoiDeca(d) }); montrerEtatEnvoi('Partagé.'); }
+  catch (err) { if(err && err.name !== 'AbortError') montrerEtatEnvoi('Partage impossible sur cet appareil.', true); }
+});
+document.getElementById('decaEnvoiCopier').addEventListener('click', async () => {
+  const texte = messageEnvoiDeca(decaEnvoiCourant);
+  try { await navigator.clipboard.writeText(texte); montrerEtatEnvoi('Message copié : colle-le où tu veux.'); }
+  catch (err) {
+    const zone = document.createElement('textarea'); zone.value = texte; document.body.appendChild(zone); zone.select();
+    const okCopie = document.execCommand && document.execCommand('copy'); zone.remove();
+    montrerEtatEnvoi(okCopie ? 'Message copié : colle-le où tu veux.' : 'Copie impossible : sélectionne le lien à la main.', !okCopie);
+  }
+});
 
 /* ============================================================
    DeCA — fiabilité renforcée
