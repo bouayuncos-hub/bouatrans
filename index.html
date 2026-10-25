@@ -218,6 +218,33 @@
   .cmr-marchandises tfoot td{ font-weight: 700; border-top: 0.75px solid #0F1F38; border-bottom: none; }
   .cmr-signatures{ display: grid; grid-template-columns: 1fr 1fr 1fr; grid-column: 1 / -1; }
   .cmr-signatures .cmr-case{ min-height: 132px; }
+
+  /* ---------- Feuille de facture (modèle LASSINE DIAKITE) ---------- */
+  .fld-feuille{ width: 794px; min-height: 1060px; background: #fff; color: #111; font-family: Arial, Helvetica, sans-serif; padding: 56px 60px 40px; box-shadow: 0 10px 30px rgba(15,31,56,.18); border-radius: 6px; position: relative; }
+  .fld-feuille input, .fld-feuille select{ font-family: inherit; color: #111; background: transparent; }
+  .fld-feuille input:focus, .fld-feuille select:focus{ outline: none; background: #FFF7E8; }
+  .fld-entete{ display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 26px; }
+  .fld-nom{ font-size: 34px; font-weight: 800; letter-spacing: .5px; }
+  .fld-tel{ font-size: 15px; font-weight: 700; margin-top: 6px; }
+  .fld-adresse{ text-align: right; font-size: 12.5px; font-weight: 700; line-height: 1.55; }
+  .fld-ligne{ display: flex; align-items: flex-end; gap: 8px; margin: 9px 0; font-size: 13px; font-weight: 700; }
+  .fld-souligne{ border: none; border-bottom: 1.5px solid #111; font-size: 13px; padding: 1px 4px; font-weight: 400; min-width: 60px; }
+  .fld-table{ width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 12.5px; }
+  .fld-table th{ border: 1.5px solid #111; font-weight: 700; padding: 10px 4px; text-align: center; line-height: 1.2; }
+  .fld-table th small{ font-size: 9.5px; font-weight: 400; }
+  .fld-table td{ border: 1.5px solid #111; height: 42px; padding: 0; }
+  .fld-table td input{ width: 100%; height: 40px; border: none; padding: 0 6px; font-size: 12.5px; }
+  .fld-table td input.n{ text-align: right; }
+  .fld-table td.tot{ text-align: right; padding: 0 6px; font-size: 12.5px; white-space: nowrap; }
+  .fld-totaux{ margin: 22px 0 0 auto; border-collapse: collapse; font-size: 13px; width: 400px; }
+  .fld-totaux th{ border: 1.5px solid #111; text-align: right; padding: 7px 12px; font-weight: 700; width: 60%; }
+  .fld-totaux td{ border: 1.5px solid #111; text-align: right; padding: 7px 10px; font-weight: 700; }
+  .fld-tva{ border: none; font-weight: 700; font-size: 13px; cursor: pointer; }
+  .fld-paiement{ width: 100%; border-collapse: collapse; margin-top: 30px; font-size: 13px; }
+  .fld-paiement th{ border: 1.5px solid #111; text-align: left; padding: 9px 12px; width: 26%; font-weight: 700; }
+  .fld-paiement td{ border: 1.5px solid #111; padding: 0; }
+  .fld-case{ width: 100%; border: none; padding: 9px 10px; font-size: 13px; }
+  .fld-pied{ position: absolute; left: 60px; right: 60px; bottom: 26px; display: flex; justify-content: space-between; font-size: 10px; color: #9CA3AF; }
   .cmr-pied{ margin-top: 8px; font-size: 8px; color: #64748B; display: flex; justify-content: space-between; gap: 10px; }
 </style>
 </head>
@@ -999,6 +1026,7 @@
       <button class="admin-tab" data-collection="nouveauVoyage">🚚 Frets &amp; voyages</button>
       <button class="admin-tab" data-collection="cmr">📄 CMR</button>
       <button class="admin-tab" data-collection="deca">🧾 DeCA</button>
+      <button class="admin-tab" data-collection="factureLd">📝 Facture</button>
       <button class="admin-tab" data-collection="devis">Devis</button>
       <button class="admin-tab" data-collection="candidatures">Candidatures</button>
       <button class="admin-tab" data-collection="commandes">Commandes / Suivi</button>
@@ -1595,6 +1623,103 @@
     <p id="decaQrTrajet" class="text-lg font-semibold text-navy"></p>
     <p class="text-sm text-slate-500 mt-1">Escanee el código para descargar el documento original (PDF).</p>
     <p id="decaQrUrl" class="font-mono-num text-xs text-slate-400 mt-3 break-all max-w-xl"></p>
+  </div>
+
+  <!-- ÉCRAN "FACTURE" : le modèle papier LASSINE DIAKITE, rempli à l'écran,
+       enregistré dans "factures" et téléchargé en PDF identique au modèle. -->
+  <div id="adminFactureLd" class="hidden max-w-5xl mx-auto px-5 py-8">
+    <div class="flex items-end justify-between flex-wrap gap-3 mb-5">
+      <div>
+        <h2 class="text-2xl font-bold text-navy dark:text-white mb-1">Facture — modèle LASSINE DIAKITE</h2>
+        <p class="text-sm text-slate-500 dark:text-cream/60">Remplis la facture directement sur le modèle : les totaux, l'IVA et le numéro se calculent tout seuls. Elle est enregistrée dans l'onglet Factures et téléchargeable en PDF.</p>
+      </div>
+      <div class="flex gap-3 text-sm font-semibold">
+        <button type="button" id="fldNouvelle" class="text-teal hover:text-amberdark">+ Nouvelle facture</button>
+        <button type="button" id="fldReglagesBtn" class="text-slate-500 hover:text-amberdark">⚙️ Mes coordonnées</button>
+      </div>
+    </div>
+
+    <!-- Coordonnées de l'émetteur (mémorisées) -->
+    <div id="fldReglages" class="hidden carte-pro mb-5">
+      <div class="grid sm:grid-cols-2 gap-3">
+        <div><label class="etiquette-pro">Nom</label><input data-reglage="nom" class="champ-pro"></div>
+        <div><label class="etiquette-pro">Téléphone</label><input data-reglage="telephone" class="champ-pro"></div>
+        <div><label class="etiquette-pro">Adresse (ligne 1)</label><input data-reglage="adresse1" class="champ-pro"></div>
+        <div><label class="etiquette-pro">Adresse (ligne 2)</label><input data-reglage="adresse2" class="champ-pro"></div>
+        <div><label class="etiquette-pro">Ton NIF / DNI (obligatoire sur une facture en Espagne)</label><input data-reglage="nif" class="champ-pro uppercase font-mono-num" placeholder="Ex : X1234567L"></div>
+        <div><label class="etiquette-pro">Forme de paiement par défaut</label><input data-reglage="formaPago" class="champ-pro" placeholder="Ex : Transferencia bancaria"></div>
+        <div class="sm:col-span-2"><label class="etiquette-pro">Numéro de compte (IBAN) par défaut</label><input data-reglage="numeroCuenta" class="champ-pro font-mono-num uppercase" placeholder="ES00 0000 0000 0000 0000 0000"></div>
+      </div>
+      <div class="flex items-center gap-3 mt-3">
+        <button type="button" id="fldReglagesEnregistrer" class="bg-navy dark:bg-amber text-cream dark:text-navy font-bold text-sm px-5 py-2 rounded-full">Enregistrer mes coordonnées</button>
+        <span id="fldReglagesEtat" class="text-sm text-slate-500 dark:text-cream/60"></span>
+      </div>
+    </div>
+
+    <!-- La feuille : même mise en page que le modèle papier -->
+    <div class="overflow-x-auto pb-2">
+      <form id="fldFeuille" novalidate class="fld-feuille mx-auto">
+        <div class="fld-entete">
+          <div>
+            <div class="fld-nom" data-af="nom">LASSINE DIAKITE</div>
+            <div class="fld-tel" data-af="telephone">+34632607101</div>
+          </div>
+          <div class="fld-adresse">
+            <div data-af="nom">LASSINE DIAKITE</div>
+            <div data-af="adresse1">Avenida Castilla La Mancha 122</div>
+            <div data-af="adresse2">Yuncos (Toledo) 45210</div>
+            <div data-af="nifLigne"></div>
+          </div>
+        </div>
+
+        <div class="fld-ligne"><label>FACTURA Nº:</label><input name="numero" class="fld-souligne" style="width:150px" placeholder="automatique"></div>
+        <div class="fld-ligne"><label>FECHA:</label><input name="dateEmission" type="date" class="fld-souligne" style="width:220px"></div>
+        <div class="fld-ligne"><label>CLIENTE:</label><input name="clientNom" class="fld-souligne" style="flex:1" list="fldClients" autocomplete="off"><label style="margin-left:22px">N.I.F.:</label><input name="clientNif" class="fld-souligne uppercase" style="width:180px"></div>
+        <div class="fld-ligne"><label>DOMICILIO:</label><input name="clientDomicilio" class="fld-souligne" style="flex:1"></div>
+        <datalist id="fldClients"></datalist>
+
+        <table class="fld-table">
+          <thead><tr>
+            <th style="width:15%">FECHA</th><th style="width:12%">CANTIDAD</th><th>CONCEPTO</th>
+            <th style="width:14%">PRECIO<br>UNITARIO</th><th style="width:14%">TOTAL<br><small>(IVA NO<br>INCLUIDO)</small></th>
+          </tr></thead>
+          <tbody id="fldLignes"></tbody>
+        </table>
+        <div class="flex justify-between items-start mt-1">
+          <button type="button" id="fldAjouterLigne" class="text-xs font-semibold text-teal hover:text-amberdark">+ ligne</button>
+        </div>
+
+        <table class="fld-totaux">
+          <tr><th>IMPORTE BRUTO:</th><td id="fldBrut"></td></tr>
+          <tr><th>I.V.A.: <select name="tauxTVA" class="fld-tva"><option value="21">21%</option><option value="10">10%</option><option value="4">4%</option><option value="0">0%</option></select></th><td id="fldIva"></td></tr>
+          <tr><th>TOTAL IVA INCLUIDO:</th><td id="fldTotal"></td></tr>
+        </table>
+
+        <table class="fld-paiement">
+          <tr><th>FORMA DE PAGO:</th><td><input name="formaPago" class="fld-case"></td></tr>
+          <tr><th>NUMERO DE CUENTA:</th><td><input name="numeroCuenta" class="fld-case uppercase"></td></tr>
+        </table>
+
+        <div class="fld-pied"><span><span data-af="nom">LASSINE DIAKITE</span> - Modelo de Factura</span><span>Page 1</span></div>
+      </form>
+    </div>
+
+    <p id="fldErreur" class="hidden text-sm font-medium text-red-500 mt-3"></p>
+    <div class="flex flex-wrap gap-3 mt-4 sm:sticky sm:bottom-3 z-[5] bg-cream/90 dark:bg-navy/90 backdrop-blur rounded-2xl p-3 border border-slate-200 dark:border-white/10">
+      <button type="button" id="fldPdf" class="bg-amber hover:bg-amberdark text-navy font-bold px-5 py-3 rounded-full">⬇ Télécharger le PDF</button>
+      <button type="button" id="fldEnregistrer" class="border-2 border-teal text-teal hover:bg-teal hover:text-white font-semibold px-5 py-2.5 rounded-full">💾 Enregistrer</button>
+      <button type="button" id="fldImprimer" class="border-2 border-navy dark:border-cream/40 text-navy dark:text-cream font-semibold px-5 py-2.5 rounded-full">🖨 Imprimer / voir</button>
+      <span id="fldEtat" class="self-center text-sm text-slate-500 dark:text-cream/60"></span>
+    </div>
+
+    <div class="mt-10">
+      <div class="flex flex-wrap items-center justify-between gap-3 mb-3">
+        <h3 class="text-lg font-bold text-navy dark:text-white">Factures enregistrées</h3>
+        <input id="fldRecherche" type="search" placeholder="Chercher (n°, client, NIF…)" class="champ-pro !w-auto min-w-[220px] !py-2">
+      </div>
+      <div id="fldListe" class="space-y-2"></div>
+      <p id="fldListeVide" class="hidden text-sm text-slate-500 dark:text-cream/50">Aucune facture pour l'instant.</p>
+    </div>
   </div>
 
   <div id="adminZoneTableau" class="max-w-6xl mx-auto px-5 py-8">
@@ -4550,7 +4675,7 @@ let ciblePublierActive = null;
 let publicationEnCours = false;
 
 // Deux onglets ne sont pas des tableaux : "publier" et "textes"
-const ECRANS_SPECIAUX = ['publier', 'textes', 'nouveauVoyage', 'cmr', 'deca'];
+const ECRANS_SPECIAUX = ['publier', 'textes', 'nouveauVoyage', 'cmr', 'deca', 'factureLd'];
 function afficherEcranAdmin(nomVue){
   const special = ECRANS_SPECIAUX.includes(nomVue);
   adminPublier.classList.toggle('hidden', nomVue !== 'publier');
@@ -4558,12 +4683,14 @@ function afficherEcranAdmin(nomVue){
   document.getElementById('adminVoyagesFret').classList.toggle('hidden', nomVue !== 'nouveauVoyage');
   document.getElementById('adminCmr').classList.toggle('hidden', nomVue !== 'cmr');
   document.getElementById('adminDeca').classList.toggle('hidden', nomVue !== 'deca');
+  document.getElementById('adminFactureLd').classList.toggle('hidden', nomVue !== 'factureLd');
   adminZoneTableau.classList.toggle('hidden', special);
   document.getElementById('adminAddBtn').classList.toggle('hidden', special); // "+ Ajouter" n'a de sens que sur un tableau
   if(nomVue === 'textes') afficherEditeurTextes();
   if(nomVue === 'nouveauVoyage') ouvrirEcranVoyages(); else fermerEcranVoyages();
   if(nomVue === 'cmr') ouvrirEcranCmr();
   if(nomVue === 'deca') ouvrirEcranDeca();
+  if(nomVue === 'factureLd') ouvrirEcranFactureLd();
 }
 
 function allerSurOnglet(nomVue){
@@ -5408,7 +5535,7 @@ function construireLigneDocument(id, donnees){
   }).join('');
 
   const boutonFacture = vueActive === 'factures'
-    ? `<button class="admin-pdf-btn text-xs font-semibold text-teal hover:text-amber px-1.5 py-1" title="Imprimer / enregistrer en PDF">PDF</button>`
+    ? `<button class="admin-pdf-btn text-xs font-semibold text-teal hover:text-amber px-1.5 py-1" title="Télécharger la facture (modèle LASSINE DIAKITE)">PDF</button>`
     : '';
 
   tr.innerHTML = `
@@ -5430,7 +5557,10 @@ function construireLigneDocument(id, donnees){
     }
   });
 
-  if(boutonFacture) tr.querySelector('.admin-pdf-btn').addEventListener('click', () => imprimerFacture(donnees));
+  if(boutonFacture) tr.querySelector('.admin-pdf-btn').addEventListener('click', async () => {
+    try { await telechargerPdfFacture(factureAvecLignes(donnees)); }
+    catch (err) { alert(`Le PDF n'a pas pu être créé : ${err.message || err}`); }
+  });
   tr.querySelector('.admin-json-btn').addEventListener('click', () => ouvrirEditionDocument(id, donnees));
   tr.querySelector('.admin-delete-btn').addEventListener('click', async () => {
     if(!confirm("Supprimer définitivement ce document ?")) return;
@@ -6806,6 +6936,427 @@ async function ajouterAnnexesDeca(fichiers){
 document.getElementById('decaScanCamera').addEventListener('change', (e) => ajouterAnnexesDeca([...e.target.files]));
 document.getElementById('decaScanFichier').addEventListener('change', (e) => ajouterAnnexesDeca([...e.target.files]));
 
+/* ============================================================
+   FACTURE — modèle papier « LASSINE DIAKITE »
+   Saisie directement sur le modèle, calculs automatiques,
+   enregistrement dans "factures" (onglet Factures) et PDF
+   vectoriel identique au modèle (A4).
+   ============================================================ */
+const REGLAGES_FACTURE_DEFAUT = { nom: 'LASSINE DIAKITE', telephone: '+34632607101', adresse1: 'Avenida Castilla La Mancha 122', adresse2: 'Yuncos (Toledo) 45210', nif: '', formaPago: '', numeroCuenta: '' };
+let reglagesFacture = { ...REGLAGES_FACTURE_DEFAUT };
+const fldFeuille = document.getElementById('fldFeuille');
+const fldLignes = document.getElementById('fldLignes');
+const fldEtat = document.getElementById('fldEtat');
+const fldErreur = document.getElementById('fldErreur');
+const LIGNES_FACTURE_MIN = 10, LIGNES_FACTURE_MAX = 14;
+let fldIdCourant = null;
+let fldStatutCourant = null;
+let fldListeCache = [];
+
+const formatMontantEs = (n) => `${new Intl.NumberFormat('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2, useGrouping: true }).format(Number(n) || 0)} €`;
+const arrondi2 = (n) => Math.round((Number(n) || 0) * 100) / 100;
+function dateFacture(iso){ const m = String(iso || '').match(/^(\d{4})-(\d{2})-(\d{2})/); return m ? `${m[3]}/${m[2]}/${m[1]}` : String(iso || ''); }
+function totalLigne(l){
+  const q = l.cantidad === '' || l.cantidad === undefined ? null : Number(String(l.cantidad).replace(',', '.'));
+  const p = l.precio === '' || l.precio === undefined ? null : Number(String(l.precio).replace(',', '.'));
+  if(p === null || isNaN(p)) return 0;
+  return arrondi2(q === null || isNaN(q) ? p : q * p);
+}
+function calculerTotauxFacture(lignes, taux){
+  const brut = arrondi2(lignes.reduce((t, l) => t + totalLigne(l), 0));
+  const iva = arrondi2(brut * (Number(taux) || 0) / 100);
+  return { brut, iva, total: arrondi2(brut + iva) };
+}
+
+// ---------- Lignes du tableau ----------
+function ajouterLigneFacture(v = {}){
+  if(fldLignes.children.length >= LIGNES_FACTURE_MAX) return;
+  const tr = document.createElement('tr');
+  const e = echapperHtmlAdmin;
+  tr.innerHTML = `<td><input data-l="fecha" placeholder="" value="${e(v.fecha || '')}"></td>
+    <td><input data-l="cantidad" class="n" inputmode="decimal" value="${e(v.cantidad ?? '')}"></td>
+    <td><input data-l="concepto" value="${e(v.concepto || '')}"></td>
+    <td><input data-l="precio" class="n" inputmode="decimal" value="${e(v.precio ?? '')}"></td>
+    <td class="tot"></td>`;
+  fldLignes.appendChild(tr);
+  document.getElementById('fldAjouterLigne').classList.toggle('hidden', fldLignes.children.length >= LIGNES_FACTURE_MAX);
+}
+document.getElementById('fldAjouterLigne').addEventListener('click', () => { ajouterLigneFacture(); recalculerFacture(); });
+function lireLignesFacture(){
+  return [...fldLignes.children].map(tr => {
+    const l = {}; tr.querySelectorAll('[data-l]').forEach(i => { l[i.dataset.l] = i.value.trim(); });
+    return l;
+  });
+}
+
+function recalculerFacture(){
+  const lignes = lireLignesFacture();
+  [...fldLignes.children].forEach((tr, i) => {
+    const l = lignes[i];
+    tr.querySelector('.tot').textContent = (l.precio !== '' && !isNaN(Number(String(l.precio).replace(',', '.')))) ? formatMontantEs(totalLigne(l)) : '';
+  });
+  const t = calculerTotauxFacture(lignes, fldFeuille.elements.tauxTVA.value);
+  document.getElementById('fldBrut').textContent = formatMontantEs(t.brut);
+  document.getElementById('fldIva').textContent = formatMontantEs(t.iva);
+  document.getElementById('fldTotal').textContent = formatMontantEs(t.total);
+}
+
+function lireFacture(){
+  const f = fldFeuille.elements;
+  const lignes = lireLignesFacture().filter(l => l.fecha || l.cantidad || l.concepto || l.precio)
+    .map(l => ({ ...l, total: totalLigne(l) }));
+  const taux = Number(f.tauxTVA.value);
+  const t = calculerTotauxFacture(lignes, taux);
+  return {
+    numero: f.numero.value.trim().toUpperCase(), dateEmission: f.dateEmission.value,
+    clientNom: f.clientNom.value.trim(), clientNif: f.clientNif.value.trim().toUpperCase(), clientDomicilio: f.clientDomicilio.value.trim(),
+    lignes, tauxTVA: taux, montantHT: t.brut, montantTVA: t.iva, montantTTC: t.total,
+    formaPago: f.formaPago.value.trim(), numeroCuenta: f.numeroCuenta.value.trim().toUpperCase()
+  };
+}
+function remplirFacture(d){
+  const f = fldFeuille.elements;
+  f.numero.value = d.numero || '';
+  f.dateEmission.value = d.dateEmission || '';
+  f.clientNom.value = d.clientNom || '';
+  f.clientNif.value = d.clientNif || '';
+  f.clientDomicilio.value = d.clientDomicilio || '';
+  f.tauxTVA.value = String(d.tauxTVA ?? 21);
+  if(!f.tauxTVA.value) f.tauxTVA.value = '21';
+  f.formaPago.value = d.formaPago || '';
+  f.numeroCuenta.value = d.numeroCuenta || '';
+  fldLignes.innerHTML = '';
+  const lignes = (d.lignes && d.lignes.length) ? d.lignes : [];
+  lignes.slice(0, LIGNES_FACTURE_MAX).forEach(l => ajouterLigneFacture(l));
+  while(fldLignes.children.length < LIGNES_FACTURE_MIN) ajouterLigneFacture();
+  recalculerFacture();
+  fldErreur.classList.add('hidden');
+}
+// Anciennes factures (sans détail de lignes) : une ligne avec le montant HT
+function factureAvecLignes(f){
+  if(f.lignes && f.lignes.length) return f;
+  const voyage = (referencesAdmin.missions || []).find(m => m.id === f.missionId);
+  const concepto = f.description || (voyage ? `Transporte ${voyage.villeDepart || ''} - ${voyage.villeArrivee || ''}`.trim() : 'Servicio de transporte');
+  return { ...f, lignes: (f.montantHT !== undefined && f.montantHT !== '') ? [{ fecha: dateFacture(f.dateEmission), cantidad: '1', concepto, precio: String(f.montantHT) }] : [] };
+}
+
+function appliquerReglagesFacture(){
+  document.querySelectorAll('#adminFactureLd [data-af]').forEach(el => {
+    const cle = el.dataset.af;
+    el.textContent = cle === 'nifLigne' ? (reglagesFacture.nif ? `N.I.F.: ${reglagesFacture.nif}` : '') : (reglagesFacture[cle] || '');
+  });
+  document.querySelectorAll('#fldReglages [data-reglage]').forEach(i => { i.value = reglagesFacture[i.dataset.reglage] || ''; });
+}
+document.getElementById('fldReglagesBtn').addEventListener('click', () => document.getElementById('fldReglages').classList.toggle('hidden'));
+document.getElementById('fldReglagesEnregistrer').addEventListener('click', async () => {
+  const etat = document.getElementById('fldReglagesEtat');
+  const nouv = {};
+  document.querySelectorAll('#fldReglages [data-reglage]').forEach(i => { nouv[i.dataset.reglage] = i.value.trim(); });
+  nouv.nif = nouv.nif.toUpperCase(); nouv.numeroCuenta = nouv.numeroCuenta.toUpperCase();
+  if(!nouv.nom) nouv.nom = REGLAGES_FACTURE_DEFAUT.nom;
+  try {
+    const { doc, setDoc } = window._firestore;
+    await avecReessais(() => setDoc(doc(window._db, 'contenus', 'facture'), nouv));
+    reglagesFacture = { ...REGLAGES_FACTURE_DEFAUT, ...nouv };
+    reglagesFactureCharges = true;
+    appliquerReglagesFacture();
+    const f = fldFeuille.elements;
+    if(!f.formaPago.value) f.formaPago.value = reglagesFacture.formaPago;
+    if(!f.numeroCuenta.value) f.numeroCuenta.value = reglagesFacture.numeroCuenta;
+    etat.textContent = '✓ Coordonnées enregistrées.';
+  } catch (err) { etat.textContent = "Non enregistré (vérifie la connexion)."; }
+});
+
+// ---------- Brouillon gardé sur l'appareil ----------
+const CLE_BROUILLON_FACTURE = 'boua-facture-brouillon';
+let minuterieBrouillonFacture = null;
+function sauverBrouillonFacture(){ try { localStorage.setItem(CLE_BROUILLON_FACTURE, JSON.stringify({ id: fldIdCourant, statut: fldStatutCourant, d: lireFacture(), t: Date.now() })); } catch (e) {} }
+function effacerBrouillonFacture(){ try { localStorage.removeItem(CLE_BROUILLON_FACTURE); } catch (e) {} }
+fldFeuille.addEventListener('input', (e) => {
+  recalculerFacture();
+  clearTimeout(minuterieBrouillonFacture);
+  minuterieBrouillonFacture = setTimeout(sauverBrouillonFacture, 400);
+  if(e.target.name === 'clientNom') completerClientFacture();
+});
+fldFeuille.addEventListener('change', recalculerFacture);
+fldFeuille.addEventListener('submit', (e) => e.preventDefault());
+
+// Client déjà facturé : NIF et domicile repris automatiquement
+function completerClientFacture(){
+  const f = fldFeuille.elements;
+  const nom = f.clientNom.value.trim().toLowerCase();
+  if(!nom) return;
+  const connu = fldListeCache.slice().sort((a, b) => String(b.numero).localeCompare(String(a.numero))).find(x => String(x.clientNom || '').toLowerCase() === nom);
+  if(!connu) return;
+  if(!f.clientNif.value && connu.clientNif) f.clientNif.value = connu.clientNif;
+  if(!f.clientDomicilio.value && connu.clientDomicilio) f.clientDomicilio.value = connu.clientDomicilio;
+}
+
+function nouvelleFacture(){
+  fldIdCourant = null; fldStatutCourant = null;
+  remplirFacture({ dateEmission: aujourdHuiISO(), tauxTVA: 21, formaPago: reglagesFacture.formaPago, numeroCuenta: reglagesFacture.numeroCuenta });
+  fldEtat.textContent = 'Nouvelle facture';
+}
+document.getElementById('fldNouvelle').addEventListener('click', () => { effacerBrouillonFacture(); nouvelleFacture(); fldFeuille.scrollIntoView({ block: 'start' }); });
+
+async function ouvrirEcranFactureLd(){
+  const premiere = !fldFeuille.dataset.pret;
+  if(premiere){
+    fldFeuille.dataset.pret = '1';
+    let b = null; try { b = JSON.parse(localStorage.getItem(CLE_BROUILLON_FACTURE) || 'null'); } catch (e) {}
+    if(b && b.d && (b.d.clientNom || (b.d.lignes || []).length) && Date.now() - b.t < 14 * 86400000){
+      fldIdCourant = b.id || null; fldStatutCourant = b.statut || null;
+      remplirFacture(b.d);
+      fldEtat.innerHTML = 'Brouillon restauré. <button type="button" id="fldEffacerBrouillon" class="underline text-teal font-semibold">Repartir de zéro</button>';
+      document.getElementById('fldEffacerBrouillon').addEventListener('click', () => { effacerBrouillonFacture(); nouvelleFacture(); });
+    } else nouvelleFacture();
+  }
+  chargerOutilsPdf().catch(() => {});
+  quandFirebasePret(async () => {
+    const { collection, getDocs, doc, getDoc } = window._firestore;
+    try {
+      const [reglages, factures] = await Promise.all([getDoc(doc(window._db, 'contenus', 'facture')), getDocs(collection(window._db, 'factures'))]);
+      if(reglages.exists()) reglagesFacture = { ...REGLAGES_FACTURE_DEFAUT, ...reglages.data() };
+      reglagesFactureCharges = true;
+      appliquerReglagesFacture();
+      const f = fldFeuille.elements;
+      if(premiere && !fldIdCourant){ if(!f.formaPago.value) f.formaPago.value = reglagesFacture.formaPago || ''; if(!f.numeroCuenta.value) f.numeroCuenta.value = reglagesFacture.numeroCuenta || ''; }
+      fldListeCache = factures.docs.map(x => ({ id: x.id, ...x.data() }));
+      document.getElementById('fldClients').innerHTML = [...new Set(fldListeCache.map(x => x.clientNom).filter(Boolean))].map(n => `<option value="${echapperHtmlAdmin(n)}">`).join('');
+      afficherListeFactures();
+    } catch (err) {
+      console.error('Chargement factures :', err);
+      document.getElementById('fldListe').innerHTML = `<p class="text-sm text-red-500">Impossible de lire les factures (${echapperHtmlAdmin(err.code || err.message)}).</p>`;
+    }
+  });
+}
+
+function afficherListeFactures(){
+  const e = echapperHtmlAdmin;
+  const q = (document.getElementById('fldRecherche').value || '').toLowerCase();
+  const etats = { en_attente: ['En attente', 'bg-amber/20 text-amberdark'], payee: ['Payée', 'bg-teal/15 text-teal'], annulee: ['Annulée', 'bg-red-100 text-red-600'] };
+  const liste = fldListeCache.filter(f => !q || [f.numero, f.clientNom, f.clientNif].some(v => String(v || '').toLowerCase().includes(q)))
+    .sort((a, b) => String(b.numero || '').localeCompare(String(a.numero || '')));
+  document.getElementById('fldListeVide').classList.toggle('hidden', liste.length > 0);
+  document.getElementById('fldListe').innerHTML = liste.map(f => {
+    const ttc = f.montantTTC !== undefined ? f.montantTTC : calculerFacture(f).ttc;
+    const etat = etats[f.statut] || etats.en_attente;
+    return `<div class="carte-pro !p-3.5 flex flex-wrap items-center gap-3">
+      <span class="font-mono-num font-bold text-amberdark">${e(f.numero || '—')}</span>
+      <div class="flex-1 min-w-[180px]"><p class="text-sm font-semibold text-navy dark:text-white">${e(f.clientNom || '—')}</p>
+        <p class="text-xs text-slate-500 dark:text-cream/60">${dateFacture(f.dateEmission)}${f.clientNif ? ' · ' + e(f.clientNif) : ''}</p></div>
+      <span class="font-mono-num font-bold text-navy dark:text-white">${formatMontantEs(ttc)}</span>
+      <span class="badge-pro ${etat[1]}">${etat[0]}</span>
+      <button type="button" data-fld-ouvrir="${e(f.id)}" class="text-xs font-semibold text-teal hover:text-amberdark px-1.5">Ouvrir</button>
+      <button type="button" data-fld-pdf="${e(f.id)}" class="text-xs font-bold bg-amber text-navy px-3 py-1 rounded-full">PDF</button>
+      <button type="button" data-fld-dupliquer="${e(f.id)}" class="text-xs font-semibold text-slate-500 hover:text-amberdark px-1.5">Dupliquer</button>
+    </div>`;
+  }).join('');
+}
+document.getElementById('fldRecherche').addEventListener('input', afficherListeFactures);
+document.getElementById('fldListe').addEventListener('click', async (e) => {
+  const b = e.target.closest('[data-fld-ouvrir],[data-fld-pdf],[data-fld-dupliquer]');
+  if(!b) return;
+  const f = fldListeCache.find(x => x.id === (b.dataset.fldOuvrir || b.dataset.fldPdf || b.dataset.fldDupliquer));
+  if(!f) return;
+  if(b.dataset.fldPdf){ try { await telechargerPdfFacture(factureAvecLignes(f)); } catch (err) { alert(`Le PDF n'a pas pu être créé : ${err.message || err}`); } return; }
+  if(b.dataset.fldOuvrir){
+    fldIdCourant = f.id; fldStatutCourant = f.statut || 'en_attente';
+    remplirFacture(factureAvecLignes(f));
+    fldEtat.textContent = `Facture ${f.numero} ouverte : tes modifications remplaceront l'original.`;
+  } else {
+    fldIdCourant = null; fldStatutCourant = null;
+    const src = factureAvecLignes(f);
+    remplirFacture({ ...src, numero: '', dateEmission: aujourdHuiISO(), lignes: src.lignes.map(l => ({ ...l, fecha: '' })) });
+    fldEtat.textContent = `Copie de ${f.numero} : vérifie les lignes puis enregistre (nouveau numéro).`;
+  }
+  sauverBrouillonFacture();
+  fldFeuille.scrollIntoView({ block: 'start' });
+});
+
+// ---------- Enregistrer ----------
+function factureVide(d){ return !d.clientNom && !d.lignes.length; }
+async function enregistrerFacture(){
+  const d = lireFacture();
+  const manques = [];
+  if(!d.clientNom) manques.push('le client');
+  if(!d.lignes.some(l => l.concepto)) manques.push('au moins un concepto');
+  if(!d.lignes.some(l => l.total > 0)) manques.push('un precio');
+  if(!d.dateEmission) manques.push('la fecha');
+  if(manques.length){ fldErreur.textContent = `Complète ${manques.join(', ')}.`; fldErreur.classList.remove('hidden'); return null; }
+  const avert = [];
+  if(d.clientNif && typeof nifValide === 'function' && !nifValide(d.clientNif)) avert.push(`N.I.F. du client « ${d.clientNif} » : format ou lettre de contrôle incorrect`);
+  if(!reglagesFacture.nif) avert.push('Ton propre NIF n\'est pas renseigné (⚙️ Mes coordonnées) : il est obligatoire sur une facture en Espagne');
+  if(avert.length && !confirm(`À vérifier :\n\n• ${avert.join('\n• ')}\n\nEnregistrer quand même ?`)) return null;
+  fldErreur.classList.add('hidden');
+  const { collection, getDocs, addDoc, doc, updateDoc, serverTimestamp } = window._firestore;
+  try {
+    const toutes = (await avecReessais(() => getDocs(collection(window._db, 'factures')))).docs.map(x => ({ id: x.id, ...x.data() }));
+    fldListeCache = toutes;
+    if(!d.numero) d.numero = prochainNumeroFacture(toutes);
+    if(toutes.some(x => x.id !== fldIdCourant && String(x.numero || '').toUpperCase() === d.numero)){
+      fldErreur.textContent = `Le numéro ${d.numero} est déjà utilisé par une autre facture.`; fldErreur.classList.remove('hidden'); return null;
+    }
+    const donnees = { ...d, modele: 'ld', description: d.lignes.map(l => l.concepto).filter(Boolean).join(' · ').slice(0, 200) };
+    if(fldIdCourant){
+      await avecReessais(() => updateDoc(doc(window._db, 'factures', fldIdCourant), { ...donnees, dateModification: serverTimestamp() }));
+    } else {
+      const ref = await avecReessais(() => addDoc(collection(window._db, 'factures'), { ...donnees, statut: 'en_attente', dateCreation: serverTimestamp() }));
+      fldIdCourant = ref.id; fldStatutCourant = 'en_attente';
+    }
+    const i = fldListeCache.findIndex(x => x.id === fldIdCourant);
+    const fiche = { id: fldIdCourant, statut: fldStatutCourant, ...donnees };
+    if(i >= 0) fldListeCache[i] = { ...fldListeCache[i], ...fiche }; else fldListeCache.push(fiche);
+    fldFeuille.elements.numero.value = d.numero;
+    clearTimeout(minuterieBrouillonFacture);
+    effacerBrouillonFacture();
+    afficherListeFactures();
+    fldEtat.textContent = `✓ Facture ${d.numero} enregistrée (onglet Factures).`;
+    return fiche;
+  } catch (err) {
+    console.error('Enregistrement facture :', err);
+    fldErreur.textContent = "La facture n'a pas pu être enregistrée (connexion ?). Ta saisie est gardée sur cet appareil : réessaie.";
+    fldErreur.classList.remove('hidden');
+    sauverBrouillonFacture();
+    return null;
+  }
+}
+document.getElementById('fldEnregistrer').addEventListener('click', enregistrerFacture);
+
+// ---------- PDF identique au modèle ----------
+let reglagesFactureCharges = false;
+async function chargerReglagesFacture(){
+  if(reglagesFactureCharges || !window._db) return;
+  try {
+    const { doc, getDoc } = window._firestore;
+    const snap = await getDoc(doc(window._db, 'contenus', 'facture'));
+    if(snap.exists()) reglagesFacture = { ...REGLAGES_FACTURE_DEFAUT, ...snap.data() };
+    reglagesFactureCharges = true;
+  } catch (e) { /* on garde les coordonnées par défaut */ }
+}
+async function construirePdfFacture(f){
+  await chargerReglagesFacture();
+  const jsPDF = await chargerOutilsPdf();
+  const r = { ...REGLAGES_FACTURE_DEFAUT, ...reglagesFacture };
+  const pdf = new jsPDF({ unit: 'mm', format: 'a4', compress: true });
+  const T = (v) => textePdf(v);
+  pdf.setProperties({ title: `Factura ${f.numero || ''}`.trim(), author: T(r.nom), creator: 'BOUA Trans' });
+  pdf.setTextColor(17, 17, 17); pdf.setDrawColor(17, 17, 17); pdf.setLineWidth(0.4);
+  // En-tête
+  pdf.setFont('helvetica', 'bold'); pdf.setFontSize(25); pdf.text(T(r.nom), 17, 24);
+  pdf.setFontSize(11); pdf.text(T(r.telephone), 17, 32);
+  pdf.setFontSize(9);
+  const droite = [r.nom, r.adresse1, r.adresse2, r.nif ? `N.I.F.: ${r.nif}` : ''].filter(Boolean);
+  droite.forEach((l, i) => pdf.text(T(l), 193, 19 + i * 4.4, { align: 'right' }));
+  // Champs
+  const champ = (lib, x, y, x2, valeur) => {
+    pdf.setFont('helvetica', 'bold'); pdf.setFontSize(9.5); pdf.text(lib, x, y);
+    const debut = x + pdf.getTextWidth(lib) + 2;
+    pdf.setLineWidth(0.3); pdf.line(debut, y + 0.8, x2, y + 0.8);
+    if(valeur){ pdf.setFont('helvetica', 'normal'); pdf.setFontSize(10); pdf.text(T(valeur), debut + 1.5, y - 0.3, { maxWidth: x2 - debut - 2 }); }
+  };
+  champ('FACTURA Nº:', 17, 43, 72, f.numero);
+  champ('FECHA:', 17, 50, 107, dateFacture(f.dateEmission));
+  champ('CLIENTE:', 17, 57, 131, f.clientNom);
+  champ('N.I.F.:', 136, 57, 193, f.clientNif);
+  champ('DOMICILIO:', 17, 64, 193, f.clientDomicilio);
+  // Tableau
+  const cols = [15, 41, 62, 139, 163, 190];
+  const yH = 71, hH = 14;
+  const lignes = (f.lignes || []).slice(0, LIGNES_FACTURE_MAX);
+  const nb = Math.max(LIGNES_FACTURE_MIN, lignes.length);
+  const hL = Math.min(10, 100 / nb);
+  const yFin = yH + hH + nb * hL;
+  pdf.setLineWidth(0.45);
+  pdf.rect(cols[0], yH, cols[5] - cols[0], yFin - yH);
+  cols.slice(1, 5).forEach(x => pdf.line(x, yH, x, yFin));
+  pdf.line(cols[0], yH + hH, cols[5], yH + hH);
+  for(let i = 1; i < nb; i++) pdf.line(cols[0], yH + hH + i * hL, cols[5], yH + hH + i * hL);
+  pdf.setFont('helvetica', 'bold'); pdf.setFontSize(8.5);
+  const centre = (a, b) => (cols[a] + cols[b]) / 2;
+  pdf.text('FECHA', centre(0, 1), yH + 8.3, { align: 'center' });
+  pdf.text('CANTIDAD', centre(1, 2), yH + 8.3, { align: 'center' });
+  pdf.text('CONCEPTO', centre(2, 3), yH + 8.3, { align: 'center' });
+  pdf.text(['PRECIO', 'UNITARIO'], centre(3, 4), yH + 6.3, { align: 'center' });
+  pdf.text('TOTAL', centre(4, 5), yH + 4.6, { align: 'center' });
+  pdf.setFont('helvetica', 'normal'); pdf.setFontSize(6.5);
+  pdf.text(['(IVA NO', 'INCLUIDO)'], centre(4, 5), yH + 8, { align: 'center' });
+  lignes.forEach((l, i) => {
+    const yb = yH + hH + i * hL, ym = yb + hL / 2 + 1.2;
+    pdf.setFontSize(9);
+    if(l.fecha) pdf.text(T(l.fecha), centre(0, 1), ym, { align: 'center', maxWidth: cols[1] - cols[0] - 2 });
+    if(l.cantidad) pdf.text(T(l.cantidad), cols[2] - 2, ym, { align: 'right' });
+    if(l.concepto){
+      const morceaux = pdf.splitTextToSize(T(l.concepto), cols[3] - cols[2] - 4).slice(0, 2);
+      pdf.setFontSize(morceaux.length > 1 ? 8 : 9);
+      pdf.text(morceaux, cols[2] + 2, morceaux.length > 1 ? yb + hL / 2 - 0.6 : ym);
+      pdf.setFontSize(9);
+    }
+    if(l.precio !== '' && l.precio !== undefined) pdf.text(T(formatMontantEs(String(l.precio).replace(',', '.'))), cols[4] - 2, ym, { align: 'right' });
+    if(l.precio !== '' && l.precio !== undefined) pdf.text(T(formatMontantEs(totalLigne(l))), cols[5] - 2, ym, { align: 'right' });
+  });
+  // Totaux
+  const t = calculerTotauxFacture(lignes, f.tauxTVA ?? 21);
+  const yT = yFin + 6, hT = 7.3, xT = [105, 156, 190];
+  pdf.setLineWidth(0.45);
+  pdf.rect(xT[0], yT, xT[2] - xT[0], hT * 3);
+  pdf.line(xT[1], yT, xT[1], yT + hT * 3);
+  pdf.line(xT[0], yT + hT, xT[2], yT + hT); pdf.line(xT[0], yT + 2 * hT, xT[2], yT + 2 * hT);
+  pdf.setFont('helvetica', 'bold'); pdf.setFontSize(9);
+  [['IMPORTE BRUTO:', t.brut], [`I.V.A.: ${Number(f.tauxTVA ?? 21)}%`, t.iva], ['TOTAL IVA INCLUIDO:', t.total]].forEach(([lib, val], i) => {
+    pdf.text(lib, xT[1] - 2.5, yT + i * hT + 4.9, { align: 'right' });
+    pdf.text(T(formatMontantEs(val)), xT[2] - 2.5, yT + i * hT + 4.9, { align: 'right' });
+  });
+  // Paiement
+  const yP = yT + hT * 3 + 9, hP = 8.5;
+  pdf.rect(12, yP, 178, hP * 2);
+  pdf.line(57, yP, 57, yP + hP * 2);
+  pdf.line(12, yP + hP, 190, yP + hP);
+  pdf.text('FORMA DE PAGO:', 15, yP + 5.6);
+  pdf.text('NUMERO DE CUENTA:', 15, yP + hP + 5.6);
+  pdf.setFont('helvetica', 'normal'); pdf.setFontSize(9.5);
+  if(f.formaPago) pdf.text(T(f.formaPago), 60, yP + 5.6, { maxWidth: 127 });
+  if(f.numeroCuenta) pdf.text(T(f.numeroCuenta), 60, yP + hP + 5.6, { maxWidth: 127 });
+  // Pied
+  pdf.setFontSize(7.5); pdf.setTextColor(156, 163, 175);
+  pdf.text(T(`${r.nom} - Modelo de Factura`), 19, 284);
+  pdf.text('Page 1', 191, 284, { align: 'right' });
+  return pdf;
+}
+function nomPdfFacture(f){ return nomFichierPdf(`Factura_${f.numero || 'sin_numero'}`); }
+async function telechargerPdfFacture(f){ const pdf = await construirePdfFacture(f); pdf.save(nomPdfFacture(f)); return pdf; }
+
+async function factureCouranteOuVierge(){
+  const d = lireFacture();
+  if(factureVide(d)){
+    if(!confirm('La facture est vide.\nTélécharger le modèle vierge à remplir à la main ?')) return null;
+    return { ...d, numero: '', dateEmission: '' };
+  }
+  const fiche = await enregistrerFacture(); // numéro attribué + copie dans la base
+  return fiche ? { ...d, ...fiche } : null;
+}
+async function avecBoutonFacture(bouton, action){
+  if(bouton.disabled) return;
+  const texte = bouton.textContent; bouton.disabled = true; bouton.textContent = 'Un instant…';
+  try { await action(); } catch (err) { console.error(err); alert(`Le PDF n'a pas pu être créé : ${err.message || err}`); }
+  finally { bouton.disabled = false; bouton.textContent = texte; }
+}
+async function telechargerFactureCourante(){
+  const f = await factureCouranteOuVierge(); if(!f) return;
+  await telechargerPdfFacture(f);
+}
+document.getElementById('fldPdf').addEventListener('click', (e) => avecBoutonFacture(e.currentTarget, telechargerFactureCourante));
+document.getElementById('fldImprimer').addEventListener('click', (e) => {
+  const onglet = window.open('', '_blank');
+  avecBoutonFacture(e.currentTarget, async () => {
+    const f = await factureCouranteOuVierge();
+    if(!f){ if(onglet) onglet.close(); return; }
+    const pdf = await construirePdfFacture(f);
+    const adresse = URL.createObjectURL(pdf.output('blob'));
+    if(onglet) onglet.location = adresse; else window.location.href = adresse;
+  });
+});
+
 /* ---------- Envoyer un DeCA : WhatsApp, SMS ou e-mail à un numéro / une adresse ---------- */
 const decaEnvoiModal = document.getElementById('decaEnvoiModal');
 document.body.appendChild(decaEnvoiModal);
@@ -7478,6 +8029,7 @@ async function exporterVueActiveEnPdf(){
   if(vueActive === 'cmr') return telechargerCmrPdf();
   if(vueActive === 'nouveauVoyage') return exporterVoyagesEnPdf();
   if(vueActive === 'publier') return exporterElementEnPdf(document.getElementById('adminPublier'), nomFichierPdf('BOUA_Trans_Publier'));
+  if(vueActive === 'factureLd') return telechargerFactureCourante();
   if(vueActive === 'deca') return exporterElementEnPdf(document.getElementById('adminDeca'), nomFichierPdf('BOUA_Trans_DeCA'));
   if(vueActive === 'textes') return exporterElementEnPdf(document.getElementById('adminTextes'), nomFichierPdf('BOUA_Trans_Textes_du_site'));
   return exporterTableauAdminEnPdf();
