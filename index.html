@@ -224,7 +224,8 @@
   .fld-feuille input, .fld-feuille select{ font-family: inherit; color: #111; background: transparent; }
   .fld-feuille input:focus, .fld-feuille select:focus{ outline: none; background: #FFF7E8; }
   .fld-entete{ display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 26px; }
-  .fld-nom{ font-size: 34px; font-weight: 800; letter-spacing: .5px; }
+  .fld-nom{ font-size: 30px; font-weight: 800; letter-spacing: .5px; }
+  .fld-email{ font-weight: 400; }
   .fld-tel{ font-size: 15px; font-weight: 700; margin-top: 6px; }
   .fld-adresse{ text-align: right; font-size: 12.5px; font-weight: 700; line-height: 1.55; }
   .fld-ligne{ display: flex; align-items: flex-end; gap: 8px; margin: 9px 0; font-size: 13px; font-weight: 700; }
@@ -1646,6 +1647,8 @@
         <div><label class="etiquette-pro">Téléphone</label><input data-reglage="telephone" class="champ-pro"></div>
         <div><label class="etiquette-pro">Adresse (ligne 1)</label><input data-reglage="adresse1" class="champ-pro"></div>
         <div><label class="etiquette-pro">Adresse (ligne 2)</label><input data-reglage="adresse2" class="champ-pro"></div>
+        <div><label class="etiquette-pro">E-mail 1</label><input data-reglage="email1" type="email" class="champ-pro"></div>
+        <div><label class="etiquette-pro">E-mail 2</label><input data-reglage="email2" type="email" class="champ-pro"></div>
         <div><label class="etiquette-pro">Ton NIF / DNI (obligatoire sur une facture en Espagne)</label><input data-reglage="nif" class="champ-pro uppercase font-mono-num" placeholder="Ex : X1234567L"></div>
         <div><label class="etiquette-pro">Forme de paiement par défaut</label><input data-reglage="formaPago" class="champ-pro" placeholder="Ex : Transferencia bancaria"></div>
         <div class="sm:col-span-2"><label class="etiquette-pro">Numéro de compte (IBAN) par défaut</label><input data-reglage="numeroCuenta" class="champ-pro font-mono-num uppercase" placeholder="ES00 0000 0000 0000 0000 0000"></div>
@@ -1660,15 +1663,20 @@
     <div class="overflow-x-auto pb-2">
       <form id="fldFeuille" novalidate class="fld-feuille mx-auto">
         <div class="fld-entete">
-          <div>
-            <div class="fld-nom" data-af="nom">LASSINE DIAKITE</div>
-            <div class="fld-tel" data-af="telephone">+34632607101</div>
+          <div class="flex items-center gap-4">
+            <img id="fldLogo" alt="Logo BOUA Trans (facture)" class="w-[100px] h-[100px] object-contain">
+            <div>
+              <div class="fld-nom" data-af="nom">LASSINE DIAKITE</div>
+              <div class="fld-tel" data-af="telephone">+34632607101</div>
+            </div>
           </div>
           <div class="fld-adresse">
             <div data-af="nom">LASSINE DIAKITE</div>
             <div data-af="adresse1">Avenida Castilla La Mancha 122</div>
             <div data-af="adresse2">Yuncos (Toledo) 45210</div>
             <div data-af="nifLigne"></div>
+            <div data-af="email1" class="fld-email">bouadiakite@gmail.com</div>
+            <div data-af="email2" class="fld-email">bouatrans@gmail.com</div>
           </div>
         </div>
 
@@ -6942,7 +6950,7 @@ document.getElementById('decaScanFichier').addEventListener('change', (e) => ajo
    enregistrement dans "factures" (onglet Factures) et PDF
    vectoriel identique au modèle (A4).
    ============================================================ */
-const REGLAGES_FACTURE_DEFAUT = { nom: 'LASSINE DIAKITE', telephone: '+34632607101', adresse1: 'Avenida Castilla La Mancha 122', adresse2: 'Yuncos (Toledo) 45210', nif: '', formaPago: '', numeroCuenta: '' };
+const REGLAGES_FACTURE_DEFAUT = { nom: 'LASSINE DIAKITE', telephone: '+34632607101', adresse1: 'Avenida Castilla La Mancha 122', adresse2: 'Yuncos (Toledo) 45210', email1: 'bouadiakite@gmail.com', email2: 'bouatrans@gmail.com', nif: '', formaPago: '', numeroCuenta: '' };
 let reglagesFacture = { ...REGLAGES_FACTURE_DEFAUT };
 const fldFeuille = document.getElementById('fldFeuille');
 const fldLignes = document.getElementById('fldLignes');
@@ -7041,6 +7049,9 @@ function factureAvecLignes(f){
 }
 
 function appliquerReglagesFacture(){
+  const logoSite = document.querySelector('img[alt="Logo BOUA Trans"]');
+  const logoFacture = document.getElementById('fldLogo');
+  if(logoSite && logoFacture && !logoFacture.src) logoFacture.src = logoSite.src;
   document.querySelectorAll('#adminFactureLd [data-af]').forEach(el => {
     const cle = el.dataset.af;
     el.textContent = cle === 'nifLigne' ? (reglagesFacture.nif ? `N.I.F.: ${reglagesFacture.nif}` : '') : (reglagesFacture[cle] || '');
@@ -7242,12 +7253,15 @@ async function construirePdfFacture(f){
   const T = (v) => textePdf(v);
   pdf.setProperties({ title: `Factura ${f.numero || ''}`.trim(), author: T(r.nom), creator: 'BOUA Trans' });
   pdf.setTextColor(17, 17, 17); pdf.setDrawColor(17, 17, 17); pdf.setLineWidth(0.4);
-  // En-tête
-  pdf.setFont('helvetica', 'bold'); pdf.setFontSize(25); pdf.text(T(r.nom), 17, 24);
-  pdf.setFontSize(11); pdf.text(T(r.telephone), 17, 32);
-  pdf.setFontSize(9);
-  const droite = [r.nom, r.adresse1, r.adresse2, r.nif ? `N.I.F.: ${r.nif}` : ''].filter(Boolean);
-  droite.forEach((l, i) => pdf.text(T(l), 193, 19 + i * 4.4, { align: 'right' }));
+  // En-tête : logo BOUA Trans, nom et téléphone, coordonnées à droite
+  const logo = await logoPourPdf();
+  let xNom = 17;
+  if(logo){ pdf.addImage(logo, 'JPEG', 15, 9.5, 26, 26); xNom = 45; }
+  pdf.setFont('helvetica', 'bold'); pdf.setFontSize(22); pdf.text(T(r.nom), xNom, 22.5);
+  pdf.setFontSize(11); pdf.text(T(r.telephone), xNom, 30);
+  const droite = [[r.nom, 'bold'], [r.adresse1, 'bold'], [r.adresse2, 'bold'], [r.nif ? `N.I.F.: ${r.nif}` : '', 'bold'], [r.email1, 'normal'], [r.email2, 'normal']].filter(l => l[0]);
+  pdf.setFontSize(8.8);
+  droite.forEach(([l, style], i) => { pdf.setFont('helvetica', style); pdf.text(T(l), 193, 14.5 + i * 4.1, { align: 'right' }); });
   // Champs
   const champ = (lib, x, y, x2, valeur) => {
     pdf.setFont('helvetica', 'bold'); pdf.setFontSize(9.5); pdf.text(lib, x, y);
