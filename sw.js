@@ -5,7 +5,7 @@
 // (même une petite). C'est ce qui force les navigateurs des visiteurs
 // à récupérer la nouvelle version plutôt que de servir l'ancienne
 // depuis le cache indéfiniment.
-const CACHE_VERSION = "v13";
+const CACHE_VERSION = "v14";
 const CACHE_NAME = `boua-trans-${CACHE_VERSION}`;
 
 // Fichiers essentiels mis en cache dès l'installation, pour que le
@@ -17,7 +17,12 @@ const PRECACHE_FILES = [
   "./",
   "./index.html",
   "./manifest.json",
-  "./offline.html"
+  "./offline.html",
+  "./icon-192.png",
+  "./icon-512.png",
+  "./icon-512-maskable.png",
+  "./apple-touch-icon.png",
+  "./favicon.ico"
 ];
 
 // ------------------------------------------------------------
