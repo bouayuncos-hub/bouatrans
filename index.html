@@ -246,6 +246,16 @@
   .fld-paiement td{ border: 1.5px solid #111; padding: 0; }
   .fld-case{ width: 100%; border: none; padding: 9px 10px; font-size: 13px; }
   .fld-pied{ position: absolute; left: 60px; right: 60px; bottom: 26px; display: flex; justify-content: space-between; font-size: 10px; color: #9CA3AF; }
+  .fld-libre{ display: block; width: 100%; border: none; border-bottom: 1px dashed transparent; padding: 0 2px; background: transparent; }
+  .fld-libre:hover{ border-bottom-color: #CBD5E1; }
+  .fld-libre::placeholder, .fld-feuille input::placeholder{ color: #CBD5E1; font-weight: 400; }
+  .fld-nom.fld-libre{ width: 440px; }
+  .fld-tel.fld-libre{ width: 300px; }
+  .fld-adresse .fld-libre{ text-align: right; font-size: 12.5px; font-weight: 700; width: 280px; margin-left: auto; line-height: 1.5; }
+  .fld-adresse .fld-libre.fld-email{ font-weight: 400; }
+  .fld-num{ text-align: right; font-weight: 700; }
+  .fld-tva-libre{ width: 58px; border: none; font-weight: 700; font-size: 13px; text-align: left; }
+  .fld-pied-texte{ font-size: 10px; color: #9CA3AF; width: 420px; }
   .cmr-pied{ margin-top: 8px; font-size: 8px; color: #64748B; display: flex; justify-content: space-between; gap: 10px; }
 </style>
 </head>
@@ -1626,65 +1636,64 @@
     <p id="decaQrUrl" class="font-mono-num text-xs text-slate-400 mt-3 break-all max-w-xl"></p>
   </div>
 
-  <!-- ÉCRAN "FACTURE" : le modèle papier LASSINE DIAKITE, rempli à l'écran,
-       enregistré dans "factures" et téléchargé en PDF identique au modèle. -->
+  <!-- ÉCRAN "FACTURE" : le modèle papier LASSINE DIAKITE, entièrement écrit à la
+       main par l'administrateur (en-tête, numéro, date, lignes, totaux, pied).
+       Rien n'est rempli ni calculé automatiquement. -->
   <div id="adminFactureLd" class="hidden max-w-5xl mx-auto px-5 py-8">
     <div class="flex items-end justify-between flex-wrap gap-3 mb-5">
       <div>
         <h2 class="text-2xl font-bold text-navy dark:text-white mb-1">Facture — modèle LASSINE DIAKITE</h2>
-        <p class="text-sm text-slate-500 dark:text-cream/60">Remplis la facture directement sur le modèle : les totaux, l'IVA et le numéro se calculent tout seuls. Elle est enregistrée dans l'onglet Factures et téléchargeable en PDF.</p>
+        <p class="text-sm text-slate-500 dark:text-cream/60">Toute la feuille s'écrit à la main : clique sur n'importe quel texte pour l'écrire ou le modifier (en-tête, numéro, date, lignes, totaux, IVA, paiement, pied de page). Rien n'est rempli ni calculé à ta place.</p>
       </div>
       <div class="flex gap-3 text-sm font-semibold">
         <button type="button" id="fldNouvelle" class="text-teal hover:text-amberdark">+ Nouvelle facture</button>
-        <button type="button" id="fldReglagesBtn" class="text-slate-500 hover:text-amberdark">⚙️ Mes coordonnées</button>
+        <button type="button" id="fldReglagesBtn" class="text-slate-500 hover:text-amberdark">⚙️ Mon en-tête</button>
       </div>
     </div>
 
-    <!-- Coordonnées de l'émetteur (mémorisées) -->
+    <!-- En-tête proposé sur chaque nouvelle feuille (modifiable ensuite sur la feuille) -->
     <div id="fldReglages" class="hidden carte-pro mb-5">
+      <p class="text-xs text-slate-500 dark:text-cream/60 mb-3">Ces textes sont écrits en haut de chaque nouvelle facture. Tu peux toujours les modifier directement sur la feuille.</p>
       <div class="grid sm:grid-cols-2 gap-3">
         <div><label class="etiquette-pro">Nom</label><input data-reglage="nom" class="champ-pro"></div>
         <div><label class="etiquette-pro">Téléphone</label><input data-reglage="telephone" class="champ-pro"></div>
         <div><label class="etiquette-pro">Adresse (ligne 1)</label><input data-reglage="adresse1" class="champ-pro"></div>
         <div><label class="etiquette-pro">Adresse (ligne 2)</label><input data-reglage="adresse2" class="champ-pro"></div>
-        <div><label class="etiquette-pro">E-mail 1</label><input data-reglage="email1" type="email" class="champ-pro"></div>
-        <div><label class="etiquette-pro">E-mail 2</label><input data-reglage="email2" type="email" class="champ-pro"></div>
-        <div><label class="etiquette-pro">Ton NIF / DNI (obligatoire sur une facture en Espagne)</label><input data-reglage="nif" class="champ-pro uppercase font-mono-num" placeholder="Ex : X1234567L"></div>
-        <div><label class="etiquette-pro">Forme de paiement par défaut</label><input data-reglage="formaPago" class="champ-pro" placeholder="Ex : Transferencia bancaria"></div>
-        <div class="sm:col-span-2"><label class="etiquette-pro">Numéro de compte (IBAN) par défaut</label><input data-reglage="numeroCuenta" class="champ-pro font-mono-num uppercase" placeholder="ES00 0000 0000 0000 0000 0000"></div>
+        <div><label class="etiquette-pro">E-mail 1</label><input data-reglage="email1" class="champ-pro"></div>
+        <div><label class="etiquette-pro">E-mail 2</label><input data-reglage="email2" class="champ-pro"></div>
+        <div class="sm:col-span-2"><label class="etiquette-pro">Ligne N.I.F. (ex : N.I.F.: X1234567L — obligatoire sur une facture en Espagne)</label><input data-reglage="nifLigne" class="champ-pro"></div>
       </div>
       <div class="flex items-center gap-3 mt-3">
-        <button type="button" id="fldReglagesEnregistrer" class="bg-navy dark:bg-amber text-cream dark:text-navy font-bold text-sm px-5 py-2 rounded-full">Enregistrer mes coordonnées</button>
+        <button type="button" id="fldReglagesEnregistrer" class="bg-navy dark:bg-amber text-cream dark:text-navy font-bold text-sm px-5 py-2 rounded-full">Enregistrer mon en-tête</button>
         <span id="fldReglagesEtat" class="text-sm text-slate-500 dark:text-cream/60"></span>
       </div>
     </div>
 
-    <!-- La feuille : même mise en page que le modèle papier -->
+    <!-- La feuille : même mise en page que le modèle papier, tout est écrit à la main -->
     <div class="overflow-x-auto pb-2">
-      <form id="fldFeuille" novalidate class="fld-feuille mx-auto">
+      <form id="fldFeuille" novalidate class="fld-feuille mx-auto" autocomplete="off">
         <div class="fld-entete">
           <div class="flex items-center gap-4">
             <img id="fldLogo" alt="Logo BOUA Trans (facture)" class="w-[100px] h-[100px] object-contain">
             <div>
-              <div class="fld-nom" data-af="nom">LASSINE DIAKITE</div>
-              <div class="fld-tel" data-af="telephone">+34632607101</div>
+              <input name="e_nom" class="fld-nom fld-libre" placeholder="Nom">
+              <input name="e_telephone" class="fld-tel fld-libre" placeholder="Téléphone">
             </div>
           </div>
           <div class="fld-adresse">
-            <div data-af="nom">LASSINE DIAKITE</div>
-            <div data-af="adresse1">Avenida Castilla La Mancha 122</div>
-            <div data-af="adresse2">Yuncos (Toledo) 45210</div>
-            <div data-af="nifLigne"></div>
-            <div data-af="email1" class="fld-email">bouadiakite@gmail.com</div>
-            <div data-af="email2" class="fld-email">bouatrans@gmail.com</div>
+            <input name="e_nomDroite" class="fld-libre" placeholder="Nom">
+            <input name="e_adresse1" class="fld-libre" placeholder="Adresse">
+            <input name="e_adresse2" class="fld-libre" placeholder="CP, ville">
+            <input name="e_nifLigne" class="fld-libre" placeholder="N.I.F.: …">
+            <input name="e_email1" class="fld-libre fld-email" placeholder="e-mail">
+            <input name="e_email2" class="fld-libre fld-email" placeholder="e-mail">
           </div>
         </div>
 
-        <div class="fld-ligne"><label>FACTURA Nº:</label><input name="numero" class="fld-souligne" style="width:150px" placeholder="automatique"></div>
-        <div class="fld-ligne"><label>FECHA:</label><input name="dateEmission" type="date" class="fld-souligne" style="width:220px"></div>
-        <div class="fld-ligne"><label>CLIENTE:</label><input name="clientNom" class="fld-souligne" style="flex:1" list="fldClients" autocomplete="off"><label style="margin-left:22px">N.I.F.:</label><input name="clientNif" class="fld-souligne uppercase" style="width:180px"></div>
+        <div class="fld-ligne"><label>FACTURA Nº:</label><input name="numero" class="fld-souligne" style="width:170px"></div>
+        <div class="fld-ligne"><label>FECHA:</label><input name="fecha" class="fld-souligne" style="width:240px" placeholder="jj/mm/aaaa"></div>
+        <div class="fld-ligne"><label>CLIENTE:</label><input name="clientNom" class="fld-souligne" style="flex:1"><label style="margin-left:22px">N.I.F.:</label><input name="clientNif" class="fld-souligne" style="width:180px"></div>
         <div class="fld-ligne"><label>DOMICILIO:</label><input name="clientDomicilio" class="fld-souligne" style="flex:1"></div>
-        <datalist id="fldClients"></datalist>
 
         <table class="fld-table">
           <thead><tr>
@@ -1693,22 +1702,23 @@
           </tr></thead>
           <tbody id="fldLignes"></tbody>
         </table>
-        <div class="flex justify-between items-start mt-1">
+        <div class="flex justify-between items-start mt-1 gap-3">
           <button type="button" id="fldAjouterLigne" class="text-xs font-semibold text-teal hover:text-amberdark">+ ligne</button>
+          <button type="button" id="fldCalculer" class="text-xs font-semibold text-slate-400 hover:text-amberdark" title="Facultatif : remplit seulement les cases de total encore vides">🧮 Calculer les totaux vides (facultatif)</button>
         </div>
 
         <table class="fld-totaux">
-          <tr><th>IMPORTE BRUTO:</th><td id="fldBrut"></td></tr>
-          <tr><th>I.V.A.: <select name="tauxTVA" class="fld-tva"><option value="21">21%</option><option value="10">10%</option><option value="4">4%</option><option value="0">0%</option></select></th><td id="fldIva"></td></tr>
-          <tr><th>TOTAL IVA INCLUIDO:</th><td id="fldTotal"></td></tr>
+          <tr><th>IMPORTE BRUTO:</th><td><input name="importeBruto" class="fld-case fld-num"></td></tr>
+          <tr><th class="whitespace-nowrap">I.V.A.: <input name="ivaTaux" class="fld-tva-libre" value="21%"></th><td><input name="ivaMontant" class="fld-case fld-num"></td></tr>
+          <tr><th>TOTAL IVA INCLUIDO:</th><td><input name="totalIva" class="fld-case fld-num"></td></tr>
         </table>
 
         <table class="fld-paiement">
           <tr><th>FORMA DE PAGO:</th><td><input name="formaPago" class="fld-case"></td></tr>
-          <tr><th>NUMERO DE CUENTA:</th><td><input name="numeroCuenta" class="fld-case uppercase"></td></tr>
+          <tr><th>NUMERO DE CUENTA:</th><td><input name="numeroCuenta" class="fld-case"></td></tr>
         </table>
 
-        <div class="fld-pied"><span><span data-af="nom">LASSINE DIAKITE</span> - Modelo de Factura</span><span>Page 1</span></div>
+        <div class="fld-pied"><input name="piedPage" class="fld-libre fld-pied-texte"><span>Page 1</span></div>
       </form>
     </div>
 
@@ -6946,194 +6956,204 @@ document.getElementById('decaScanFichier').addEventListener('change', (e) => ajo
 
 /* ============================================================
    FACTURE — modèle papier « LASSINE DIAKITE »
-   Saisie directement sur le modèle, calculs automatiques,
-   enregistrement dans "factures" (onglet Factures) et PDF
-   vectoriel identique au modèle (A4).
+   Toute la feuille est écrite à la main par l'administrateur :
+   en-tête, numéro, date, client, lignes, totaux, IVA, paiement,
+   pied de page. Rien n'est rempli ni calculé automatiquement
+   (seul un bouton facultatif peut remplir les totaux vides).
+   Le PDF reproduit exactement ce qui est écrit, sur le modèle.
    ============================================================ */
-const REGLAGES_FACTURE_DEFAUT = { nom: 'LASSINE DIAKITE', telephone: '+34632607101', adresse1: 'Avenida Castilla La Mancha 122', adresse2: 'Yuncos (Toledo) 45210', email1: 'bouadiakite@gmail.com', email2: 'bouatrans@gmail.com', nif: '', formaPago: '', numeroCuenta: '' };
-let reglagesFacture = { ...REGLAGES_FACTURE_DEFAUT };
+const ENTETE_FACTURE_DEFAUT = { nom: 'LASSINE DIAKITE', telephone: '+34632607101', adresse1: 'Avenida Castilla La Mancha 122', adresse2: 'Yuncos (Toledo) 45210', email1: 'bouadiakite@gmail.com', email2: 'bouatrans@gmail.com', nifLigne: '' };
+let enteteFacture = { ...ENTETE_FACTURE_DEFAUT };
 const fldFeuille = document.getElementById('fldFeuille');
 const fldLignes = document.getElementById('fldLignes');
 const fldEtat = document.getElementById('fldEtat');
 const fldErreur = document.getElementById('fldErreur');
 const LIGNES_FACTURE_MIN = 10, LIGNES_FACTURE_MAX = 14;
+const CHAMPS_ENTETE = ['nom', 'telephone', 'nomDroite', 'adresse1', 'adresse2', 'nifLigne', 'email1', 'email2'];
+const CHAMPS_FEUILLE = ['numero', 'fecha', 'clientNom', 'clientNif', 'clientDomicilio', 'importeBruto', 'ivaTaux', 'ivaMontant', 'totalIva', 'formaPago', 'numeroCuenta', 'piedPage'];
 let fldIdCourant = null;
 let fldStatutCourant = null;
 let fldListeCache = [];
 
 const formatMontantEs = (n) => `${new Intl.NumberFormat('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2, useGrouping: true }).format(Number(n) || 0)} €`;
-const arrondi2 = (n) => Math.round((Number(n) || 0) * 100) / 100;
+// Lit un montant écrit à la main : "1.020,50 €", "1020.5", "900" → nombre (ou null)
+function lireMontant(texte){
+  let t = String(texte ?? '').replace(/[€\s  %]/g, '');
+  if(!t) return null;
+  if(/,\d{1,2}$/.test(t)) t = t.replace(/\./g, '').replace(',', '.');
+  else if(/^\d{1,3}(\.\d{3})+$/.test(t)) t = t.replace(/\./g, '');
+  else t = t.replace(/,/g, '');
+  const n = Number(t);
+  return isNaN(n) ? null : Math.round(n * 100) / 100;
+}
+// "25/10/2026" → "2026-10-25" (pour les listes et l'onglet Factures)
+function fechaVersIso(texte){
+  const m = String(texte || '').trim().match(/^(\d{1,2})[\/.-](\d{1,2})[\/.-](\d{2,4})$/);
+  if(!m) return /^\d{4}-\d{2}-\d{2}$/.test(String(texte || '').trim()) ? String(texte).trim() : '';
+  const a = m[3].length === 2 ? '20' + m[3] : m[3];
+  return `${a}-${m[2].padStart(2, '0')}-${m[1].padStart(2, '0')}`;
+}
 function dateFacture(iso){ const m = String(iso || '').match(/^(\d{4})-(\d{2})-(\d{2})/); return m ? `${m[3]}/${m[2]}/${m[1]}` : String(iso || ''); }
-function totalLigne(l){
-  const q = l.cantidad === '' || l.cantidad === undefined ? null : Number(String(l.cantidad).replace(',', '.'));
-  const p = l.precio === '' || l.precio === undefined ? null : Number(String(l.precio).replace(',', '.'));
-  if(p === null || isNaN(p)) return 0;
-  return arrondi2(q === null || isNaN(q) ? p : q * p);
-}
-function calculerTotauxFacture(lignes, taux){
-  const brut = arrondi2(lignes.reduce((t, l) => t + totalLigne(l), 0));
-  const iva = arrondi2(brut * (Number(taux) || 0) / 100);
-  return { brut, iva, total: arrondi2(brut + iva) };
-}
 
-// ---------- Lignes du tableau ----------
+// ---------- Lignes ----------
 function ajouterLigneFacture(v = {}){
   if(fldLignes.children.length >= LIGNES_FACTURE_MAX) return;
-  const tr = document.createElement('tr');
   const e = echapperHtmlAdmin;
-  tr.innerHTML = `<td><input data-l="fecha" placeholder="" value="${e(v.fecha || '')}"></td>
-    <td><input data-l="cantidad" class="n" inputmode="decimal" value="${e(v.cantidad ?? '')}"></td>
+  const tr = document.createElement('tr');
+  tr.innerHTML = `<td><input data-l="fecha" value="${e(v.fecha || '')}"></td>
+    <td><input data-l="cantidad" class="n" value="${e(v.cantidad ?? '')}"></td>
     <td><input data-l="concepto" value="${e(v.concepto || '')}"></td>
-    <td><input data-l="precio" class="n" inputmode="decimal" value="${e(v.precio ?? '')}"></td>
-    <td class="tot"></td>`;
+    <td><input data-l="precio" class="n" value="${e(v.precio ?? '')}"></td>
+    <td><input data-l="total" class="n" value="${e(v.total ?? '')}"></td>`;
   fldLignes.appendChild(tr);
   document.getElementById('fldAjouterLigne').classList.toggle('hidden', fldLignes.children.length >= LIGNES_FACTURE_MAX);
 }
-document.getElementById('fldAjouterLigne').addEventListener('click', () => { ajouterLigneFacture(); recalculerFacture(); });
+document.getElementById('fldAjouterLigne').addEventListener('click', () => ajouterLigneFacture());
 function lireLignesFacture(){
-  return [...fldLignes.children].map(tr => {
-    const l = {}; tr.querySelectorAll('[data-l]').forEach(i => { l[i.dataset.l] = i.value.trim(); });
-    return l;
-  });
+  return [...fldLignes.children].map(tr => { const l = {}; tr.querySelectorAll('[data-l]').forEach(i => { l[i.dataset.l] = i.value.trim(); }); return l; })
+    .filter(l => l.fecha || l.cantidad || l.concepto || l.precio || l.total);
 }
 
-function recalculerFacture(){
-  const lignes = lireLignesFacture();
-  [...fldLignes.children].forEach((tr, i) => {
-    const l = lignes[i];
-    tr.querySelector('.tot').textContent = (l.precio !== '' && !isNaN(Number(String(l.precio).replace(',', '.')))) ? formatMontantEs(totalLigne(l)) : '';
+// Bouton facultatif : remplit seulement les totaux encore vides, à partir de ce qui est écrit
+document.getElementById('fldCalculer').addEventListener('click', () => {
+  let brut = 0, auMoinsUn = false;
+  [...fldLignes.children].forEach(tr => {
+    const q = lireMontant(tr.querySelector('[data-l="cantidad"]').value);
+    const p = lireMontant(tr.querySelector('[data-l="precio"]').value);
+    const champTotal = tr.querySelector('[data-l="total"]');
+    if(!champTotal.value.trim() && p !== null) champTotal.value = formatMontantEs(q === null ? p : q * p);
+    const t = lireMontant(champTotal.value);
+    if(t !== null){ brut += t; auMoinsUn = true; }
   });
-  const t = calculerTotauxFacture(lignes, fldFeuille.elements.tauxTVA.value);
-  document.getElementById('fldBrut').textContent = formatMontantEs(t.brut);
-  document.getElementById('fldIva').textContent = formatMontantEs(t.iva);
-  document.getElementById('fldTotal').textContent = formatMontantEs(t.total);
-}
+  if(!auMoinsUn){ fldEtat.textContent = 'Aucun montant écrit dans le tableau.'; return; }
+  const f = fldFeuille.elements;
+  const taux = lireMontant(f.ivaTaux.value) ?? 21;
+  if(!f.importeBruto.value.trim()) f.importeBruto.value = formatMontantEs(brut);
+  const b = lireMontant(f.importeBruto.value) ?? brut;
+  if(!f.ivaMontant.value.trim()) f.ivaMontant.value = formatMontantEs(b * taux / 100);
+  if(!f.totalIva.value.trim()) f.totalIva.value = formatMontantEs(b + (lireMontant(f.ivaMontant.value) ?? 0));
+  sauverBrouillonFacture();
+  fldEtat.textContent = 'Totaux vides remplis : vérifie-les, tu peux toujours les réécrire.';
+});
 
 function lireFacture(){
   const f = fldFeuille.elements;
-  const lignes = lireLignesFacture().filter(l => l.fecha || l.cantidad || l.concepto || l.precio)
-    .map(l => ({ ...l, total: totalLigne(l) }));
-  const taux = Number(f.tauxTVA.value);
-  const t = calculerTotauxFacture(lignes, taux);
-  return {
-    numero: f.numero.value.trim().toUpperCase(), dateEmission: f.dateEmission.value,
-    clientNom: f.clientNom.value.trim(), clientNif: f.clientNif.value.trim().toUpperCase(), clientDomicilio: f.clientDomicilio.value.trim(),
-    lignes, tauxTVA: taux, montantHT: t.brut, montantTVA: t.iva, montantTTC: t.total,
-    formaPago: f.formaPago.value.trim(), numeroCuenta: f.numeroCuenta.value.trim().toUpperCase()
-  };
+  const d = { entete: {}, lignes: lireLignesFacture() };
+  CHAMPS_ENTETE.forEach(c => { d.entete[c] = f['e_' + c].value.trim(); });
+  CHAMPS_FEUILLE.forEach(c => { d[c] = f[c].value.trim(); });
+  // Valeurs lues dans ce qui est écrit, pour l'onglet Factures (rien n'est modifié sur la feuille)
+  d.dateEmission = fechaVersIso(d.fecha);
+  d.montantHT = lireMontant(d.importeBruto);
+  d.tauxTVA = lireMontant(d.ivaTaux);
+  d.montantTVA = lireMontant(d.ivaMontant);
+  d.montantTTC = lireMontant(d.totalIva);
+  return d;
 }
 function remplirFacture(d){
   const f = fldFeuille.elements;
-  f.numero.value = d.numero || '';
-  f.dateEmission.value = d.dateEmission || '';
-  f.clientNom.value = d.clientNom || '';
-  f.clientNif.value = d.clientNif || '';
-  f.clientDomicilio.value = d.clientDomicilio || '';
-  f.tauxTVA.value = String(d.tauxTVA ?? 21);
-  if(!f.tauxTVA.value) f.tauxTVA.value = '21';
-  f.formaPago.value = d.formaPago || '';
-  f.numeroCuenta.value = d.numeroCuenta || '';
+  const entete = { nomDroite: (d.entete && d.entete.nomDroite) ?? enteteFacture.nom, ...enteteFacture, ...(d.entete || {}) };
+  if(!d.entete) entete.nomDroite = enteteFacture.nom;
+  CHAMPS_ENTETE.forEach(c => { f['e_' + c].value = entete[c] ?? ''; });
+  CHAMPS_FEUILLE.forEach(c => { f[c].value = d[c] ?? ''; });
+  if(d.ivaTaux === undefined) f.ivaTaux.value = '21%';
+  if(d.piedPage === undefined) f.piedPage.value = `${entete.nom || ''} - Modelo de Factura`;
   fldLignes.innerHTML = '';
-  const lignes = (d.lignes && d.lignes.length) ? d.lignes : [];
-  lignes.slice(0, LIGNES_FACTURE_MAX).forEach(l => ajouterLigneFacture(l));
+  (d.lignes || []).slice(0, LIGNES_FACTURE_MAX).forEach(l => ajouterLigneFacture(l));
   while(fldLignes.children.length < LIGNES_FACTURE_MIN) ajouterLigneFacture();
-  recalculerFacture();
   fldErreur.classList.add('hidden');
 }
-// Anciennes factures (sans détail de lignes) : une ligne avec le montant HT
+// Factures enregistrées avant (format calculé) → mêmes cases, en texte
 function factureAvecLignes(f){
-  if(f.lignes && f.lignes.length) return f;
+  if(f.entete) return f;
   const voyage = (referencesAdmin.missions || []).find(m => m.id === f.missionId);
-  const concepto = f.description || (voyage ? `Transporte ${voyage.villeDepart || ''} - ${voyage.villeArrivee || ''}`.trim() : 'Servicio de transporte');
-  return { ...f, lignes: (f.montantHT !== undefined && f.montantHT !== '') ? [{ fecha: dateFacture(f.dateEmission), cantidad: '1', concepto, precio: String(f.montantHT) }] : [] };
+  const montant = (v) => (v === undefined || v === null || v === '') ? '' : formatMontantEs(v);
+  let lignes = (f.lignes || []).map(l => ({ fecha: l.fecha || '', cantidad: l.cantidad || '', concepto: l.concepto || '', precio: l.precio !== undefined && l.precio !== '' ? montant(lireMontant(l.precio)) : '', total: l.total !== undefined && l.total !== '' ? montant(l.total) : '' }));
+  if(!lignes.length && f.montantHT !== undefined && f.montantHT !== ''){
+    const concepto = f.description || (voyage ? `Transporte ${voyage.villeDepart || ''} - ${voyage.villeArrivee || ''}`.trim() : 'Servicio de transporte');
+    lignes = [{ fecha: dateFacture(f.dateEmission), cantidad: '1', concepto, precio: montant(f.montantHT), total: montant(f.montantHT) }];
+  }
+  const c = calculerFacture(f);
+  return {
+    ...f, lignes,
+    entete: { ...enteteFacture, nomDroite: enteteFacture.nom },
+    fecha: dateFacture(f.dateEmission),
+    importeBruto: montant(f.montantHT), ivaTaux: `${f.tauxTVA ?? 21}%`, ivaMontant: f.montantHT !== undefined ? montant(c.tva) : '', totalIva: f.montantHT !== undefined ? montant(c.ttc) : '',
+    piedPage: `${enteteFacture.nom} - Modelo de Factura`
+  };
 }
 
-function appliquerReglagesFacture(){
+// ---------- En-tête proposé (⚙️ Mon en-tête) ----------
+let enteteFactureCharge = false;
+async function chargerEnteteFacture(){
+  if(enteteFactureCharge || !window._db) return;
+  try {
+    const { doc, getDoc } = window._firestore;
+    const snap = await getDoc(doc(window._db, 'contenus', 'facture'));
+    if(snap.exists()){
+      const r = snap.data();
+      enteteFacture = { ...ENTETE_FACTURE_DEFAUT, ...r };
+      if(!r.nifLigne && r.nif) enteteFacture.nifLigne = `N.I.F.: ${r.nif}`; // ancien réglage
+    }
+    enteteFactureCharge = true;
+  } catch (e) { /* en-tête par défaut */ }
+}
+function afficherReglagesFacture(){
   const logoSite = document.querySelector('img[alt="Logo BOUA Trans"]');
   const logoFacture = document.getElementById('fldLogo');
   if(logoSite && logoFacture && !logoFacture.src) logoFacture.src = logoSite.src;
-  document.querySelectorAll('#adminFactureLd [data-af]').forEach(el => {
-    const cle = el.dataset.af;
-    el.textContent = cle === 'nifLigne' ? (reglagesFacture.nif ? `N.I.F.: ${reglagesFacture.nif}` : '') : (reglagesFacture[cle] || '');
-  });
-  document.querySelectorAll('#fldReglages [data-reglage]').forEach(i => { i.value = reglagesFacture[i.dataset.reglage] || ''; });
+  document.querySelectorAll('#fldReglages [data-reglage]').forEach(i => { i.value = enteteFacture[i.dataset.reglage] || ''; });
 }
 document.getElementById('fldReglagesBtn').addEventListener('click', () => document.getElementById('fldReglages').classList.toggle('hidden'));
 document.getElementById('fldReglagesEnregistrer').addEventListener('click', async () => {
   const etat = document.getElementById('fldReglagesEtat');
   const nouv = {};
   document.querySelectorAll('#fldReglages [data-reglage]').forEach(i => { nouv[i.dataset.reglage] = i.value.trim(); });
-  nouv.nif = nouv.nif.toUpperCase(); nouv.numeroCuenta = nouv.numeroCuenta.toUpperCase();
-  if(!nouv.nom) nouv.nom = REGLAGES_FACTURE_DEFAUT.nom;
   try {
     const { doc, setDoc } = window._firestore;
     await avecReessais(() => setDoc(doc(window._db, 'contenus', 'facture'), nouv));
-    reglagesFacture = { ...REGLAGES_FACTURE_DEFAUT, ...nouv };
-    reglagesFactureCharges = true;
-    appliquerReglagesFacture();
-    const f = fldFeuille.elements;
-    if(!f.formaPago.value) f.formaPago.value = reglagesFacture.formaPago;
-    if(!f.numeroCuenta.value) f.numeroCuenta.value = reglagesFacture.numeroCuenta;
-    etat.textContent = '✓ Coordonnées enregistrées.';
-  } catch (err) { etat.textContent = "Non enregistré (vérifie la connexion)."; }
+    enteteFacture = { ...ENTETE_FACTURE_DEFAUT, ...nouv };
+    enteteFactureCharge = true;
+    etat.textContent = '✓ Enregistré : utilisé sur les prochaines factures.';
+  } catch (err) { etat.textContent = 'Non enregistré (vérifie la connexion).'; }
 });
 
 // ---------- Brouillon gardé sur l'appareil ----------
 const CLE_BROUILLON_FACTURE = 'boua-facture-brouillon';
 let minuterieBrouillonFacture = null;
-function sauverBrouillonFacture(){ try { localStorage.setItem(CLE_BROUILLON_FACTURE, JSON.stringify({ id: fldIdCourant, statut: fldStatutCourant, d: lireFacture(), t: Date.now() })); } catch (e) {} }
+function sauverBrouillonFacture(){ try { localStorage.setItem(CLE_BROUILLON_FACTURE, JSON.stringify({ id: fldIdCourant, statut: fldStatutCourant, d: lireFacture(), t: Date.now(), v: 2 })); } catch (e) {} }
 function effacerBrouillonFacture(){ try { localStorage.removeItem(CLE_BROUILLON_FACTURE); } catch (e) {} }
-fldFeuille.addEventListener('input', (e) => {
-  recalculerFacture();
-  clearTimeout(minuterieBrouillonFacture);
-  minuterieBrouillonFacture = setTimeout(sauverBrouillonFacture, 400);
-  if(e.target.name === 'clientNom') completerClientFacture();
-});
-fldFeuille.addEventListener('change', recalculerFacture);
+fldFeuille.addEventListener('input', () => { clearTimeout(minuterieBrouillonFacture); minuterieBrouillonFacture = setTimeout(sauverBrouillonFacture, 400); });
 fldFeuille.addEventListener('submit', (e) => e.preventDefault());
-
-// Client déjà facturé : NIF et domicile repris automatiquement
-function completerClientFacture(){
-  const f = fldFeuille.elements;
-  const nom = f.clientNom.value.trim().toLowerCase();
-  if(!nom) return;
-  const connu = fldListeCache.slice().sort((a, b) => String(b.numero).localeCompare(String(a.numero))).find(x => String(x.clientNom || '').toLowerCase() === nom);
-  if(!connu) return;
-  if(!f.clientNif.value && connu.clientNif) f.clientNif.value = connu.clientNif;
-  if(!f.clientDomicilio.value && connu.clientDomicilio) f.clientDomicilio.value = connu.clientDomicilio;
-}
 
 function nouvelleFacture(){
   fldIdCourant = null; fldStatutCourant = null;
-  remplirFacture({ dateEmission: aujourdHuiISO(), tauxTVA: 21, formaPago: reglagesFacture.formaPago, numeroCuenta: reglagesFacture.numeroCuenta });
-  fldEtat.textContent = 'Nouvelle facture';
+  remplirFacture({}); // en-tête proposé, tout le reste vide
+  fldEtat.textContent = 'Nouvelle facture : écris chaque case.';
 }
 document.getElementById('fldNouvelle').addEventListener('click', () => { effacerBrouillonFacture(); nouvelleFacture(); fldFeuille.scrollIntoView({ block: 'start' }); });
 
 async function ouvrirEcranFactureLd(){
   const premiere = !fldFeuille.dataset.pret;
-  if(premiere){
-    fldFeuille.dataset.pret = '1';
-    let b = null; try { b = JSON.parse(localStorage.getItem(CLE_BROUILLON_FACTURE) || 'null'); } catch (e) {}
-    if(b && b.d && (b.d.clientNom || (b.d.lignes || []).length) && Date.now() - b.t < 14 * 86400000){
-      fldIdCourant = b.id || null; fldStatutCourant = b.statut || null;
-      remplirFacture(b.d);
-      fldEtat.innerHTML = 'Brouillon restauré. <button type="button" id="fldEffacerBrouillon" class="underline text-teal font-semibold">Repartir de zéro</button>';
-      document.getElementById('fldEffacerBrouillon').addEventListener('click', () => { effacerBrouillonFacture(); nouvelleFacture(); });
-    } else nouvelleFacture();
-  }
   chargerOutilsPdf().catch(() => {});
   quandFirebasePret(async () => {
-    const { collection, getDocs, doc, getDoc } = window._firestore;
+    await chargerEnteteFacture();
+    afficherReglagesFacture();
+    if(premiere){
+      fldFeuille.dataset.pret = '1';
+      let b = null; try { b = JSON.parse(localStorage.getItem(CLE_BROUILLON_FACTURE) || 'null'); } catch (e) {}
+      if(b && b.v === 2 && b.d && (b.d.numero || b.d.clientNom || (b.d.lignes || []).length) && Date.now() - b.t < 14 * 86400000){
+        fldIdCourant = b.id || null; fldStatutCourant = b.statut || null;
+        remplirFacture(b.d);
+        fldEtat.innerHTML = 'Brouillon restauré. <button type="button" id="fldEffacerBrouillon" class="underline text-teal font-semibold">Repartir de zéro</button>';
+        document.getElementById('fldEffacerBrouillon').addEventListener('click', () => { effacerBrouillonFacture(); nouvelleFacture(); });
+      } else nouvelleFacture();
+    }
     try {
-      const [reglages, factures] = await Promise.all([getDoc(doc(window._db, 'contenus', 'facture')), getDocs(collection(window._db, 'factures'))]);
-      if(reglages.exists()) reglagesFacture = { ...REGLAGES_FACTURE_DEFAUT, ...reglages.data() };
-      reglagesFactureCharges = true;
-      appliquerReglagesFacture();
-      const f = fldFeuille.elements;
-      if(premiere && !fldIdCourant){ if(!f.formaPago.value) f.formaPago.value = reglagesFacture.formaPago || ''; if(!f.numeroCuenta.value) f.numeroCuenta.value = reglagesFacture.numeroCuenta || ''; }
+      const { collection, getDocs } = window._firestore;
+      const factures = await getDocs(collection(window._db, 'factures'));
       fldListeCache = factures.docs.map(x => ({ id: x.id, ...x.data() }));
-      document.getElementById('fldClients').innerHTML = [...new Set(fldListeCache.map(x => x.clientNom).filter(Boolean))].map(n => `<option value="${echapperHtmlAdmin(n)}">`).join('');
+      const suivant = prochainNumeroFacture(fldListeCache);
+      fldFeuille.elements.numero.placeholder = `ex : ${suivant}`;
       afficherListeFactures();
     } catch (err) {
       console.error('Chargement factures :', err);
@@ -7150,13 +7170,13 @@ function afficherListeFactures(){
     .sort((a, b) => String(b.numero || '').localeCompare(String(a.numero || '')));
   document.getElementById('fldListeVide').classList.toggle('hidden', liste.length > 0);
   document.getElementById('fldListe').innerHTML = liste.map(f => {
-    const ttc = f.montantTTC !== undefined ? f.montantTTC : calculerFacture(f).ttc;
+    const total = f.totalIva || (f.montantTTC !== undefined && f.montantTTC !== null ? formatMontantEs(f.montantTTC) : (f.montantHT !== undefined ? formatMontantEs(calculerFacture(f).ttc) : ''));
     const etat = etats[f.statut] || etats.en_attente;
     return `<div class="carte-pro !p-3.5 flex flex-wrap items-center gap-3">
       <span class="font-mono-num font-bold text-amberdark">${e(f.numero || '—')}</span>
       <div class="flex-1 min-w-[180px]"><p class="text-sm font-semibold text-navy dark:text-white">${e(f.clientNom || '—')}</p>
-        <p class="text-xs text-slate-500 dark:text-cream/60">${dateFacture(f.dateEmission)}${f.clientNif ? ' · ' + e(f.clientNif) : ''}</p></div>
-      <span class="font-mono-num font-bold text-navy dark:text-white">${formatMontantEs(ttc)}</span>
+        <p class="text-xs text-slate-500 dark:text-cream/60">${e(f.fecha || dateFacture(f.dateEmission))}${f.clientNif ? ' · ' + e(f.clientNif) : ''}</p></div>
+      <span class="font-mono-num font-bold text-navy dark:text-white">${e(total)}</span>
       <span class="badge-pro ${etat[1]}">${etat[0]}</span>
       <button type="button" data-fld-ouvrir="${e(f.id)}" class="text-xs font-semibold text-teal hover:text-amberdark px-1.5">Ouvrir</button>
       <button type="button" data-fld-pdf="${e(f.id)}" class="text-xs font-bold bg-amber text-navy px-3 py-1 rounded-full">PDF</button>
@@ -7177,48 +7197,44 @@ document.getElementById('fldListe').addEventListener('click', async (e) => {
     fldEtat.textContent = `Facture ${f.numero} ouverte : tes modifications remplaceront l'original.`;
   } else {
     fldIdCourant = null; fldStatutCourant = null;
-    const src = factureAvecLignes(f);
-    remplirFacture({ ...src, numero: '', dateEmission: aujourdHuiISO(), lignes: src.lignes.map(l => ({ ...l, fecha: '' })) });
-    fldEtat.textContent = `Copie de ${f.numero} : vérifie les lignes puis enregistre (nouveau numéro).`;
+    remplirFacture({ ...factureAvecLignes(f), numero: '', fecha: '' });
+    fldEtat.textContent = `Copie de ${f.numero} : écris le nouveau numéro et la date, puis enregistre.`;
   }
   sauverBrouillonFacture();
   fldFeuille.scrollIntoView({ block: 'start' });
 });
 
-// ---------- Enregistrer ----------
-function factureVide(d){ return !d.clientNom && !d.lignes.length; }
+// ---------- Enregistrer (ce qui est écrit, tel quel) ----------
+function factureVide(d){ return !d.numero && !d.clientNom && !d.lignes.length && !d.importeBruto && !d.totalIva; }
 async function enregistrerFacture(){
   const d = lireFacture();
-  const manques = [];
-  if(!d.clientNom) manques.push('le client');
-  if(!d.lignes.some(l => l.concepto)) manques.push('au moins un concepto');
-  if(!d.lignes.some(l => l.total > 0)) manques.push('un precio');
-  if(!d.dateEmission) manques.push('la fecha');
-  if(manques.length){ fldErreur.textContent = `Complète ${manques.join(', ')}.`; fldErreur.classList.remove('hidden'); return null; }
+  if(!d.numero){ fldErreur.textContent = 'Écris le numéro de la facture (FACTURA Nº) avant d\'enregistrer.'; fldErreur.classList.remove('hidden'); fldFeuille.elements.numero.focus(); return null; }
   const avert = [];
+  if(!d.fecha) avert.push('la date (FECHA) est vide');
+  else if(!d.dateEmission) avert.push(`la date « ${d.fecha} » n'est pas au format jj/mm/aaaa (elle sera imprimée telle quelle)`);
+  if(!d.clientNom) avert.push('le client est vide');
+  if(!d.totalIva) avert.push('le TOTAL IVA INCLUIDO est vide');
   if(d.clientNif && typeof nifValide === 'function' && !nifValide(d.clientNif)) avert.push(`N.I.F. du client « ${d.clientNif} » : format ou lettre de contrôle incorrect`);
-  if(!reglagesFacture.nif) avert.push('Ton propre NIF n\'est pas renseigné (⚙️ Mes coordonnées) : il est obligatoire sur une facture en Espagne');
+  if(!/\d/.test(d.entete.nifLigne || '')) avert.push('ton N.I.F. n\'est pas écrit dans l\'en-tête (obligatoire sur une facture en Espagne)');
   if(avert.length && !confirm(`À vérifier :\n\n• ${avert.join('\n• ')}\n\nEnregistrer quand même ?`)) return null;
   fldErreur.classList.add('hidden');
   const { collection, getDocs, addDoc, doc, updateDoc, serverTimestamp } = window._firestore;
   try {
     const toutes = (await avecReessais(() => getDocs(collection(window._db, 'factures')))).docs.map(x => ({ id: x.id, ...x.data() }));
     fldListeCache = toutes;
-    if(!d.numero) d.numero = prochainNumeroFacture(toutes);
-    if(toutes.some(x => x.id !== fldIdCourant && String(x.numero || '').toUpperCase() === d.numero)){
+    if(toutes.some(x => x.id !== fldIdCourant && String(x.numero || '').trim().toUpperCase() === d.numero.toUpperCase())){
       fldErreur.textContent = `Le numéro ${d.numero} est déjà utilisé par une autre facture.`; fldErreur.classList.remove('hidden'); return null;
     }
-    const donnees = { ...d, modele: 'ld', description: d.lignes.map(l => l.concepto).filter(Boolean).join(' · ').slice(0, 200) };
+    const donnees = { ...d, modele: 'ld-manuel', description: d.lignes.map(l => l.concepto).filter(Boolean).join(' · ').slice(0, 200) };
     if(fldIdCourant){
       await avecReessais(() => updateDoc(doc(window._db, 'factures', fldIdCourant), { ...donnees, dateModification: serverTimestamp() }));
     } else {
       const ref = await avecReessais(() => addDoc(collection(window._db, 'factures'), { ...donnees, statut: 'en_attente', dateCreation: serverTimestamp() }));
       fldIdCourant = ref.id; fldStatutCourant = 'en_attente';
     }
-    const i = fldListeCache.findIndex(x => x.id === fldIdCourant);
     const fiche = { id: fldIdCourant, statut: fldStatutCourant, ...donnees };
+    const i = fldListeCache.findIndex(x => x.id === fldIdCourant);
     if(i >= 0) fldListeCache[i] = { ...fldListeCache[i], ...fiche }; else fldListeCache.push(fiche);
-    fldFeuille.elements.numero.value = d.numero;
     clearTimeout(minuterieBrouillonFacture);
     effacerBrouillonFacture();
     afficherListeFactures();
@@ -7234,32 +7250,23 @@ async function enregistrerFacture(){
 }
 document.getElementById('fldEnregistrer').addEventListener('click', enregistrerFacture);
 
-// ---------- PDF identique au modèle ----------
-let reglagesFactureCharges = false;
-async function chargerReglagesFacture(){
-  if(reglagesFactureCharges || !window._db) return;
-  try {
-    const { doc, getDoc } = window._firestore;
-    const snap = await getDoc(doc(window._db, 'contenus', 'facture'));
-    if(snap.exists()) reglagesFacture = { ...REGLAGES_FACTURE_DEFAUT, ...snap.data() };
-    reglagesFactureCharges = true;
-  } catch (e) { /* on garde les coordonnées par défaut */ }
-}
+// ---------- PDF : exactement ce qui est écrit, sur le modèle ----------
 async function construirePdfFacture(f){
-  await chargerReglagesFacture();
+  await chargerEnteteFacture();
   const jsPDF = await chargerOutilsPdf();
-  const r = { ...REGLAGES_FACTURE_DEFAUT, ...reglagesFacture };
+  const en = { nomDroite: enteteFacture.nom, ...enteteFacture, ...(f.entete || {}) };
   const pdf = new jsPDF({ unit: 'mm', format: 'a4', compress: true });
   const T = (v) => textePdf(v);
-  pdf.setProperties({ title: `Factura ${f.numero || ''}`.trim(), author: T(r.nom), creator: 'BOUA Trans' });
+  pdf.setProperties({ title: `Factura ${f.numero || ''}`.trim(), author: T(en.nom), creator: 'BOUA Trans' });
   pdf.setTextColor(17, 17, 17); pdf.setDrawColor(17, 17, 17); pdf.setLineWidth(0.4);
-  // En-tête : logo BOUA Trans, nom et téléphone, coordonnées à droite
+  // En-tête : logo, nom, téléphone ; coordonnées à droite
   const logo = await logoPourPdf();
   let xNom = 17;
   if(logo){ pdf.addImage(logo, 'JPEG', 15, 9.5, 26, 26); xNom = 45; }
-  pdf.setFont('helvetica', 'bold'); pdf.setFontSize(22); pdf.text(T(r.nom), xNom, 22.5);
-  pdf.setFontSize(11); pdf.text(T(r.telephone), xNom, 30);
-  const droite = [[r.nom, 'bold'], [r.adresse1, 'bold'], [r.adresse2, 'bold'], [r.nif ? `N.I.F.: ${r.nif}` : '', 'bold'], [r.email1, 'normal'], [r.email2, 'normal']].filter(l => l[0]);
+  pdf.setFont('helvetica', 'bold'); pdf.setFontSize(22);
+  if(en.nom) pdf.text(T(en.nom), xNom, 22.5, { maxWidth: 140 - xNom });
+  pdf.setFontSize(11); if(en.telephone) pdf.text(T(en.telephone), xNom, 30);
+  const droite = [[en.nomDroite, 'bold'], [en.adresse1, 'bold'], [en.adresse2, 'bold'], [en.nifLigne, 'bold'], [en.email1, 'normal'], [en.email2, 'normal']].filter(l => l[0]);
   pdf.setFontSize(8.8);
   droite.forEach(([l, style], i) => { pdf.setFont('helvetica', style); pdf.text(T(l), 193, 14.5 + i * 4.1, { align: 'right' }); });
   // Champs
@@ -7270,7 +7277,7 @@ async function construirePdfFacture(f){
     if(valeur){ pdf.setFont('helvetica', 'normal'); pdf.setFontSize(10); pdf.text(T(valeur), debut + 1.5, y - 0.3, { maxWidth: x2 - debut - 2 }); }
   };
   champ('FACTURA Nº:', 17, 43, 72, f.numero);
-  champ('FECHA:', 17, 50, 107, dateFacture(f.dateEmission));
+  champ('FECHA:', 17, 50, 107, f.fecha);
   champ('CLIENTE:', 17, 57, 131, f.clientNom);
   champ('N.I.F.:', 136, 57, 193, f.clientNif);
   champ('DOMICILIO:', 17, 64, 193, f.clientDomicilio);
@@ -7306,20 +7313,19 @@ async function construirePdfFacture(f){
       pdf.text(morceaux, cols[2] + 2, morceaux.length > 1 ? yb + hL / 2 - 0.6 : ym);
       pdf.setFontSize(9);
     }
-    if(l.precio !== '' && l.precio !== undefined) pdf.text(T(formatMontantEs(String(l.precio).replace(',', '.'))), cols[4] - 2, ym, { align: 'right' });
-    if(l.precio !== '' && l.precio !== undefined) pdf.text(T(formatMontantEs(totalLigne(l))), cols[5] - 2, ym, { align: 'right' });
+    if(l.precio) pdf.text(T(l.precio), cols[4] - 2, ym, { align: 'right' });
+    if(l.total) pdf.text(T(l.total), cols[5] - 2, ym, { align: 'right' });
   });
-  // Totaux
-  const t = calculerTotauxFacture(lignes, f.tauxTVA ?? 21);
+  // Totaux (tels qu'écrits)
   const yT = yFin + 6, hT = 7.3, xT = [105, 156, 190];
   pdf.setLineWidth(0.45);
   pdf.rect(xT[0], yT, xT[2] - xT[0], hT * 3);
   pdf.line(xT[1], yT, xT[1], yT + hT * 3);
   pdf.line(xT[0], yT + hT, xT[2], yT + hT); pdf.line(xT[0], yT + 2 * hT, xT[2], yT + 2 * hT);
   pdf.setFont('helvetica', 'bold'); pdf.setFontSize(9);
-  [['IMPORTE BRUTO:', t.brut], [`I.V.A.: ${Number(f.tauxTVA ?? 21)}%`, t.iva], ['TOTAL IVA INCLUIDO:', t.total]].forEach(([lib, val], i) => {
-    pdf.text(lib, xT[1] - 2.5, yT + i * hT + 4.9, { align: 'right' });
-    pdf.text(T(formatMontantEs(val)), xT[2] - 2.5, yT + i * hT + 4.9, { align: 'right' });
+  [['IMPORTE BRUTO:', f.importeBruto], [`I.V.A.: ${f.ivaTaux || ''}`.trim(), f.ivaMontant], ['TOTAL IVA INCLUIDO:', f.totalIva]].forEach(([lib, val], i) => {
+    pdf.text(T(lib), xT[1] - 2.5, yT + i * hT + 4.9, { align: 'right' });
+    if(val) pdf.text(T(val), xT[2] - 2.5, yT + i * hT + 4.9, { align: 'right' });
   });
   // Paiement
   const yP = yT + hT * 3 + 9, hP = 8.5;
@@ -7331,22 +7337,28 @@ async function construirePdfFacture(f){
   pdf.setFont('helvetica', 'normal'); pdf.setFontSize(9.5);
   if(f.formaPago) pdf.text(T(f.formaPago), 60, yP + 5.6, { maxWidth: 127 });
   if(f.numeroCuenta) pdf.text(T(f.numeroCuenta), 60, yP + hP + 5.6, { maxWidth: 127 });
-  // Pied
+  // Pied de page
   pdf.setFontSize(7.5); pdf.setTextColor(156, 163, 175);
-  pdf.text(T(`${r.nom} - Modelo de Factura`), 19, 284);
+  if(f.piedPage) pdf.text(T(f.piedPage), 19, 284);
   pdf.text('Page 1', 191, 284, { align: 'right' });
   return pdf;
 }
 function nomPdfFacture(f){ return nomFichierPdf(`Factura_${f.numero || 'sin_numero'}`); }
 async function telechargerPdfFacture(f){ const pdf = await construirePdfFacture(f); pdf.save(nomPdfFacture(f)); return pdf; }
 
+// PDF de la feuille affichée : enregistrée d'abord si un numéro est écrit ;
+// sinon (feuille vide ou sans numéro) téléchargée telle quelle, sans enregistrer.
 async function factureCouranteOuVierge(){
   const d = lireFacture();
   if(factureVide(d)){
-    if(!confirm('La facture est vide.\nTélécharger le modèle vierge à remplir à la main ?')) return null;
-    return { ...d, numero: '', dateEmission: '' };
+    if(!confirm('La facture est vide.\nTélécharger le modèle vierge (avec ton en-tête) à remplir à la main ?')) return null;
+    return d;
   }
-  const fiche = await enregistrerFacture(); // numéro attribué + copie dans la base
+  if(!d.numero){
+    if(!confirm('Aucun numéro écrit (FACTURA Nº) : la facture ne sera pas enregistrée.\nTélécharger quand même le PDF tel qu\'il est écrit ?')) return null;
+    return d;
+  }
+  const fiche = await enregistrerFacture();
   return fiche ? { ...d, ...fiche } : null;
 }
 async function avecBoutonFacture(bouton, action){
