@@ -246,6 +246,10 @@
   .fld-paiement td{ border: 1.5px solid #111; padding: 0; }
   .fld-case{ width: 100%; border: none; padding: 9px 10px; font-size: 13px; }
   .fld-pied{ position: absolute; left: 60px; right: 60px; bottom: 26px; display: flex; justify-content: space-between; font-size: 10px; color: #9CA3AF; }
+  .ch-onglet{ font-size: 0.78rem; font-weight: 600; padding: 7px 12px; border-radius: 999px; white-space: nowrap; color: #64748B; background: #F1F5F9; }
+  .ch-onglet.actif{ background: #0F1F38; color: #E8A33D; }
+  .dark .ch-onglet{ background: rgba(255,255,255,0.08); color: rgba(245,243,237,0.75); }
+  .dark .ch-onglet.actif{ background: #E8A33D; color: #0F1F38; }
   .fld-libre{ display: block; width: 100%; border: none; border-bottom: 1px dashed transparent; padding: 0 2px; background: transparent; }
   .fld-libre:hover{ border-bottom-color: #CBD5E1; }
   .fld-libre::placeholder, .fld-feuille input::placeholder{ color: #CBD5E1; font-weight: 400; }
@@ -1046,6 +1050,10 @@
       <button class="admin-tab" data-collection="partenaires">Partenaires</button>
       <button class="admin-tab" data-collection="vehicules">Véhicules</button>
       <button class="admin-tab" data-collection="chauffeurs">Chauffeurs</button>
+      <button class="admin-tab" data-collection="journees">📍 Kilométrage</button>
+      <button class="admin-tab" data-collection="repostajes">⛽ Repostajes</button>
+      <button class="admin-tab" data-collection="incidents">⚠️ Incidents</button>
+      <button class="admin-tab" data-collection="messagesChauffeurs">💬 Messages</button>
       <button class="admin-tab" data-collection="missions">Voyages</button>
       <button class="admin-tab" data-collection="rentabilite">Rentabilité</button>
       <button class="admin-tab" data-collection="factures">Factures</button>
@@ -1740,6 +1748,26 @@
     </div>
   </div>
 
+  <!-- ÉCRAN "MESSAGES" : conversations avec les chauffeurs -->
+  <div id="adminMessages" class="hidden max-w-5xl mx-auto px-5 py-8">
+    <h2 class="text-2xl font-bold text-navy dark:text-white mb-1">Messages chauffeurs</h2>
+    <p class="text-sm text-slate-500 dark:text-cream/60 mb-5">Les chauffeurs t'écrivent depuis leur Espace Chauffeur ; tu réponds ici, en temps réel.</p>
+    <div class="grid md:grid-cols-3 gap-4">
+      <div class="carte-pro !p-3 md:col-span-1">
+        <select id="admMsgNouveau" class="champ-pro !py-2 mb-3"><option value="">+ Écrire à un chauffeur…</option></select>
+        <div id="admMsgConvs" class="space-y-1 max-h-[60vh] overflow-y-auto"></div>
+      </div>
+      <div class="carte-pro md:col-span-2 flex flex-col min-h-[360px]">
+        <p id="admMsgTitre" class="font-bold text-navy dark:text-white mb-3">Choisis une conversation</p>
+        <div id="admMsgFil" class="flex-1 space-y-2 max-h-[50vh] overflow-y-auto pr-1 mb-3"></div>
+        <form id="admMsgForm" class="flex gap-2 hidden">
+          <input id="admMsgTexte" class="champ-pro flex-1" placeholder="Ta réponse…" autocomplete="off">
+          <button type="submit" class="bg-amber hover:bg-amberdark text-navy font-bold px-4 rounded-full">Envoyer</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
   <div id="adminZoneTableau" class="max-w-6xl mx-auto px-5 py-8">
     <p class="text-sm text-slate-500 dark:text-cream/50 mb-5">
       Onglet actif : <span id="adminCollectionLabel" class="font-mono-num font-semibold text-navy dark:text-cream">devis</span>
@@ -1934,7 +1962,7 @@
      ============================================================ -->
 <div id="chauffeurModal" class="hidden fixed inset-0 z-[60] flex items-center justify-center p-5">
   <div id="chauffeurModalOverlay" class="absolute inset-0 bg-navy/70 backdrop-blur-sm"></div>
-  <div class="relative bg-white dark:bg-navylight rounded-2xl shadow-2xl w-full max-w-sm p-7 max-h-[85vh] overflow-y-auto">
+  <div id="chauffeurModalBoite" class="relative bg-white dark:bg-navylight rounded-2xl shadow-2xl w-full max-w-sm p-6 sm:p-7 max-h-[90vh] overflow-y-auto">
     <button id="chauffeurModalClose" aria-label="Fermer" class="absolute top-4 right-4 text-slate-400 hover:text-amber">✕</button>
 
     <!-- VUE 1 : CONNEXION / CRÉATION DE COMPTE CHAUFFEUR -->
@@ -1962,21 +1990,28 @@
       </p>
     </div>
 
-    <!-- VUE 2 : CRÉATION DE COMPTE (accès débloqué ensuite par l'admin) -->
+    <!-- VUE 2 : CRÉATION DE COMPTE CHAUFFEUR (profil personnalisé, accès immédiat) -->
     <div id="chauffeurViewSignup" class="hidden">
       <h3 class="text-2xl font-bold text-navy dark:text-white mb-1.5">Créer mon compte chauffeur</h3>
-      <p class="text-sm text-slate-500 dark:text-cream/60 mb-6">Une fois ton compte créé, préviens l'administrateur pour qu'il active ton accès aux missions.</p>
+      <p class="text-sm text-slate-500 dark:text-cream/60 mb-5">Ton espace personnel : missions, kilomètres, repostajes, incidents et messages avec BOUA Trans.</p>
 
-      <form id="chauffeurSignupForm">
-        <div class="mb-4">
-          <label for="chauffeurSignupEmail" class="block text-sm font-semibold text-navy dark:text-cream mb-2">Email</label>
-          <input type="email" id="chauffeurSignupEmail" required
-            class="w-full px-3.5 py-3 rounded-lg border border-slate-200 dark:border-white/15 bg-cream dark:bg-navy focus:outline-none focus:border-amber">
-        </div>
-        <div class="mb-5">
-          <label for="chauffeurSignupPassword" class="block text-sm font-semibold text-navy dark:text-cream mb-2">Mot de passe (6 caractères minimum)</label>
-          <input type="password" id="chauffeurSignupPassword" required minlength="6"
-            class="w-full px-3.5 py-3 rounded-lg border border-slate-200 dark:border-white/15 bg-cream dark:bg-navy focus:outline-none focus:border-amber">
+      <form id="chauffeurSignupForm" novalidate>
+        <div class="grid grid-cols-2 gap-3 mb-3">
+          <div class="col-span-2"><label class="etiquette-pro" for="chSignNom">Nom et prénom <span class="requis">*</span></label><input id="chSignNom" required autocomplete="name" class="champ-pro"></div>
+          <div class="col-span-2"><label class="etiquette-pro" for="chauffeurSignupEmail">Email <span class="requis">*</span></label><input type="email" id="chauffeurSignupEmail" required autocomplete="email" class="champ-pro"></div>
+          <div class="col-span-2"><label class="etiquette-pro" for="chauffeurSignupPassword">Mot de passe (6 caractères min.) <span class="requis">*</span></label><input type="password" id="chauffeurSignupPassword" required minlength="6" autocomplete="new-password" class="champ-pro"></div>
+          <div class="col-span-2"><label class="etiquette-pro" for="chSignTel">Téléphone <span class="requis">*</span></label><input id="chSignTel" type="tel" required autocomplete="tel" class="champ-pro" placeholder="+34 600 00 00 00"></div>
+          <div><label class="etiquette-pro" for="chSignMatricula">Camion habituel</label><input id="chSignMatricula" class="champ-pro uppercase font-mono-num" placeholder="0000 ABC"></div>
+          <div><label class="etiquette-pro" for="chSignPermis">Permis</label><select id="chSignPermis" class="champ-pro"><option value="">—</option><option>C</option><option>C+E</option><option>C1</option><option>B</option><option>D</option></select></div>
+          <div class="col-span-2"><label class="etiquette-pro">Ma couleur</label>
+            <div class="flex gap-2" id="chSignCouleurs">
+              <button type="button" data-couleur="#E8A33D" class="w-8 h-8 rounded-full ring-2 ring-offset-2 ring-navy" style="background:#E8A33D"></button>
+              <button type="button" data-couleur="#1B7A72" class="w-8 h-8 rounded-full" style="background:#1B7A72"></button>
+              <button type="button" data-couleur="#0F1F38" class="w-8 h-8 rounded-full" style="background:#0F1F38"></button>
+              <button type="button" data-couleur="#C2410C" class="w-8 h-8 rounded-full" style="background:#C2410C"></button>
+              <button type="button" data-couleur="#7C3AED" class="w-8 h-8 rounded-full" style="background:#7C3AED"></button>
+            </div>
+          </div>
         </div>
         <button type="submit" id="chauffeurSignupSubmitBtn" class="w-full bg-amber hover:bg-amberdark text-navy font-semibold py-3.5 rounded-full transition">Créer mon compte</button>
         <p id="chauffeurSignupStatus" class="text-xs mt-3 text-slate-500 dark:text-cream/60"></p>
@@ -1987,23 +2022,146 @@
       </p>
     </div>
 
-    <!-- VUE 3 : TABLEAU DE BORD CHAUFFEUR (missions en temps réel) -->
+    <!-- VUE 3 : ESPACE PERSONNEL DU CHAUFFEUR -->
     <div id="chauffeurViewDashboard" class="hidden">
-      <div class="flex justify-between items-start mb-1.5">
-        <h3 class="text-2xl font-bold text-navy dark:text-white">Mes missions</h3>
+      <div class="flex items-center gap-3 mb-4 pr-6">
+        <span id="chAvatar" class="w-12 h-12 shrink-0 rounded-full flex items-center justify-center text-white font-bold text-lg" style="background:#E8A33D"></span>
+        <div class="flex-1 min-w-0">
+          <h3 id="chBonjour" class="text-lg sm:text-xl font-bold text-navy dark:text-white leading-tight">Bonjour</h3>
+          <p class="text-xs text-slate-500 dark:text-cream/60 truncate"><span id="chauffeurEmailDisplay"></span> <span id="chMatriculaAffiche" class="font-mono-num"></span></p>
+        </div>
         <button id="chauffeurLogoutBtn" class="text-xs font-semibold text-slate-400 hover:text-amber">Déconnexion</button>
       </div>
-      <p class="text-sm text-slate-500 dark:text-cream/60 mb-6">Connecté en tant que <span id="chauffeurEmailDisplay" class="font-semibold text-navy dark:text-white"></span></p>
 
-      <div id="chauffeurMissionsList" class="space-y-4"></div>
-      <p id="chauffeurMissionsEmpty" class="hidden text-sm text-slate-400 dark:text-cream/40 text-center py-6">Aucune mission qui t'est assignée pour le moment.</p>
+      <div class="flex gap-1 overflow-x-auto pb-2 mb-4 -mx-1 px-1" role="tablist">
+        <button type="button" class="ch-onglet" data-ch-onglet="missions">🚚 Missions</button>
+        <button type="button" class="ch-onglet" data-ch-onglet="km">📍 Km</button>
+        <button type="button" class="ch-onglet" data-ch-onglet="repostaje">⛽ Repostaje</button>
+        <button type="button" class="ch-onglet" data-ch-onglet="incident">⚠️ Incident</button>
+        <button type="button" class="ch-onglet" data-ch-onglet="messages">💬 Messages <span id="chBadgeMessages" class="hidden ml-0.5 bg-red-500 text-white text-[0.65rem] font-bold rounded-full px-1.5"></span></button>
+        <button type="button" class="ch-onglet" data-ch-onglet="profil">👤 Profil</button>
+      </div>
+
+      <!-- Missions (existant) -->
+      <div data-ch-panneau="missions">
+        <div id="chauffeurMissionsList" class="space-y-4"></div>
+        <p id="chauffeurMissionsEmpty" class="hidden text-sm text-slate-400 dark:text-cream/40 text-center py-6">Aucune mission qui t'est assignée pour le moment.</p>
+      </div>
+
+      <!-- Kilomètres : début / fin de journée -->
+      <div data-ch-panneau="km" class="hidden">
+        <div id="chKmOuverte" class="hidden rounded-xl bg-amber/10 border border-amber/40 p-4 mb-4">
+          <p class="text-sm font-bold text-navy dark:text-white mb-1">🟢 Journée en cours</p>
+          <p id="chKmOuverteInfo" class="text-xs text-slate-600 dark:text-cream/70 mb-3"></p>
+          <form id="chKmFinForm" novalidate class="space-y-2">
+            <label class="etiquette-pro" for="chKmFin">Kilométrage de fin <span class="requis">*</span></label>
+            <input id="chKmFin" type="number" inputmode="numeric" min="0" class="champ-pro font-mono-num" placeholder="Ex : 452380">
+            <input id="chKmFinNote" class="champ-pro" placeholder="Observations (facultatif)">
+            <label class="block text-xs text-slate-500 dark:text-cream/60">Photo du compteur (facultatif)<input id="chKmFinPhoto" type="file" accept="image/*" capture="environment" class="block w-full text-xs mt-1"></label>
+            <button type="submit" class="w-full bg-navy dark:bg-amber text-cream dark:text-navy font-bold py-3 rounded-full">🏁 Fin de kilomètres</button>
+          </form>
+        </div>
+        <form id="chKmDebutForm" novalidate class="space-y-2 mb-5">
+          <div class="grid grid-cols-2 gap-2">
+            <div><label class="etiquette-pro" for="chKmDate">Date</label><input id="chKmDate" type="date" class="champ-pro"></div>
+            <div><label class="etiquette-pro" for="chKmMatricula">Camion</label><input id="chKmMatricula" class="champ-pro uppercase font-mono-num"></div>
+          </div>
+          <label class="etiquette-pro" for="chKmDebut">Kilométrage de début <span class="requis">*</span></label>
+          <input id="chKmDebut" type="number" inputmode="numeric" min="0" class="champ-pro font-mono-num" placeholder="Ex : 452000">
+          <label class="block text-xs text-slate-500 dark:text-cream/60">Photo du compteur (facultatif)<input id="chKmDebutPhoto" type="file" accept="image/*" capture="environment" class="block w-full text-xs mt-1"></label>
+          <button type="submit" class="w-full bg-amber hover:bg-amberdark text-navy font-bold py-3 rounded-full">▶️ Début de kilomètres</button>
+        </form>
+        <p id="chKmEtat" class="text-sm font-medium mb-3 min-h-[1rem]"></p>
+        <p id="chKmTotal" class="text-xs font-semibold text-slate-500 dark:text-cream/60 mb-2"></p>
+        <div id="chKmListe" class="space-y-2"></div>
+      </div>
+
+      <!-- Repostaje -->
+      <div data-ch-panneau="repostaje" class="hidden">
+        <form id="chRepForm" novalidate class="space-y-2 mb-4">
+          <div class="grid grid-cols-2 gap-2">
+            <div><label class="etiquette-pro" for="chRepDate">Date</label><input id="chRepDate" type="date" class="champ-pro"></div>
+            <div><label class="etiquette-pro" for="chRepCarburant">Carburant</label><select id="chRepCarburant" class="champ-pro"><option value="gasoil">Gasoil</option><option value="adblue">AdBlue</option><option value="autre">Autre</option></select></div>
+            <div><label class="etiquette-pro" for="chRepLitres">Litres <span class="requis">*</span></label><input id="chRepLitres" type="number" inputmode="decimal" min="0" step="0.01" class="champ-pro font-mono-num"></div>
+            <div><label class="etiquette-pro" for="chRepMontant">Montant € <span class="requis">*</span></label><input id="chRepMontant" type="number" inputmode="decimal" min="0" step="0.01" class="champ-pro font-mono-num"></div>
+            <div><label class="etiquette-pro" for="chRepKm">Km compteur</label><input id="chRepKm" type="number" inputmode="numeric" min="0" class="champ-pro font-mono-num"></div>
+            <div><label class="etiquette-pro" for="chRepMatricula">Camion</label><input id="chRepMatricula" class="champ-pro uppercase font-mono-num"></div>
+          </div>
+          <input id="chRepStation" class="champ-pro" placeholder="Station / lieu (ex : Repsol Illescas)">
+          <label class="block text-xs text-slate-500 dark:text-cream/60">Photo du ticket (facultatif)<input id="chRepTicket" type="file" accept="image/*,application/pdf" capture="environment" class="block w-full text-xs mt-1"></label>
+          <p id="chRepPrixLitre" class="text-xs text-slate-500 dark:text-cream/60"></p>
+          <button type="submit" class="w-full bg-amber hover:bg-amberdark text-navy font-bold py-3 rounded-full">⛽ Enregistrer le repostaje</button>
+        </form>
+        <p id="chRepEtat" class="text-sm font-medium mb-3 min-h-[1rem]"></p>
+        <div id="chRepListe" class="space-y-2"></div>
+      </div>
+
+      <!-- Incident -->
+      <div data-ch-panneau="incident" class="hidden">
+        <form id="chIncForm" novalidate class="space-y-2 mb-4">
+          <div class="grid grid-cols-2 gap-2">
+            <div><label class="etiquette-pro" for="chIncType">Type <span class="requis">*</span></label><select id="chIncType" class="champ-pro"><option value="">— Choisir —</option><option value="panne">Panne</option><option value="accident">Accident</option><option value="retard">Retard</option><option value="marchandise">Marchandise abîmée</option><option value="controle">Contrôle routier</option><option value="autre">Autre</option></select></div>
+            <div><label class="etiquette-pro" for="chIncGravite">Gravité</label><select id="chIncGravite" class="champ-pro"><option value="faible">Faible</option><option value="moyenne">Moyenne</option><option value="grave">Grave</option></select></div>
+          </div>
+          <input id="chIncLieu" class="champ-pro" placeholder="Lieu (ex : A-42 km 35, sens Madrid)">
+          <textarea id="chIncDescription" rows="3" class="champ-pro" placeholder="Que s'est-il passé ? *"></textarea>
+          <label class="block text-xs text-slate-500 dark:text-cream/60">Photos (facultatif)<input id="chIncPhotos" type="file" accept="image/*" capture="environment" multiple class="block w-full text-xs mt-1"></label>
+          <button type="submit" class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-3 rounded-full">⚠️ Signaler l'incident</button>
+        </form>
+        <p id="chIncEtat" class="text-sm font-medium mb-3 min-h-[1rem]"></p>
+        <div id="chIncListe" class="space-y-2"></div>
+      </div>
+
+      <!-- Messages avec BOUA Trans -->
+      <div data-ch-panneau="messages" class="hidden">
+        <div id="chMsgListe" class="space-y-2 max-h-[45vh] overflow-y-auto pr-1 mb-3"></div>
+        <form id="chMsgForm" class="flex gap-2">
+          <input id="chMsgTexte" class="champ-pro flex-1" placeholder="Écris ton message…" autocomplete="off">
+          <button type="submit" class="bg-amber hover:bg-amberdark text-navy font-bold px-4 rounded-full">Envoyer</button>
+        </form>
+      </div>
+
+      <!-- Profil personnalisé -->
+      <div data-ch-panneau="profil" class="hidden">
+        <form id="chProfilForm" novalidate class="space-y-2">
+          <label class="etiquette-pro" for="chProNom">Nom et prénom</label><input id="chProNom" class="champ-pro">
+          <label class="etiquette-pro" for="chProTel">Téléphone</label><input id="chProTel" type="tel" class="champ-pro">
+          <div class="grid grid-cols-2 gap-2">
+            <div><label class="etiquette-pro" for="chProMatricula">Camion habituel</label><input id="chProMatricula" class="champ-pro uppercase font-mono-num"></div>
+            <div><label class="etiquette-pro" for="chProPermis">Permis</label><select id="chProPermis" class="champ-pro"><option value="">—</option><option>C</option><option>C+E</option><option>C1</option><option>B</option><option>D</option></select></div>
+          </div>
+          <label class="etiquette-pro">Ma couleur</label>
+          <div class="flex gap-2" id="chProCouleurs">
+            <button type="button" data-couleur="#E8A33D" class="w-8 h-8 rounded-full" style="background:#E8A33D"></button>
+            <button type="button" data-couleur="#1B7A72" class="w-8 h-8 rounded-full" style="background:#1B7A72"></button>
+            <button type="button" data-couleur="#0F1F38" class="w-8 h-8 rounded-full" style="background:#0F1F38"></button>
+            <button type="button" data-couleur="#C2410C" class="w-8 h-8 rounded-full" style="background:#C2410C"></button>
+            <button type="button" data-couleur="#7C3AED" class="w-8 h-8 rounded-full" style="background:#7C3AED"></button>
+          </div>
+          <button type="submit" class="w-full bg-navy dark:bg-amber text-cream dark:text-navy font-bold py-3 rounded-full mt-2">Enregistrer mon profil</button>
+          <p id="chProEtat" class="text-sm font-medium min-h-[1rem]"></p>
+        </form>
+      </div>
     </div>
 
-    <!-- VUE 4 : COMPTE NON RECONNU COMME CHAUFFEUR -->
-    <div id="chauffeurViewNonReconnu" class="hidden text-center py-4">
-      <h3 class="text-xl font-bold text-navy dark:text-white mb-2">Compte pas encore activé</h3>
-      <p class="text-sm text-slate-500 dark:text-cream/60 mb-5">Ton compte existe, mais l'administrateur ne t'a pas encore ajouté comme chauffeur. Contacte-le pour débloquer l'accès à tes missions.</p>
-      <button id="chauffeurLogoutBtnNonReconnu" class="text-sm font-semibold text-amberdark hover:underline">Se déconnecter</button>
+    <!-- VUE 4 : COMPTE SANS FICHE → compléter son profil (ou accès retiré) -->
+    <div id="chauffeurViewNonReconnu" class="hidden py-2">
+      <div id="chCompleterBloc">
+        <h3 class="text-xl font-bold text-navy dark:text-white mb-1.5">Complète ton profil</h3>
+        <p class="text-sm text-slate-500 dark:text-cream/60 mb-4">Ton compte existe : ajoute ton nom et ton téléphone pour ouvrir ton espace chauffeur.</p>
+        <form id="chCompleterForm" novalidate class="space-y-2">
+          <input id="chCompNom" class="champ-pro" placeholder="Nom et prénom *">
+          <input id="chCompTel" type="tel" class="champ-pro" placeholder="Téléphone *">
+          <input id="chCompMatricula" class="champ-pro uppercase font-mono-num" placeholder="Camion habituel (facultatif)">
+          <button type="submit" class="w-full bg-amber hover:bg-amberdark text-navy font-bold py-3 rounded-full">Ouvrir mon espace</button>
+          <p id="chCompEtat" class="text-sm font-medium text-red-500 min-h-[1rem]"></p>
+        </form>
+      </div>
+      <div id="chBloqueBloc" class="hidden text-center">
+        <h3 class="text-xl font-bold text-navy dark:text-white mb-2">Accès suspendu</h3>
+        <p class="text-sm text-slate-500 dark:text-cream/60 mb-5">L'administrateur a suspendu l'accès de ce compte. Contacte BOUA Trans.</p>
+      </div>
+      <button id="chauffeurLogoutBtnNonReconnu" class="block mx-auto mt-4 text-sm font-semibold text-amberdark hover:underline">Se déconnecter</button>
     </div>
   </div>
 </div>
@@ -3337,6 +3495,9 @@ function afficherVueChauffeur(vue){
   chauffeurViewSignup.classList.toggle('hidden', vue !== 'signup');
   chauffeurViewDashboard.classList.toggle('hidden', vue !== 'dashboard');
   chauffeurViewNonReconnu.classList.toggle('hidden', vue !== 'non-reconnu');
+  const large = vue === 'dashboard' || vue === 'signup';
+  document.getElementById('chauffeurModalBoite').classList.toggle('max-w-sm', !large);
+  document.getElementById('chauffeurModalBoite').classList.toggle('max-w-xl', large);
 }
 
 let arreterEcouteMissions = null; // pour couper l'écoute précédente en changeant de compte
@@ -3355,9 +3516,12 @@ async function verifierEtOuvrirEspaceChauffeur(){
     // on compare donc sans tenir compte de la casse.
     const emailConnecte = String(utilisateur.email || '').trim().toLowerCase();
     const snapshot = await getDocs(collection(window._db, "chauffeurs"));
-    const fiche = snapshot.docs.map(d => d.data()).find(c => String(c.email || '').trim().toLowerCase() === emailConnecte);
+    const fiche = snapshot.docs.map(d => ({ id: d.id, ...d.data() })).find(c => String(c.email || '').trim().toLowerCase() === emailConnecte);
 
-    if(!fiche){
+    if(!fiche || fiche.statut === 'bloque'){
+      // Pas encore de fiche : le chauffeur complète son profil lui-même ; fiche bloquée : accès suspendu
+      document.getElementById('chCompleterBloc').classList.toggle('hidden', !!fiche);
+      document.getElementById('chBloqueBloc').classList.toggle('hidden', !fiche);
       afficherVueChauffeur('non-reconnu');
       return;
     }
@@ -3367,6 +3531,7 @@ async function verifierEtOuvrirEspaceChauffeur(){
     // Les voyages portent l'email tel qu'il figure sur la fiche du chauffeur
     ecouterMesMissions(Array.from(new Set([fiche.email, emailConnecte])));
     ecouterMesDeca(Array.from(new Set([fiche.email, emailConnecte])));
+    demarrerCarnetChauffeur({ ...fiche, email: emailConnecte });
   } catch (err) {
     console.error("Erreur de vérification chauffeur :", err);
     afficherVueChauffeur('non-reconnu');
@@ -3425,15 +3590,23 @@ const chauffeurSignupSubmitBtn = document.getElementById('chauffeurSignupSubmitB
 
 chauffeurSignupForm.addEventListener('submit', async (e) => {
   e.preventDefault();
+  const profil = {
+    nom: document.getElementById('chSignNom').value.trim(), telephone: document.getElementById('chSignTel').value.trim(),
+    matricula: document.getElementById('chSignMatricula').value.trim(), permis: document.getElementById('chSignPermis').value, couleur: couleurInscription
+  };
+  const emailSaisi = document.getElementById('chauffeurSignupEmail').value.trim();
+  const manque = !profil.nom ? 'ton nom' : !emailSaisi ? 'ton email' : document.getElementById('chauffeurSignupPassword').value.length < 6 ? 'un mot de passe de 6 caractères minimum' : !profil.telephone ? 'ton téléphone' : '';
+  if(manque){ chauffeurSignupStatus.textContent = `Indique ${manque}.`; chauffeurSignupStatus.className = "text-xs mt-3 text-red-500 font-medium"; return; }
   chauffeurSignupStatus.textContent = "Création du compte...";
   chauffeurSignupStatus.className = "text-xs mt-3 text-slate-500 dark:text-cream/60";
   chauffeurSignupSubmitBtn.disabled = true;
 
   try {
     const { createUserWithEmailAndPassword } = window._authFns;
-    const email = document.getElementById('chauffeurSignupEmail').value.trim();
+    const email = emailSaisi;
     const motDePasse = document.getElementById('chauffeurSignupPassword').value;
     await createUserWithEmailAndPassword(window._auth, email, motDePasse);
+    try { await creerFicheChauffeur(email, profil); } catch (errFiche) { console.error('Fiche chauffeur :', errFiche); }
     chauffeurSignupForm.reset();
     verifierEtOuvrirEspaceChauffeur();
   } catch (err) {
@@ -3457,6 +3630,7 @@ chauffeurSignupForm.addEventListener('submit', async (e) => {
 async function deconnecterChauffeur(){
   const { signOut } = window._authFns;
   if(arreterEcouteMissions) arreterEcouteMissions();
+  arreterCarnetChauffeur(); chauffeurCourant = null;
   if(arreterEcouteDecaChauffeur){ arreterEcouteDecaChauffeur(); arreterEcouteDecaChauffeur = null; }
   await signOut(window._auth);
   fermerModaleChauffeur();
@@ -3915,7 +4089,46 @@ const SCHEMAS_ADMIN = {
     { champ: 'nom', label: 'Nom', type: 'text' },
     { champ: 'email', label: 'Email', type: 'text' },
     { champ: 'telephone', label: 'Téléphone', type: 'text' },
-    { champ: 'statut', label: 'Statut', type: 'select', options: ['disponible', 'en_mission', 'conge'], optionLabels: ['Disponible', 'En mission', 'Congé'], defaut: 'disponible' }
+    { champ: 'matricula', label: 'Camion habituel', type: 'text' },
+    { champ: 'permis', label: 'Permis', type: 'text' },
+    { champ: 'statut', label: 'Statut', type: 'select', options: ['disponible', 'en_mission', 'conge', 'bloque'], optionLabels: ['Disponible', 'En mission', 'Congé', '⛔ Accès suspendu'], defaut: 'disponible' }
+  ],
+  journees: [
+    { champ: 'date', label: 'Date', type: 'date' },
+    { champ: 'chauffeurNom', label: 'Chauffeur', type: 'text' },
+    { champ: 'matricula', label: 'Camion', type: 'text' },
+    { champ: 'kmDebut', label: 'Km début', type: 'number' },
+    { champ: 'heureDebut', label: 'Heure début', type: 'text' },
+    { champ: 'kmFin', label: 'Km fin', type: 'number' },
+    { champ: 'heureFin', label: 'Heure fin', type: 'text' },
+    { champ: '_distance', label: 'Distance', type: 'calcul', calcul: j => ({ texte: (j.kmFin !== undefined && j.kmFin !== null && j.kmFin !== '' && j.kmDebut !== undefined) ? `${(Number(j.kmFin) - Number(j.kmDebut)).toLocaleString('fr-FR')} km` : 'en cours', negatif: Number(j.kmFin) < Number(j.kmDebut) }) },
+    { champ: 'statut', label: 'État', type: 'select', options: ['ouverte', 'fermee'], optionLabels: ['🟢 En cours', 'Terminée'], defaut: 'fermee' },
+    { champ: 'observations', label: 'Observations', type: 'text' },
+    { champ: 'photoDebutUrl', label: 'Photo début', type: 'fichier', dossier: 'chauffeurs', accept: 'image/*' },
+    { champ: 'photoFinUrl', label: 'Photo fin', type: 'fichier', dossier: 'chauffeurs', accept: 'image/*' }
+  ],
+  repostajes: [
+    { champ: 'date', label: 'Date', type: 'date' },
+    { champ: 'chauffeurNom', label: 'Chauffeur', type: 'text' },
+    { champ: 'matricula', label: 'Camion', type: 'text' },
+    { champ: 'carburant', label: 'Carburant', type: 'select', options: ['gasoil', 'adblue', 'autre'], optionLabels: ['Gasoil', 'AdBlue', 'Autre'], defaut: 'gasoil' },
+    { champ: 'litres', label: 'Litres', type: 'number' },
+    { champ: 'montant', label: 'Montant (€)', type: 'number' },
+    { champ: '_prixLitre', label: '€ / L', type: 'calcul', calcul: r => ({ texte: Number(r.litres) > 0 && Number(r.montant) > 0 ? (Number(r.montant) / Number(r.litres)).toLocaleString('fr-FR', { minimumFractionDigits: 3, maximumFractionDigits: 3 }) + ' €' : '—' }) },
+    { champ: 'km', label: 'Km compteur', type: 'number' },
+    { champ: 'station', label: 'Station', type: 'text' },
+    { champ: 'ticketUrl', label: 'Ticket', type: 'fichier', dossier: 'chauffeurs', accept: 'image/*,application/pdf' }
+  ],
+  incidents: [
+    { champ: 'date', label: 'Date', type: 'date' },
+    { champ: 'heure', label: 'Heure', type: 'text' },
+    { champ: 'chauffeurNom', label: 'Chauffeur', type: 'text' },
+    { champ: 'type', label: 'Type', type: 'select', options: ['panne', 'accident', 'retard', 'marchandise', 'controle', 'autre'], optionLabels: ['Panne', 'Accident', 'Retard', 'Marchandise abîmée', 'Contrôle routier', 'Autre'] },
+    { champ: 'gravite', label: 'Gravité', type: 'select', options: ['faible', 'moyenne', 'grave'], optionLabels: ['Faible', 'Moyenne', '🔴 Grave'], defaut: 'faible' },
+    { champ: 'lieu', label: 'Lieu', type: 'text' },
+    { champ: 'description', label: 'Description', type: 'texte_long' },
+    { champ: 'photoUrl', label: 'Photo', type: 'fichier', dossier: 'chauffeurs', accept: 'image/*' },
+    { champ: 'statut', label: 'Suivi', type: 'select', options: ['nouveau', 'en_cours', 'resolu'], optionLabels: ['🆕 Nouveau', 'En cours', '✅ Résolu'], defaut: 'nouveau' }
   ],
 
   // MODULE 2 — Voyages (collection "missions", aussi lue par l'Espace Chauffeur)
@@ -4037,6 +4250,46 @@ const SCHEMAS_ADMIN = {
                   rangement est décrite dans CIBLES_PUBLICATION)
    ---------------------------------------------------------------- */
 const VUES_ADMIN = {
+  journees: {
+    complet: true,
+    tri: (a, b) => String(b.date || '').localeCompare(String(a.date || '')),
+    resume: (l) => {
+      const mois = aujourdHuiISO().slice(0, 7);
+      const fermees = l.filter(j => j.kmFin !== undefined && j.kmFin !== null && j.kmFin !== '');
+      const km = (liste) => liste.reduce((t, j) => t + Math.max(0, Number(j.kmFin) - Number(j.kmDebut) || 0), 0);
+      return [
+        { label: 'Journées', valeur: String(l.length) },
+        { label: '🟢 En cours', valeur: String(l.filter(j => j.statut === 'ouverte').length) },
+        { label: 'Km ce mois-ci', valeur: km(fermees.filter(j => String(j.date || '').startsWith(mois))).toLocaleString('fr-FR') + ' km' },
+        { label: 'Km au total', valeur: km(fermees).toLocaleString('fr-FR') + ' km' }
+      ];
+    }
+  },
+  repostajes: {
+    complet: true,
+    tri: (a, b) => String(b.date || '').localeCompare(String(a.date || '')),
+    resume: (l) => {
+      const mois = aujourdHuiISO().slice(0, 7);
+      const duMois = l.filter(r => String(r.date || '').startsWith(mois));
+      const litres = duMois.reduce((t, r) => t + (Number(r.litres) || 0), 0), euros = duMois.reduce((t, r) => t + (Number(r.montant) || 0), 0);
+      return [
+        { label: 'Repostajes ce mois', valeur: String(duMois.length) },
+        { label: 'Litres ce mois', valeur: litres.toLocaleString('fr-FR', { maximumFractionDigits: 1 }) + ' L' },
+        { label: 'Dépense ce mois', valeur: formatEuros.format(euros) },
+        { label: 'Prix moyen', valeur: litres > 0 ? (euros / litres).toLocaleString('fr-FR', { minimumFractionDigits: 3, maximumFractionDigits: 3 }) + ' €/L' : '—' }
+      ];
+    }
+  },
+  incidents: {
+    complet: true,
+    tri: (a, b) => (a.statut === 'nouveau' ? 0 : 1) - (b.statut === 'nouveau' ? 0 : 1) || String(b.date || '').localeCompare(String(a.date || '')),
+    resume: (l) => [
+      { label: '🆕 Nouveaux', valeur: String(l.filter(i => i.statut === 'nouveau' || !i.statut).length), negatif: l.some(i => i.statut === 'nouveau' || !i.statut) },
+      { label: 'En cours', valeur: String(l.filter(i => i.statut === 'en_cours').length) },
+      { label: 'Résolus', valeur: String(l.filter(i => i.statut === 'resolu').length) },
+      { label: '🔴 Graves', valeur: String(l.filter(i => i.gravite === 'grave').length) }
+    ]
+  },
   missions: { references: ['vehicules', 'chauffeurs'] },
   faq: {
     complet: true,
@@ -4693,7 +4946,7 @@ let ciblePublierActive = null;
 let publicationEnCours = false;
 
 // Deux onglets ne sont pas des tableaux : "publier" et "textes"
-const ECRANS_SPECIAUX = ['publier', 'textes', 'nouveauVoyage', 'cmr', 'deca', 'factureLd'];
+const ECRANS_SPECIAUX = ['publier', 'textes', 'nouveauVoyage', 'cmr', 'deca', 'factureLd', 'messagesChauffeurs'];
 function afficherEcranAdmin(nomVue){
   const special = ECRANS_SPECIAUX.includes(nomVue);
   adminPublier.classList.toggle('hidden', nomVue !== 'publier');
@@ -4702,6 +4955,7 @@ function afficherEcranAdmin(nomVue){
   document.getElementById('adminCmr').classList.toggle('hidden', nomVue !== 'cmr');
   document.getElementById('adminDeca').classList.toggle('hidden', nomVue !== 'deca');
   document.getElementById('adminFactureLd').classList.toggle('hidden', nomVue !== 'factureLd');
+  document.getElementById('adminMessages').classList.toggle('hidden', nomVue !== 'messagesChauffeurs');
   adminZoneTableau.classList.toggle('hidden', special);
   document.getElementById('adminAddBtn').classList.toggle('hidden', special); // "+ Ajouter" n'a de sens que sur un tableau
   if(nomVue === 'textes') afficherEditeurTextes();
@@ -4709,6 +4963,7 @@ function afficherEcranAdmin(nomVue){
   if(nomVue === 'cmr') ouvrirEcranCmr();
   if(nomVue === 'deca') ouvrirEcranDeca();
   if(nomVue === 'factureLd') ouvrirEcranFactureLd();
+  if(nomVue === 'messagesChauffeurs') ouvrirEcranMessages(); else { fermerEcranMessages(); if(window._db) majBadgeMessagesAdmin(); }
 }
 
 function allerSurOnglet(nomVue){
@@ -7383,6 +7638,382 @@ document.getElementById('fldImprimer').addEventListener('click', (e) => {
   });
 });
 
+
+/* ============================================================
+   ESPACE CHAUFFEUR — compte personnalisé + carnet de route
+   Début / fin de kilomètres (collection "journees"), repostajes
+   ("repostajes"), incidents ("incidents") et messages avec
+   l'administrateur ("messages"). Tout est lié à l'email du chauffeur.
+   ============================================================ */
+let chauffeurCourant = null;      // { id, nom, email, telephone, matricula, permis, couleur }
+const ecoutesCarnet = [];
+let chJournees = [], chRepostajes = [], chIncidents = [], chMessages = [];
+let couleurInscription = '#E8A33D', couleurProfil = '#E8A33D';
+const LIBELLES_INCIDENT = { panne: 'Panne', accident: 'Accident', retard: 'Retard', marchandise: 'Marchandise abîmée', controle: 'Contrôle routier', autre: 'Autre' };
+const LIBELLES_STATUT_INCIDENT = { nouveau: 'Nouveau', en_cours: 'En cours', resolu: 'Résolu' };
+
+function initialesNom(nom){ return String(nom || '?').trim().split(/\s+/).slice(0, 2).map(m => m[0] || '').join('').toUpperCase() || '?'; }
+function heureLocale(){ return new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }); }
+function dateJour(iso){ const m = String(iso || '').match(/^(\d{4})-(\d{2})-(\d{2})/); return m ? `${m[3]}/${m[2]}/${m[1]}` : ''; }
+function nombreFr(n, dec = 0){ return Number(n || 0).toLocaleString('fr-FR', { minimumFractionDigits: dec, maximumFractionDigits: dec }); }
+function etatCh(id, texte, erreur){ const el = document.getElementById(id); el.textContent = texte; el.className = `text-sm font-medium mb-3 min-h-[1rem] ${erreur ? 'text-red-500' : 'text-teal'}`; }
+function choixCouleur(conteneurId, rappel){
+  const c = document.getElementById(conteneurId);
+  c.addEventListener('click', (e) => {
+    const b = e.target.closest('[data-couleur]'); if(!b) return;
+    c.querySelectorAll('[data-couleur]').forEach(x => x.classList.remove('ring-2', 'ring-offset-2', 'ring-navy'));
+    b.classList.add('ring-2', 'ring-offset-2', 'ring-navy');
+    rappel(b.dataset.couleur);
+  });
+}
+function marquerCouleur(conteneurId, couleur){
+  document.querySelectorAll(`#${conteneurId} [data-couleur]`).forEach(x => x.classList.toggle('ring-2', x.dataset.couleur === couleur));
+  document.querySelectorAll(`#${conteneurId} [data-couleur]`).forEach(x => { x.classList.toggle('ring-offset-2', x.dataset.couleur === couleur); x.classList.toggle('ring-navy', x.dataset.couleur === couleur); });
+}
+choixCouleur('chSignCouleurs', (c) => { couleurInscription = c; });
+choixCouleur('chProCouleurs', (c) => { couleurProfil = c; });
+
+// Photo facultative : envoyée avec le système de fichiers du site ; un échec ne bloque jamais l'enregistrement
+async function envoyerPhotoChauffeur(input){
+  const fichier = input && input.files && input.files[0];
+  if(!fichier) return '';
+  try { return await publierFichier(fichier, 'chauffeurs', null, false); }
+  catch (err) { console.warn('Photo non envoyée :', err); return ''; }
+}
+function baseEnregistrementChauffeur(){
+  return { chauffeurEmail: chauffeurCourant.email, chauffeurNom: chauffeurCourant.nom || chauffeurCourant.email, chauffeurId: chauffeurCourant.id || '' };
+}
+
+// ---------- Création de la fiche (inscription ou compte sans fiche) ----------
+async function creerFicheChauffeur(email, profil){
+  const { collection, addDoc, serverTimestamp } = window._firestore;
+  const fiche = { nom: profil.nom, email: String(email).trim().toLowerCase(), telephone: profil.telephone, statut: 'disponible', source: 'inscription' };
+  if(profil.matricula) fiche.matricula = profil.matricula.toUpperCase();
+  if(profil.permis) fiche.permis = profil.permis;
+  fiche.couleur = profil.couleur || '#E8A33D';
+  const ref = await avecReessais(() => addDoc(collection(window._db, 'chauffeurs'), { ...fiche, dateCreation: serverTimestamp() }));
+  return { id: ref.id, ...fiche };
+}
+document.getElementById('chCompleterForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const nom = document.getElementById('chCompNom').value.trim(), tel = document.getElementById('chCompTel').value.trim();
+  if(!nom || !tel){ document.getElementById('chCompEtat').textContent = 'Indique ton nom et ton téléphone.'; return; }
+  const u = window._auth && window._auth.currentUser; if(!u) return;
+  try {
+    await creerFicheChauffeur(u.email, { nom, telephone: tel, matricula: document.getElementById('chCompMatricula').value.trim() });
+    verifierEtOuvrirEspaceChauffeur();
+  } catch (err) { document.getElementById('chCompEtat').textContent = "Profil non enregistré (connexion ?). Réessaie."; }
+});
+
+// ---------- Ouverture de l'espace ----------
+function afficherProfilEntete(){
+  const c = chauffeurCourant;
+  const av = document.getElementById('chAvatar');
+  av.textContent = initialesNom(c.nom);
+  av.style.background = c.couleur || '#E8A33D';
+  document.getElementById('chBonjour').textContent = `Bonjour ${String(c.nom || '').split(' ')[0] || ''} 👋`;
+  document.getElementById('chMatriculaAffiche').textContent = c.matricula ? `· 🚛 ${c.matricula}` : '';
+}
+function activerOngletChauffeur(nom){
+  document.querySelectorAll('[data-ch-onglet]').forEach(b => b.classList.toggle('actif', b.dataset.chOnglet === nom));
+  document.querySelectorAll('[data-ch-panneau]').forEach(p => p.classList.toggle('hidden', p.dataset.chPanneau !== nom));
+  if(nom === 'messages'){ marquerMessagesLusChauffeur(); const l = document.getElementById('chMsgListe'); l.scrollTop = l.scrollHeight; }
+}
+document.querySelectorAll('[data-ch-onglet]').forEach(b => b.addEventListener('click', () => activerOngletChauffeur(b.dataset.chOnglet)));
+
+function arreterCarnetChauffeur(){ while(ecoutesCarnet.length) { try { ecoutesCarnet.pop()(); } catch (e) {} } }
+function demarrerCarnetChauffeur(fiche){
+  chauffeurCourant = fiche;
+  arreterCarnetChauffeur();
+  afficherProfilEntete();
+  const aujourdhui = aujourdHuiISO();
+  document.getElementById('chKmDate').value = aujourdhui;
+  document.getElementById('chRepDate').value = aujourdhui;
+  ['chKmMatricula', 'chRepMatricula'].forEach(id => { const el = document.getElementById(id); if(!el.value) el.value = fiche.matricula || ''; });
+  // Profil
+  document.getElementById('chProNom').value = fiche.nom || '';
+  document.getElementById('chProTel').value = fiche.telephone || '';
+  document.getElementById('chProMatricula').value = fiche.matricula || '';
+  document.getElementById('chProPermis').value = fiche.permis || '';
+  couleurProfil = fiche.couleur || '#E8A33D';
+  marquerCouleur('chProCouleurs', couleurProfil);
+  activerOngletChauffeur('missions');
+
+  const { collection, query, where, onSnapshot } = window._firestore;
+  const ecouter = (nom, rappel) => {
+    ecoutesCarnet.push(onSnapshot(query(collection(window._db, nom), where('chauffeurEmail', '==', fiche.email)), (snap) => {
+      rappel(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+    }, (err) => console.error(`Écoute ${nom} :`, err)));
+  };
+  const parDate = (a, b) => String(b.date || '').localeCompare(String(a.date || '')) || ((b.dateCreation?.seconds || 0) - (a.dateCreation?.seconds || 0));
+  ecouter('journees', (l) => { chJournees = l.sort(parDate); afficherJourneesChauffeur(); });
+  ecouter('repostajes', (l) => { chRepostajes = l.sort(parDate); afficherRepostajesChauffeur(); });
+  ecouter('incidents', (l) => { chIncidents = l.sort(parDate); afficherIncidentsChauffeur(); });
+  ecouter('messages', (l) => { chMessages = l.sort((a, b) => (a.dateCreation?.seconds || 0) - (b.dateCreation?.seconds || 0) || String(a.envoyeLe || '').localeCompare(String(b.envoyeLe || ''))); afficherMessagesChauffeur(); });
+}
+
+// ---------- Kilomètres ----------
+function journeeOuverte(){ return chJournees.find(j => j.statut === 'ouverte'); }
+function afficherJourneesChauffeur(){
+  const e = echapperHtml;
+  const ouverte = journeeOuverte();
+  document.getElementById('chKmOuverte').classList.toggle('hidden', !ouverte);
+  document.getElementById('chKmDebutForm').classList.toggle('hidden', !!ouverte);
+  if(ouverte) document.getElementById('chKmOuverteInfo').textContent = `Début : ${nombreFr(ouverte.kmDebut)} km · ${dateJour(ouverte.date)} à ${ouverte.heureDebut || ''}${ouverte.matricula ? ' · ' + ouverte.matricula : ''}`;
+  const mois = aujourdHuiISO().slice(0, 7);
+  const totalMois = chJournees.filter(j => j.statut === 'fermee' && String(j.date || '').startsWith(mois)).reduce((t, j) => t + (Number(j.distance) || 0), 0);
+  document.getElementById('chKmTotal').textContent = chJournees.length ? `Ce mois-ci : ${nombreFr(totalMois)} km parcourus` : '';
+  document.getElementById('chKmListe').innerHTML = chJournees.slice(0, 15).map(j => `
+    <div class="flex items-center justify-between gap-2 border border-slate-200 dark:border-white/10 rounded-xl px-3 py-2 text-sm">
+      <div><p class="font-semibold text-navy dark:text-white">${dateJour(j.date)} ${j.matricula ? `<span class="font-mono-num text-xs text-slate-500">${e(j.matricula)}</span>` : ''}</p>
+      <p class="text-xs text-slate-500 dark:text-cream/60 font-mono-num">${nombreFr(j.kmDebut)} → ${j.kmFin !== undefined && j.kmFin !== null ? nombreFr(j.kmFin) : '…'} km</p></div>
+      <span class="font-mono-num font-bold ${j.statut === 'ouverte' ? 'text-amberdark' : 'text-teal'}">${j.statut === 'ouverte' ? 'en cours' : nombreFr(j.distance) + ' km'}</span>
+    </div>`).join('');
+}
+document.getElementById('chKmDebutForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const bouton = e.submitter || e.target.querySelector('button[type="submit"]');
+  const km = Number(document.getElementById('chKmDebut').value);
+  if(!document.getElementById('chKmDebut').value || isNaN(km) || km < 0) return etatCh('chKmEtat', 'Indique le kilométrage de début.', true);
+  if(journeeOuverte()) return etatCh('chKmEtat', 'Une journée est déjà en cours : termine-la d\'abord.', true);
+  const derniere = chJournees.find(j => j.kmFin !== undefined && j.kmFin !== null);
+  if(derniere && km < Number(derniere.kmFin) && !confirm(`Le kilométrage (${nombreFr(km)}) est inférieur à la dernière fin de journée (${nombreFr(derniere.kmFin)}). Continuer quand même ?`)) return;
+  bouton.disabled = true;
+  try {
+    const { collection, addDoc, serverTimestamp } = window._firestore;
+    const photo = await envoyerPhotoChauffeur(document.getElementById('chKmDebutPhoto'));
+    const donnees = { ...baseEnregistrementChauffeur(), date: document.getElementById('chKmDate').value || aujourdHuiISO(), matricula: document.getElementById('chKmMatricula').value.trim().toUpperCase(), kmDebut: km, heureDebut: heureLocale(), statut: 'ouverte' };
+    if(photo) donnees.photoDebutUrl = photo;
+    await avecReessais(() => addDoc(collection(window._db, 'journees'), { ...donnees, dateCreation: serverTimestamp() }));
+    e.target.reset();
+    document.getElementById('chKmDate').value = aujourdHuiISO();
+    document.getElementById('chKmMatricula').value = donnees.matricula;
+    etatCh('chKmEtat', `✓ Début enregistré : ${nombreFr(km)} km à ${donnees.heureDebut}. Bonne route !`);
+  } catch (err) { etatCh('chKmEtat', 'Non enregistré (connexion ?). Réessaie.', true); }
+  finally { bouton.disabled = false; }
+});
+document.getElementById('chKmFinForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const bouton = e.submitter || e.target.querySelector('button[type="submit"]');
+  const ouverte = journeeOuverte(); if(!ouverte) return;
+  const champ = document.getElementById('chKmFin');
+  const km = Number(champ.value);
+  if(!champ.value || isNaN(km)) return etatCh('chKmEtat', 'Indique le kilométrage de fin.', true);
+  if(km < Number(ouverte.kmDebut)) return etatCh('chKmEtat', `Le kilométrage de fin doit être supérieur au début (${nombreFr(ouverte.kmDebut)} km).`, true);
+  const distance = km - Number(ouverte.kmDebut);
+  if(distance > 1500 && !confirm(`${nombreFr(distance)} km en une journée : c'est beaucoup. Confirmer ?`)) return;
+  bouton.disabled = true;
+  try {
+    const { doc, updateDoc } = window._firestore;
+    const photo = await envoyerPhotoChauffeur(document.getElementById('chKmFinPhoto'));
+    const maj = { kmFin: km, distance, heureFin: heureLocale(), statut: 'fermee' };
+    const note = document.getElementById('chKmFinNote').value.trim(); if(note) maj.observations = note;
+    if(photo) maj.photoFinUrl = photo;
+    await avecReessais(() => updateDoc(doc(window._db, 'journees', ouverte.id), maj));
+    e.target.reset();
+    etatCh('chKmEtat', `✓ Fin enregistrée : ${nombreFr(distance)} km parcourus aujourd'hui.`);
+  } catch (err) { etatCh('chKmEtat', 'Non enregistré (connexion ?). Réessaie.', true); }
+  finally { bouton.disabled = false; }
+});
+
+// ---------- Repostaje ----------
+function majPrixLitre(){
+  const l = Number(document.getElementById('chRepLitres').value), m = Number(document.getElementById('chRepMontant').value);
+  document.getElementById('chRepPrixLitre').textContent = l > 0 && m > 0 ? `Soit ${nombreFr(m / l, 3)} €/L` : '';
+}
+['chRepLitres', 'chRepMontant'].forEach(id => document.getElementById(id).addEventListener('input', majPrixLitre));
+function afficherRepostajesChauffeur(){
+  const e = echapperHtml;
+  document.getElementById('chRepListe').innerHTML = chRepostajes.slice(0, 15).map(r => `
+    <div class="flex items-center justify-between gap-2 border border-slate-200 dark:border-white/10 rounded-xl px-3 py-2 text-sm">
+      <div><p class="font-semibold text-navy dark:text-white">${dateJour(r.date)} · ${nombreFr(r.litres, 2)} L ${r.carburant === 'adblue' ? 'AdBlue' : ''}</p>
+      <p class="text-xs text-slate-500 dark:text-cream/60">${e(r.station || '')}${r.km ? ` · ${nombreFr(r.km)} km` : ''}</p></div>
+      <span class="font-mono-num font-bold text-navy dark:text-white">${nombreFr(r.montant, 2)} €</span>
+    </div>`).join('');
+}
+document.getElementById('chRepForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const bouton = e.submitter || e.target.querySelector('button[type="submit"]');
+  const litres = Number(document.getElementById('chRepLitres').value), montant = Number(document.getElementById('chRepMontant').value);
+  if(!(litres > 0) || !(montant > 0)) return etatCh('chRepEtat', 'Indique les litres et le montant.', true);
+  if(montant / litres > 4 && !confirm(`${nombreFr(montant / litres, 2)} €/L : vérifie les litres et le montant. Continuer ?`)) return;
+  bouton.disabled = true;
+  try {
+    const { collection, addDoc, serverTimestamp } = window._firestore;
+    const ticket = await envoyerPhotoChauffeur(document.getElementById('chRepTicket'));
+    const km = document.getElementById('chRepKm').value;
+    const donnees = { ...baseEnregistrementChauffeur(), date: document.getElementById('chRepDate').value || aujourdHuiISO(), carburant: document.getElementById('chRepCarburant').value, litres, montant, prixLitre: Math.round(montant / litres * 1000) / 1000, matricula: document.getElementById('chRepMatricula').value.trim().toUpperCase(), station: document.getElementById('chRepStation').value.trim() };
+    if(km !== '') donnees.km = Number(km);
+    if(ticket) donnees.ticketUrl = ticket;
+    await avecReessais(() => addDoc(collection(window._db, 'repostajes'), { ...donnees, dateCreation: serverTimestamp() }));
+    const matricula = donnees.matricula;
+    e.target.reset();
+    document.getElementById('chRepDate').value = aujourdHuiISO();
+    document.getElementById('chRepMatricula').value = matricula;
+    majPrixLitre();
+    etatCh('chRepEtat', `✓ Repostaje enregistré : ${nombreFr(litres, 2)} L pour ${nombreFr(montant, 2)} €.`);
+  } catch (err) { etatCh('chRepEtat', 'Non enregistré (connexion ?). Réessaie.', true); }
+  finally { bouton.disabled = false; }
+});
+
+// ---------- Incident ----------
+function afficherIncidentsChauffeur(){
+  const e = echapperHtml;
+  const couleurs = { nouveau: 'bg-red-100 text-red-600', en_cours: 'bg-amber/20 text-amberdark', resolu: 'bg-teal/15 text-teal' };
+  document.getElementById('chIncListe').innerHTML = chIncidents.slice(0, 15).map(i => `
+    <div class="border border-slate-200 dark:border-white/10 rounded-xl px-3 py-2 text-sm">
+      <div class="flex items-center justify-between gap-2"><p class="font-semibold text-navy dark:text-white">${e(LIBELLES_INCIDENT[i.type] || i.type)} · ${dateJour(i.date)}</p>
+      <span class="badge-pro ${couleurs[i.statut] || couleurs.nouveau}">${LIBELLES_STATUT_INCIDENT[i.statut] || 'Nouveau'}</span></div>
+      <p class="text-xs text-slate-500 dark:text-cream/60 mt-0.5">${e(i.description || '')}</p>
+    </div>`).join('');
+}
+document.getElementById('chIncForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const bouton = e.submitter || e.target.querySelector('button[type="submit"]');
+  const type = document.getElementById('chIncType').value, description = document.getElementById('chIncDescription').value.trim();
+  if(!type || !description) return etatCh('chIncEtat', 'Choisis le type et décris l\'incident.', true);
+  bouton.disabled = true;
+  try {
+    const { collection, addDoc, serverTimestamp } = window._firestore;
+    const photos = [];
+    for(const f of [...(document.getElementById('chIncPhotos').files || [])].slice(0, 5)){
+      try { photos.push(await publierFichier(f, 'chauffeurs', null, false)); } catch (err) { console.warn('Photo non envoyée :', err); }
+    }
+    const donnees = { ...baseEnregistrementChauffeur(), date: aujourdHuiISO(), heure: heureLocale(), type, gravite: document.getElementById('chIncGravite').value, lieu: document.getElementById('chIncLieu').value.trim(), description, statut: 'nouveau', photos };
+    if(photos[0]) donnees.photoUrl = photos[0];
+    await avecReessais(() => addDoc(collection(window._db, 'incidents'), { ...donnees, dateCreation: serverTimestamp() }));
+    // L'administrateur le voit aussi dans les messages du chauffeur
+    addDoc(collection(window._db, 'messages'), { chauffeurEmail: chauffeurCourant.email, chauffeurNom: chauffeurCourant.nom, de: 'chauffeur', texte: `⚠️ Incident signalé (${LIBELLES_INCIDENT[type]}, gravité ${donnees.gravite}) : ${description}${donnees.lieu ? ' — ' + donnees.lieu : ''}`, lu: false, envoyeLe: new Date().toISOString(), dateCreation: serverTimestamp() }).catch(() => {});
+    e.target.reset();
+    etatCh('chIncEtat', '✓ Incident signalé : BOUA Trans est prévenu.');
+  } catch (err) { etatCh('chIncEtat', 'Non envoyé (connexion ?). Réessaie, ou appelle BOUA Trans si c\'est urgent.', true); }
+  finally { bouton.disabled = false; }
+});
+
+// ---------- Messages ----------
+function bulleMessage(m, cote){
+  const e = echapperHtml;
+  const moi = m.de === cote;
+  const heure = m.envoyeLe ? new Date(m.envoyeLe).toLocaleString('fr-FR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }) : '';
+  return `<div class="flex ${moi ? 'justify-end' : 'justify-start'}"><div class="max-w-[80%] rounded-2xl px-3 py-2 text-sm ${moi ? 'bg-amber text-navy rounded-br-sm' : 'bg-slate-100 dark:bg-white/10 text-navy dark:text-cream rounded-bl-sm'}">
+    <p class="whitespace-pre-wrap break-words">${e(m.texte)}</p><p class="text-[0.65rem] opacity-60 mt-0.5 text-right">${heure}</p></div></div>`;
+}
+function afficherMessagesChauffeur(){
+  const liste = document.getElementById('chMsgListe');
+  liste.innerHTML = chMessages.length ? chMessages.map(m => bulleMessage(m, 'chauffeur')).join('') : '<p class="text-sm text-slate-400 text-center py-6">Aucun message. Écris à BOUA Trans ici.</p>';
+  liste.scrollTop = liste.scrollHeight;
+  const nonLus = chMessages.filter(m => m.de === 'admin' && !m.lu).length;
+  const badge = document.getElementById('chBadgeMessages');
+  badge.textContent = nonLus; badge.classList.toggle('hidden', !nonLus);
+  if(!document.querySelector('[data-ch-panneau="messages"]').classList.contains('hidden')) marquerMessagesLusChauffeur();
+}
+function marquerMessagesLusChauffeur(){
+  const { doc, updateDoc } = window._firestore;
+  chMessages.filter(m => m.de === 'admin' && !m.lu).forEach(m => { m.lu = true; updateDoc(doc(window._db, 'messages', m.id), { lu: true }).catch(() => {}); });
+  document.getElementById('chBadgeMessages').classList.add('hidden');
+}
+document.getElementById('chMsgForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const champ = document.getElementById('chMsgTexte');
+  const texte = champ.value.trim(); if(!texte || !chauffeurCourant) return;
+  champ.value = '';
+  try {
+    const { collection, addDoc, serverTimestamp } = window._firestore;
+    await avecReessais(() => addDoc(collection(window._db, 'messages'), { chauffeurEmail: chauffeurCourant.email, chauffeurNom: chauffeurCourant.nom, de: 'chauffeur', texte, lu: false, envoyeLe: new Date().toISOString(), dateCreation: serverTimestamp() }));
+  } catch (err) { champ.value = texte; alert('Message non envoyé (connexion ?). Réessaie.'); }
+});
+
+// ---------- Profil ----------
+document.getElementById('chProfilForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  if(!chauffeurCourant || !chauffeurCourant.id) return;
+  const maj = { nom: document.getElementById('chProNom').value.trim(), telephone: document.getElementById('chProTel').value.trim(), matricula: document.getElementById('chProMatricula').value.trim().toUpperCase(), permis: document.getElementById('chProPermis').value, couleur: couleurProfil };
+  if(!maj.nom || !maj.telephone){ const el = document.getElementById('chProEtat'); el.textContent = 'Nom et téléphone obligatoires.'; el.className = 'text-sm font-medium text-red-500 min-h-[1rem]'; return; }
+  try {
+    const { doc, updateDoc } = window._firestore;
+    await avecReessais(() => updateDoc(doc(window._db, 'chauffeurs', chauffeurCourant.id), maj));
+    Object.assign(chauffeurCourant, maj);
+    afficherProfilEntete();
+    const el = document.getElementById('chProEtat'); el.textContent = '✓ Profil enregistré.'; el.className = 'text-sm font-medium text-teal min-h-[1rem]';
+  } catch (err) { const el = document.getElementById('chProEtat'); el.textContent = 'Non enregistré (connexion ?).'; el.className = 'text-sm font-medium text-red-500 min-h-[1rem]'; }
+});
+
+/* ---------- Admin : messages avec les chauffeurs ---------- */
+let admMsgDesabonnement = null;
+let admMessages = [];
+let admMsgChauffeurs = [];
+let admMsgSelection = null;
+function admMsgNomDe(email){ const c = admMsgChauffeurs.find(x => String(x.email || '').toLowerCase() === email); const m = admMessages.find(x => x.chauffeurEmail === email && x.chauffeurNom); return (c && c.nom) || (m && m.chauffeurNom) || email; }
+async function majBadgeMessagesAdmin(liste){
+  try {
+    if(!liste){ const { collection, getDocs } = window._firestore; liste = (await getDocs(collection(window._db, 'messages'))).docs.map(d => d.data()); }
+    const n = liste.filter(m => m.de === 'chauffeur' && !m.lu).length;
+    const onglet = document.querySelector('.admin-tab[data-collection="messagesChauffeurs"]');
+    if(onglet) onglet.textContent = n ? `💬 Messages (${n})` : '💬 Messages';
+  } catch (e) {}
+}
+function ouvrirEcranMessages(){
+  quandFirebasePret(async () => {
+    const { collection, getDocs, onSnapshot } = window._firestore;
+    try { admMsgChauffeurs = (await getDocs(collection(window._db, 'chauffeurs'))).docs.map(d => d.data()); } catch (e) { admMsgChauffeurs = []; }
+    document.getElementById('admMsgNouveau').innerHTML = '<option value="">+ Écrire à un chauffeur…</option>' + admMsgChauffeurs.filter(c => c.email)
+      .map(c => `<option value="${echapperHtmlAdmin(String(c.email).toLowerCase())}">${echapperHtmlAdmin(c.nom || c.email)}</option>`).join('');
+    if(admMsgDesabonnement) return;
+    admMsgDesabonnement = onSnapshot(collection(window._db, 'messages'), (snap) => {
+      admMessages = snap.docs.map(d => ({ id: d.id, ...d.data() }))
+        .sort((a, b) => String(a.envoyeLe || '').localeCompare(String(b.envoyeLe || '')));
+      afficherConversationsAdmin();
+      afficherFilAdmin();
+      majBadgeMessagesAdmin(admMessages);
+    }, (err) => { document.getElementById('admMsgConvs').innerHTML = `<p class="text-sm text-red-500">Messages illisibles (${echapperHtmlAdmin(err.code || err.message)}).</p>`; });
+  });
+}
+function fermerEcranMessages(){ if(admMsgDesabonnement){ admMsgDesabonnement(); admMsgDesabonnement = null; } }
+function afficherConversationsAdmin(){
+  const e = echapperHtmlAdmin;
+  const parChauffeur = new Map();
+  admMessages.forEach(m => { if(m.chauffeurEmail) parChauffeur.set(m.chauffeurEmail, m); });
+  if(admMsgSelection && !parChauffeur.has(admMsgSelection)) parChauffeur.set(admMsgSelection, null);
+  const conv = [...parChauffeur.entries()].sort((a, b) => String((b[1] || {}).envoyeLe || '9').localeCompare(String((a[1] || {}).envoyeLe || '9')));
+  document.getElementById('admMsgConvs').innerHTML = conv.length ? conv.map(([email, dernier]) => {
+    const nonLus = admMessages.filter(m => m.chauffeurEmail === email && m.de === 'chauffeur' && !m.lu).length;
+    return `<button type="button" data-conv="${e(email)}" class="w-full text-left rounded-xl px-3 py-2 ${email === admMsgSelection ? 'bg-amber/15' : 'hover:bg-slate-50 dark:hover:bg-white/5'}">
+      <span class="flex items-center justify-between gap-2"><span class="font-semibold text-sm text-navy dark:text-white truncate">${e(admMsgNomDe(email))}</span>${nonLus ? `<span class="bg-red-500 text-white text-[0.65rem] font-bold rounded-full px-1.5">${nonLus}</span>` : ''}</span>
+      <span class="block text-xs text-slate-500 dark:text-cream/60 truncate">${dernier ? e(dernier.texte) : 'Nouvelle conversation'}</span></button>`;
+  }).join('') : '<p class="text-sm text-slate-400 p-2">Aucun message pour l\'instant.</p>';
+}
+function afficherFilAdmin(){
+  const fil = document.getElementById('admMsgFil');
+  document.getElementById('admMsgForm').classList.toggle('hidden', !admMsgSelection);
+  if(!admMsgSelection){ fil.innerHTML = ''; return; }
+  document.getElementById('admMsgTitre').textContent = `💬 ${admMsgNomDe(admMsgSelection)}`;
+  const liste = admMessages.filter(m => m.chauffeurEmail === admMsgSelection);
+  fil.innerHTML = liste.length ? liste.map(m => bulleMessage(m, 'admin')).join('') : '<p class="text-sm text-slate-400 text-center py-6">Écris le premier message.</p>';
+  fil.scrollTop = fil.scrollHeight;
+  const { doc, updateDoc } = window._firestore;
+  liste.filter(m => m.de === 'chauffeur' && !m.lu).forEach(m => { m.lu = true; updateDoc(doc(window._db, 'messages', m.id), { lu: true }).catch(() => {}); });
+}
+document.getElementById('admMsgConvs').addEventListener('click', (e) => {
+  const b = e.target.closest('[data-conv]'); if(!b) return;
+  admMsgSelection = b.dataset.conv; afficherConversationsAdmin(); afficherFilAdmin();
+});
+document.getElementById('admMsgNouveau').addEventListener('change', (e) => {
+  if(!e.target.value) return;
+  admMsgSelection = e.target.value; e.target.value = '';
+  afficherConversationsAdmin(); afficherFilAdmin();
+  document.getElementById('admMsgTexte').focus();
+});
+document.getElementById('admMsgForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const champ = document.getElementById('admMsgTexte');
+  const texte = champ.value.trim(); if(!texte || !admMsgSelection) return;
+  champ.value = '';
+  try {
+    const { collection, addDoc, serverTimestamp } = window._firestore;
+    await avecReessais(() => addDoc(collection(window._db, 'messages'), { chauffeurEmail: admMsgSelection, chauffeurNom: admMsgNomDe(admMsgSelection), de: 'admin', texte, lu: false, envoyeLe: new Date().toISOString(), dateCreation: serverTimestamp() }));
+  } catch (err) { champ.value = texte; alert('Message non envoyé (connexion ?).'); }
+});
+
 /* ---------- Envoyer un DeCA : WhatsApp, SMS ou e-mail à un numéro / une adresse ---------- */
 const decaEnvoiModal = document.getElementById('decaEnvoiModal');
 document.body.appendChild(decaEnvoiModal);
@@ -8056,6 +8687,7 @@ async function exporterVueActiveEnPdf(){
   if(vueActive === 'nouveauVoyage') return exporterVoyagesEnPdf();
   if(vueActive === 'publier') return exporterElementEnPdf(document.getElementById('adminPublier'), nomFichierPdf('BOUA_Trans_Publier'));
   if(vueActive === 'factureLd') return telechargerFactureCourante();
+  if(vueActive === 'messagesChauffeurs') return exporterElementEnPdf(document.getElementById('adminMessages'), nomFichierPdf('BOUA_Trans_Messages'));
   if(vueActive === 'deca') return exporterElementEnPdf(document.getElementById('adminDeca'), nomFichierPdf('BOUA_Trans_DeCA'));
   if(vueActive === 'textes') return exporterElementEnPdf(document.getElementById('adminTextes'), nomFichierPdf('BOUA_Trans_Textes_du_site'));
   return exporterTableauAdminEnPdf();
