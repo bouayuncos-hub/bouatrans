@@ -219,47 +219,53 @@
   .cmr-signatures{ display: grid; grid-template-columns: 1fr 1fr 1fr; grid-column: 1 / -1; }
   .cmr-signatures .cmr-case{ min-height: 132px; }
 
-  /* ---------- Feuille de facture (modèle LASSINE DIAKITE) ---------- */
-  .fld-feuille{ width: 794px; min-height: 1060px; background: #fff; color: #111; font-family: Arial, Helvetica, sans-serif; padding: 56px 60px 40px; box-shadow: 0 10px 30px rgba(15,31,56,.18); border-radius: 6px; position: relative; }
-  .fld-feuille input, .fld-feuille select{ font-family: inherit; color: #111; background: transparent; }
-  .fld-feuille input:focus, .fld-feuille select:focus{ outline: none; background: #FFF7E8; }
-  .fld-entete{ display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 26px; }
-  .fld-nom{ font-size: 30px; font-weight: 800; letter-spacing: .5px; }
-  .fld-email{ font-weight: 400; }
-  .fld-tel{ font-size: 15px; font-weight: 700; margin-top: 6px; }
-  .fld-adresse{ text-align: right; font-size: 12.5px; font-weight: 700; line-height: 1.55; }
-  .fld-ligne{ display: flex; align-items: flex-end; gap: 8px; margin: 9px 0; font-size: 13px; font-weight: 700; }
-  .fld-souligne{ border: none; border-bottom: 1.5px solid #111; font-size: 13px; padding: 1px 4px; font-weight: 400; min-width: 60px; }
-  .fld-table{ width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 12.5px; }
-  .fld-table th{ border: 1.5px solid #111; font-weight: 700; padding: 10px 4px; text-align: center; line-height: 1.2; }
-  .fld-table th small{ font-size: 9.5px; font-weight: 400; }
-  .fld-table td{ border: 1.5px solid #111; height: 42px; padding: 0; }
-  .fld-table td input{ width: 100%; height: 40px; border: none; padding: 0 6px; font-size: 12.5px; }
-  .fld-table td input.n{ text-align: right; }
-  .fld-table td.tot{ text-align: right; padding: 0 6px; font-size: 12.5px; white-space: nowrap; }
-  .fld-totaux{ margin: 22px 0 0 auto; border-collapse: collapse; font-size: 13px; width: 400px; }
-  .fld-totaux th{ border: 1.5px solid #111; text-align: right; padding: 7px 12px; font-weight: 700; width: 60%; }
-  .fld-totaux td{ border: 1.5px solid #111; text-align: right; padding: 7px 10px; font-weight: 700; }
-  .fld-tva{ border: none; font-weight: 700; font-size: 13px; cursor: pointer; }
-  .fld-paiement{ width: 100%; border-collapse: collapse; margin-top: 30px; font-size: 13px; }
-  .fld-paiement th{ border: 1.5px solid #111; text-align: left; padding: 9px 12px; width: 26%; font-weight: 700; }
-  .fld-paiement td{ border: 1.5px solid #111; padding: 0; }
-  .fld-case{ width: 100%; border: none; padding: 9px 10px; font-size: 13px; }
-  .fld-pied{ position: absolute; left: 60px; right: 60px; bottom: 26px; display: flex; justify-content: space-between; font-size: 10px; color: #9CA3AF; }
+  /* ---------- Formulaire de facture (modèle « Factura rellenable ») ---------- */
+  .fv2-feuille{ width: 794px; background: #fff; color: #111; font-family: Arial, Helvetica, sans-serif; font-size: 12px; padding: 40px 46px 30px; box-shadow: 0 10px 30px rgba(15,31,56,.18); border-radius: 6px; border-top: 3px solid #1F3A5F; }
+  .fv2-feuille input, .fv2-feuille textarea{ font-family: inherit; color: #111; }
+  .fv2-case{ width: 100%; background: #EAF1FB; border: none; padding: 3px 6px; font-size: 12px; }
+  .fv2-case:focus{ outline: 2px solid #E8A33D; background: #FFF7E8; }
+  textarea.fv2-case{ resize: vertical; }
+  .fv2-gras{ font-weight: 700; }
+  .fv2-d{ text-align: right; }
+  .fv2-haut{ display: flex; justify-content: space-between; gap: 30px; margin-bottom: 26px; }
+  .fv2-nom{ font-size: 20px; font-weight: 800; letter-spacing: .3px; }
+  .fv2-emetteur{ line-height: 1.55; }
+  .fv2-nif{ display: flex; align-items: center; gap: 6px; width: 220px; }
+  .fv2-droite{ width: 300px; }
+  .fv2-titre{ font-size: 26px; font-weight: 800; color: #1F3A5F; text-align: right; margin-bottom: 8px; }
+  .fv2-encadre{ width: 100%; border-collapse: collapse; }
+  .fv2-encadre th, .fv2-encadre td{ border: 1px solid #C9CED6; padding: 3px 6px; font-weight: 400; text-align: left; }
+  .fv2-encadre th{ background: #F3F4F6; width: 48%; }
+  .fv2-encadre td{ padding: 2px; }
+  .fv2-client{ width: 380px; border: 1px solid #C9CED6; margin-bottom: 22px; }
+  .fv2-bandeau{ background: #1F3A5F; color: #fff; font-weight: 700; padding: 5px 8px; font-size: 11.5px; }
+  .fv2-client table{ width: 100%; border-collapse: collapse; margin: 6px 0; }
+  .fv2-client th{ text-align: left; font-weight: 400; padding: 3px 8px; width: 42%; white-space: nowrap; }
+  .fv2-client td{ padding: 2px 6px 2px 0; }
+  .fv2-lignes{ width: 100%; border-collapse: collapse; }
+  .fv2-lignes th{ background: #1F3A5F; color: #fff; font-size: 11px; font-weight: 700; padding: 5px 6px; text-align: left; }
+  .fv2-lignes th.d{ text-align: right; }
+  .fv2-lignes td{ border: 1px solid #C9CED6; padding: 1px; }
+  .fv2-lignes td input{ width: 100%; background: #EAF1FB; border: none; padding: 4px 5px; font-size: 11.5px; }
+  .fv2-lignes td input.n{ text-align: right; }
+  .fv2-lignes td input:focus{ outline: 2px solid #E8A33D; background: #FFF7E8; }
+  .fv2-bas{ display: flex; justify-content: space-between; gap: 24px; margin-top: 22px; align-items: flex-start; }
+  .fv2-paiement{ width: 52%; border-collapse: collapse; }
+  .fv2-paiement th{ text-align: left; font-weight: 700; padding: 5px 8px 5px 0; white-space: nowrap; vertical-align: top; width: 1%; }
+  .fv2-paiement td{ padding: 3px 0; border-bottom: 1px solid #E5E7EB; }
+  .fv2-fixe{ padding-left: 6px !important; }
+  .fv2-firma{ height: 44px; border-bottom: 1px solid #93A6C4 !important; }
+  .fv2-totaux{ width: 46%; border-collapse: collapse; border: 1px solid #C9CED6; }
+  .fv2-totaux th{ text-align: left; font-weight: 400; padding: 7px 8px; border-bottom: 1px solid #C9CED6; }
+  .fv2-totaux td{ padding: 3px 6px; border-bottom: 1px solid #C9CED6; width: 40%; }
+  .fv2-total th{ background: #1F3A5F; color: #fff; font-weight: 800; font-size: 13px; }
+  .fv2-total td{ background: #1F3A5F; }
+  .fv2-total .fv2-case{ font-weight: 800; }
+  .fv2-pied{ margin-top: 30px; padding-top: 6px; border-top: 2px solid #1F3A5F; font-size: 9.5px; color: #6B7280; }
   .ch-onglet{ font-size: 0.78rem; font-weight: 600; padding: 7px 12px; border-radius: 999px; white-space: nowrap; color: #64748B; background: #F1F5F9; }
   .ch-onglet.actif{ background: #0F1F38; color: #E8A33D; }
   .dark .ch-onglet{ background: rgba(255,255,255,0.08); color: rgba(245,243,237,0.75); }
   .dark .ch-onglet.actif{ background: #E8A33D; color: #0F1F38; }
-  .fld-libre{ display: block; width: 100%; border: none; border-bottom: 1px dashed transparent; padding: 0 2px; background: transparent; }
-  .fld-libre:hover{ border-bottom-color: #CBD5E1; }
-  .fld-libre::placeholder, .fld-feuille input::placeholder{ color: #CBD5E1; font-weight: 400; }
-  .fld-nom.fld-libre{ width: 440px; }
-  .fld-tel.fld-libre{ width: 300px; }
-  .fld-adresse .fld-libre{ text-align: right; font-size: 12.5px; font-weight: 700; width: 280px; margin-left: auto; line-height: 1.5; }
-  .fld-adresse .fld-libre.fld-email{ font-weight: 400; }
-  .fld-num{ text-align: right; font-weight: 700; }
-  .fld-tva-libre{ width: 58px; border: none; font-weight: 700; font-size: 13px; text-align: left; }
-  .fld-pied-texte{ font-size: 10px; color: #9CA3AF; width: 420px; }
   .cmr-pied{ margin-top: 8px; font-size: 8px; color: #64748B; display: flex; justify-content: space-between; gap: 10px; }
 </style>
 </head>
@@ -1644,89 +1650,73 @@
     <p id="decaQrUrl" class="font-mono-num text-xs text-slate-400 mt-3 break-all max-w-xl"></p>
   </div>
 
-  <!-- ÉCRAN "FACTURE" : le modèle papier LASSINE DIAKITE, entièrement écrit à la
-       main par l'administrateur (en-tête, numéro, date, lignes, totaux, pied).
-       Rien n'est rempli ni calculé automatiquement. -->
+  <!-- ÉCRAN "FACTURE" : formulaire de facture LASSINE DIAKITE (modèle PDF
+       « Factura rellenable »). Tout s'écrit à la main ; le PDF téléchargé est
+       ce modèle officiel, rempli avec ce qui est écrit (fichier factura-modelo.pdf). -->
   <div id="adminFactureLd" class="hidden max-w-5xl mx-auto px-5 py-8">
     <div class="flex items-end justify-between flex-wrap gap-3 mb-5">
       <div>
-        <h2 class="text-2xl font-bold text-navy dark:text-white mb-1">Facture — modèle LASSINE DIAKITE</h2>
-        <p class="text-sm text-slate-500 dark:text-cream/60">Toute la feuille s'écrit à la main : clique sur n'importe quel texte pour l'écrire ou le modifier (en-tête, numéro, date, lignes, totaux, IVA, paiement, pied de page). Rien n'est rempli ni calculé à ta place.</p>
+        <h2 class="text-2xl font-bold text-navy dark:text-white mb-1">Facture — formulaire LASSINE DIAKITE</h2>
+        <p class="text-sm text-slate-500 dark:text-cream/60">Écris chaque case à la main ; le PDF téléchargé est ton modèle de facture, rempli avec ce que tu as écrit. Rien n'est rempli ni calculé à ta place.</p>
       </div>
-      <div class="flex gap-3 text-sm font-semibold">
-        <button type="button" id="fldNouvelle" class="text-teal hover:text-amberdark">+ Nouvelle facture</button>
-        <button type="button" id="fldReglagesBtn" class="text-slate-500 hover:text-amberdark">⚙️ Mon en-tête</button>
-      </div>
+      <button type="button" id="fldNouvelle" class="text-sm font-semibold text-teal hover:text-amberdark">+ Nouvelle facture</button>
     </div>
 
-    <!-- En-tête proposé sur chaque nouvelle feuille (modifiable ensuite sur la feuille) -->
-    <div id="fldReglages" class="hidden carte-pro mb-5">
-      <p class="text-xs text-slate-500 dark:text-cream/60 mb-3">Ces textes sont écrits en haut de chaque nouvelle facture. Tu peux toujours les modifier directement sur la feuille.</p>
-      <div class="grid sm:grid-cols-2 gap-3">
-        <div><label class="etiquette-pro">Nom</label><input data-reglage="nom" class="champ-pro"></div>
-        <div><label class="etiquette-pro">Téléphone</label><input data-reglage="telephone" class="champ-pro"></div>
-        <div><label class="etiquette-pro">Adresse (ligne 1)</label><input data-reglage="adresse1" class="champ-pro"></div>
-        <div><label class="etiquette-pro">Adresse (ligne 2)</label><input data-reglage="adresse2" class="champ-pro"></div>
-        <div><label class="etiquette-pro">E-mail 1</label><input data-reglage="email1" class="champ-pro"></div>
-        <div><label class="etiquette-pro">E-mail 2</label><input data-reglage="email2" class="champ-pro"></div>
-        <div class="sm:col-span-2"><label class="etiquette-pro">Ligne N.I.F. (ex : N.I.F.: X1234567L — obligatoire sur une facture en Espagne)</label><input data-reglage="nifLigne" class="champ-pro"></div>
-      </div>
-      <div class="flex items-center gap-3 mt-3">
-        <button type="button" id="fldReglagesEnregistrer" class="bg-navy dark:bg-amber text-cream dark:text-navy font-bold text-sm px-5 py-2 rounded-full">Enregistrer mon en-tête</button>
-        <span id="fldReglagesEtat" class="text-sm text-slate-500 dark:text-cream/60"></span>
-      </div>
-    </div>
-
-    <!-- La feuille : même mise en page que le modèle papier, tout est écrit à la main -->
     <div class="overflow-x-auto pb-2">
-      <form id="fldFeuille" novalidate class="fld-feuille mx-auto" autocomplete="off">
-        <div class="fld-entete">
-          <div class="flex items-center gap-4">
-            <img id="fldLogo" alt="Logo BOUA Trans (facture)" class="w-[100px] h-[100px] object-contain">
-            <div>
-              <input name="e_nom" class="fld-nom fld-libre" placeholder="Nom">
-              <input name="e_telephone" class="fld-tel fld-libre" placeholder="Téléphone">
-            </div>
+      <form id="fldFeuille" novalidate class="fv2-feuille mx-auto" autocomplete="off">
+        <div class="fv2-haut">
+          <div class="fv2-emetteur">
+            <div class="fv2-nom">LASSINE DIAKITE</div>
+            <div class="fv2-nif"><span>NIF:</span><input name="emisorNif" class="fv2-case"></div>
+            <div>Avenida Castilla La Mancha 122</div>
+            <div>45210 Yuncos (Toledo) – España</div>
+            <div>Tel.: +34 632 60 71 01</div>
           </div>
-          <div class="fld-adresse">
-            <input name="e_nomDroite" class="fld-libre" placeholder="Nom">
-            <input name="e_adresse1" class="fld-libre" placeholder="Adresse">
-            <input name="e_adresse2" class="fld-libre" placeholder="CP, ville">
-            <input name="e_nifLigne" class="fld-libre" placeholder="N.I.F.: …">
-            <input name="e_email1" class="fld-libre fld-email" placeholder="e-mail">
-            <input name="e_email2" class="fld-libre fld-email" placeholder="e-mail">
+          <div class="fv2-droite">
+            <div class="fv2-titre">FACTURA</div>
+            <table class="fv2-encadre">
+              <tr><th>Nº factura:</th><td><input name="numero" class="fv2-case"></td></tr>
+              <tr><th>Fecha de emisión:</th><td><input name="fecha" class="fv2-case"></td></tr>
+              <tr><th>Periodo:</th><td><input name="periodo" class="fv2-case"></td></tr>
+            </table>
           </div>
         </div>
 
-        <div class="fld-ligne"><label>FACTURA Nº:</label><input name="numero" class="fld-souligne" style="width:170px"></div>
-        <div class="fld-ligne"><label>FECHA:</label><input name="fecha" class="fld-souligne" style="width:240px" placeholder="jj/mm/aaaa"></div>
-        <div class="fld-ligne"><label>CLIENTE:</label><input name="clientNom" class="fld-souligne" style="flex:1"><label style="margin-left:22px">N.I.F.:</label><input name="clientNif" class="fld-souligne" style="width:180px"></div>
-        <div class="fld-ligne"><label>DOMICILIO:</label><input name="clientDomicilio" class="fld-souligne" style="flex:1"></div>
+        <div class="fv2-client">
+          <div class="fv2-bandeau">DATOS DEL CLIENTE</div>
+          <table>
+            <tr><th>Nombre / Razón social:</th><td><input name="clientNom" class="fv2-case fv2-gras"></td></tr>
+            <tr><th>N.I.F. / C.I.F.:</th><td><input name="clientNif" class="fv2-case"></td></tr>
+            <tr><th>Domicilio:</th><td><input name="clientDomicilio" class="fv2-case"></td></tr>
+            <tr><th>C.P. / Localidad:</th><td><input name="clientLocalidad" class="fv2-case"></td></tr>
+            <tr><th>Tel.:</th><td><input name="clientTel" class="fv2-case"></td></tr>
+          </table>
+        </div>
 
-        <table class="fld-table">
-          <thead><tr>
-            <th style="width:15%">FECHA</th><th style="width:12%">CANTIDAD</th><th>CONCEPTO</th>
-            <th style="width:14%">PRECIO<br>UNITARIO</th><th style="width:14%">TOTAL<br><small>(IVA NO<br>INCLUIDO)</small></th>
-          </tr></thead>
+        <table class="fv2-lignes">
+          <thead><tr><th style="width:13%">FECHA</th><th style="width:7%">CANT.</th><th>CONCEPTO</th><th style="width:13%" class="d">PRECIO UN.</th><th style="width:13%" class="d">TOTAL</th></tr></thead>
           <tbody id="fldLignes"></tbody>
         </table>
         <div class="flex justify-between items-start mt-1 gap-3">
           <button type="button" id="fldAjouterLigne" class="text-xs font-semibold text-teal hover:text-amberdark">+ ligne</button>
-          <button type="button" id="fldCalculer" class="text-xs font-semibold text-slate-400 hover:text-amberdark" title="Facultatif : remplit seulement les cases de total encore vides">🧮 Calculer les totaux vides (facultatif)</button>
+          <button type="button" id="fldCalculer" class="text-xs font-semibold text-slate-400 hover:text-amberdark" title="Facultatif : remplit seulement les totaux encore vides">🧮 Calculer les totaux vides (facultatif)</button>
         </div>
 
-        <table class="fld-totaux">
-          <tr><th>IMPORTE BRUTO:</th><td><input name="importeBruto" class="fld-case fld-num"></td></tr>
-          <tr><th class="whitespace-nowrap">I.V.A.: <input name="ivaTaux" class="fld-tva-libre" value="21%"></th><td><input name="ivaMontant" class="fld-case fld-num"></td></tr>
-          <tr><th>TOTAL IVA INCLUIDO:</th><td><input name="totalIva" class="fld-case fld-num"></td></tr>
-        </table>
-
-        <table class="fld-paiement">
-          <tr><th>FORMA DE PAGO:</th><td><input name="formaPago" class="fld-case"></td></tr>
-          <tr><th>NUMERO DE CUENTA:</th><td><input name="numeroCuenta" class="fld-case"></td></tr>
-        </table>
-
-        <div class="fld-pied"><input name="piedPage" class="fld-libre fld-pied-texte"><span>Page 1</span></div>
+        <div class="fv2-bas">
+          <table class="fv2-paiement">
+            <tr><th>FORMA DE PAGO:</th><td><input name="formaPago" class="fv2-case"></td></tr>
+            <tr><th>IBAN:</th><td><input name="iban" class="fv2-case"></td></tr>
+            <tr><th>TITULAR:</th><td class="fv2-fixe">Lassine Diakite</td></tr>
+            <tr><th>OBSERVACIONES:</th><td><textarea name="observaciones" rows="2" class="fv2-case"></textarea></td></tr>
+            <tr><th>FIRMA:</th><td class="fv2-firma"></td></tr>
+          </table>
+          <table class="fv2-totaux">
+            <tr><th>IMPORTE NETO (base imponible)</th><td><input name="importeNeto" class="fv2-case fv2-d"></td></tr>
+            <tr><th>I.V.A. (21 %)</th><td><input name="iva" class="fv2-case fv2-d"></td></tr>
+            <tr class="fv2-total"><th>TOTAL IVA INCLUIDO</th><td><input name="totalIva" class="fv2-case fv2-d"></td></tr>
+          </table>
+        </div>
+        <div class="fv2-pied"><span>Lassine Diakite · Avenida Castilla La Mancha 122, 45210 Yuncos (Toledo) · Tel. +34 632 60 71 01</span></div>
       </form>
     </div>
 
@@ -1734,6 +1724,7 @@
     <div class="flex flex-wrap gap-3 mt-4 sm:sticky sm:bottom-3 z-[5] bg-cream/90 dark:bg-navy/90 backdrop-blur rounded-2xl p-3 border border-slate-200 dark:border-white/10">
       <button type="button" id="fldPdf" class="bg-amber hover:bg-amberdark text-navy font-bold px-5 py-3 rounded-full">⬇ Télécharger le PDF</button>
       <button type="button" id="fldEnregistrer" class="border-2 border-teal text-teal hover:bg-teal hover:text-white font-semibold px-5 py-2.5 rounded-full">💾 Enregistrer</button>
+      <button type="button" id="fldVierge" class="border-2 border-amber text-amberdark dark:text-amber font-semibold px-5 py-2.5 rounded-full" title="Le modèle officiel sans rien dedans, cases à remplir">📄 Facture vierge</button>
       <button type="button" id="fldImprimer" class="border-2 border-navy dark:border-cream/40 text-navy dark:text-cream font-semibold px-5 py-2.5 rounded-full">🖨 Imprimer / voir</button>
       <span id="fldEtat" class="self-center text-sm text-slate-500 dark:text-cream/60"></span>
     </div>
@@ -7210,22 +7201,21 @@ document.getElementById('decaScanCamera').addEventListener('change', (e) => ajou
 document.getElementById('decaScanFichier').addEventListener('change', (e) => ajouterAnnexesDeca([...e.target.files]));
 
 /* ============================================================
-   FACTURE — modèle papier « LASSINE DIAKITE »
-   Toute la feuille est écrite à la main par l'administrateur :
-   en-tête, numéro, date, client, lignes, totaux, IVA, paiement,
-   pied de page. Rien n'est rempli ni calculé automatiquement
-   (seul un bouton facultatif peut remplir les totaux vides).
-   Le PDF reproduit exactement ce qui est écrit, sur le modèle.
+   FACTURE — formulaire « Factura rellenable » LASSINE DIAKITE
+   Tout s'écrit à la main dans le formulaire (rien n'est rempli ni
+   calculé automatiquement, sauf bouton facultatif). Le PDF téléchargé
+   est le modèle officiel factura-modelo.pdf, dont les cases sont
+   remplies avec ce qui est écrit (bibliothèque pdf-lib, chargée au
+   premier clic). Enregistrement dans la collection "factures".
    ============================================================ */
-const ENTETE_FACTURE_DEFAUT = { nom: 'LASSINE DIAKITE', telephone: '+34632607101', adresse1: 'Avenida Castilla La Mancha 122', adresse2: 'Yuncos (Toledo) 45210', email1: 'bouadiakite@gmail.com', email2: 'bouatrans@gmail.com', nifLigne: '' };
-let enteteFacture = { ...ENTETE_FACTURE_DEFAUT };
+const PDF_LIB_URL = 'https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js';
+const MODELE_FACTURE_URL = '/factura-modelo.pdf';
 const fldFeuille = document.getElementById('fldFeuille');
 const fldLignes = document.getElementById('fldLignes');
 const fldEtat = document.getElementById('fldEtat');
 const fldErreur = document.getElementById('fldErreur');
-const LIGNES_FACTURE_MIN = 10, LIGNES_FACTURE_MAX = 14;
-const CHAMPS_ENTETE = ['nom', 'telephone', 'nomDroite', 'adresse1', 'adresse2', 'nifLigne', 'email1', 'email2'];
-const CHAMPS_FEUILLE = ['numero', 'fecha', 'clientNom', 'clientNif', 'clientDomicilio', 'importeBruto', 'ivaTaux', 'ivaMontant', 'totalIva', 'formaPago', 'numeroCuenta', 'piedPage'];
+const LIGNES_FACTURE_MIN = 10, LIGNES_FACTURE_MAX = 60; // le modèle a 60 lignes (29 en page 1, 31 en page 2)
+const CHAMPS_FEUILLE = ['emisorNif', 'numero', 'fecha', 'periodo', 'clientNom', 'clientNif', 'clientDomicilio', 'clientLocalidad', 'clientTel', 'formaPago', 'iban', 'observaciones', 'importeNeto', 'iva', 'totalIva'];
 let fldIdCourant = null;
 let fldStatutCourant = null;
 let fldListeCache = [];
@@ -7241,7 +7231,6 @@ function lireMontant(texte){
   const n = Number(t);
   return isNaN(n) ? null : Math.round(n * 100) / 100;
 }
-// "25/10/2026" → "2026-10-25" (pour les listes et l'onglet Factures)
 function fechaVersIso(texte){
   const m = String(texte || '').trim().match(/^(\d{1,2})[\/.-](\d{1,2})[\/.-](\d{2,4})$/);
   if(!m) return /^\d{4}-\d{2}-\d{2}$/.test(String(texte || '').trim()) ? String(texte).trim() : '';
@@ -7269,146 +7258,112 @@ function lireLignesFacture(){
     .filter(l => l.fecha || l.cantidad || l.concepto || l.precio || l.total);
 }
 
-// Bouton facultatif : remplit seulement les totaux encore vides, à partir de ce qui est écrit
+// Bouton facultatif : remplit seulement les totaux encore vides
 document.getElementById('fldCalculer').addEventListener('click', () => {
-  let brut = 0, auMoinsUn = false;
+  let net = 0, auMoinsUn = false;
   [...fldLignes.children].forEach(tr => {
     const q = lireMontant(tr.querySelector('[data-l="cantidad"]').value);
     const p = lireMontant(tr.querySelector('[data-l="precio"]').value);
     const champTotal = tr.querySelector('[data-l="total"]');
     if(!champTotal.value.trim() && p !== null) champTotal.value = formatMontantEs(q === null ? p : q * p);
     const t = lireMontant(champTotal.value);
-    if(t !== null){ brut += t; auMoinsUn = true; }
+    if(t !== null){ net += t; auMoinsUn = true; }
   });
   if(!auMoinsUn){ fldEtat.textContent = 'Aucun montant écrit dans le tableau.'; return; }
   const f = fldFeuille.elements;
-  const taux = lireMontant(f.ivaTaux.value) ?? 21;
-  if(!f.importeBruto.value.trim()) f.importeBruto.value = formatMontantEs(brut);
-  const b = lireMontant(f.importeBruto.value) ?? brut;
-  if(!f.ivaMontant.value.trim()) f.ivaMontant.value = formatMontantEs(b * taux / 100);
-  if(!f.totalIva.value.trim()) f.totalIva.value = formatMontantEs(b + (lireMontant(f.ivaMontant.value) ?? 0));
+  if(!f.importeNeto.value.trim()) f.importeNeto.value = formatMontantEs(net);
+  const base = lireMontant(f.importeNeto.value) ?? net;
+  if(!f.iva.value.trim()) f.iva.value = formatMontantEs(base * 0.21);
+  if(!f.totalIva.value.trim()) f.totalIva.value = formatMontantEs(base + (lireMontant(f.iva.value) ?? 0));
   sauverBrouillonFacture();
   fldEtat.textContent = 'Totaux vides remplis : vérifie-les, tu peux toujours les réécrire.';
 });
 
 function lireFacture(){
   const f = fldFeuille.elements;
-  const d = { entete: {}, lignes: lireLignesFacture() };
-  CHAMPS_ENTETE.forEach(c => { d.entete[c] = f['e_' + c].value.trim(); });
+  const d = { lignes: lireLignesFacture() };
   CHAMPS_FEUILLE.forEach(c => { d[c] = f[c].value.trim(); });
-  // Valeurs lues dans ce qui est écrit, pour l'onglet Factures (rien n'est modifié sur la feuille)
+  // Valeurs lues dans ce qui est écrit, pour l'onglet Factures (la feuille n'est pas modifiée)
   d.dateEmission = fechaVersIso(d.fecha);
-  d.montantHT = lireMontant(d.importeBruto);
-  d.tauxTVA = lireMontant(d.ivaTaux);
-  d.montantTVA = lireMontant(d.ivaMontant);
+  d.montantHT = lireMontant(d.importeNeto);
+  d.montantTVA = lireMontant(d.iva);
   d.montantTTC = lireMontant(d.totalIva);
+  d.tauxTVA = (d.montantHT && d.montantTVA !== null) ? Math.round(d.montantTVA / d.montantHT * 100) : 21;
   return d;
 }
 function remplirFacture(d){
   const f = fldFeuille.elements;
-  const entete = { nomDroite: (d.entete && d.entete.nomDroite) ?? enteteFacture.nom, ...enteteFacture, ...(d.entete || {}) };
-  if(!d.entete) entete.nomDroite = enteteFacture.nom;
-  CHAMPS_ENTETE.forEach(c => { f['e_' + c].value = entete[c] ?? ''; });
   CHAMPS_FEUILLE.forEach(c => { f[c].value = d[c] ?? ''; });
-  if(d.ivaTaux === undefined) f.ivaTaux.value = '21%';
-  if(d.piedPage === undefined) f.piedPage.value = `${entete.nom || ''} - Modelo de Factura`;
   fldLignes.innerHTML = '';
   (d.lignes || []).slice(0, LIGNES_FACTURE_MAX).forEach(l => ajouterLigneFacture(l));
   while(fldLignes.children.length < LIGNES_FACTURE_MIN) ajouterLigneFacture();
   fldErreur.classList.add('hidden');
 }
-// Factures enregistrées avant (format calculé) → mêmes cases, en texte
+// Factures des modèles précédents → mêmes cases, en texte
 function factureAvecLignes(f){
-  if(f.entete) return f;
-  const voyage = (referencesAdmin.missions || []).find(m => m.id === f.missionId);
+  if(f.modele === 'factura-v2') return f;
   const montant = (v) => (v === undefined || v === null || v === '') ? '' : formatMontantEs(v);
-  let lignes = (f.lignes || []).map(l => ({ fecha: l.fecha || '', cantidad: l.cantidad || '', concepto: l.concepto || '', precio: l.precio !== undefined && l.precio !== '' ? montant(lireMontant(l.precio)) : '', total: l.total !== undefined && l.total !== '' ? montant(l.total) : '' }));
-  if(!lignes.length && f.montantHT !== undefined && f.montantHT !== ''){
+  let lignes = (f.lignes || []).map(l => ({
+    fecha: l.fecha || '', cantidad: l.cantidad || '', concepto: l.concepto || '',
+    precio: l.precio !== undefined && l.precio !== '' ? (/[€]/.test(String(l.precio)) ? l.precio : montant(lireMontant(l.precio))) : '',
+    total: l.total !== undefined && l.total !== '' ? (typeof l.total === 'number' ? montant(l.total) : l.total) : ''
+  }));
+  if(!lignes.length && f.montantHT !== undefined && f.montantHT !== null && f.montantHT !== ''){
+    const voyage = (referencesAdmin.missions || []).find(m => m.id === f.missionId);
     const concepto = f.description || (voyage ? `Transporte ${voyage.villeDepart || ''} - ${voyage.villeArrivee || ''}`.trim() : 'Servicio de transporte');
     lignes = [{ fecha: dateFacture(f.dateEmission), cantidad: '1', concepto, precio: montant(f.montantHT), total: montant(f.montantHT) }];
   }
   const c = calculerFacture(f);
+  const aMontant = f.montantHT !== undefined && f.montantHT !== null && f.montantHT !== '';
   return {
     ...f, lignes,
-    entete: { ...enteteFacture, nomDroite: enteteFacture.nom },
-    fecha: dateFacture(f.dateEmission),
-    importeBruto: montant(f.montantHT), ivaTaux: `${f.tauxTVA ?? 21}%`, ivaMontant: f.montantHT !== undefined ? montant(c.tva) : '', totalIva: f.montantHT !== undefined ? montant(c.ttc) : '',
-    piedPage: `${enteteFacture.nom} - Modelo de Factura`
+    emisorNif: f.emisorNif || String((f.entete && f.entete.nifLigne) || '').replace(/^\s*N\.?I\.?F\.?\s*:?\s*/i, ''),
+    fecha: f.fecha || dateFacture(f.dateEmission),
+    periodo: f.periodo || '',
+    clientLocalidad: f.clientLocalidad || '', clientTel: f.clientTel || '',
+    iban: f.iban || f.numeroCuenta || '',
+    observaciones: f.observaciones || '',
+    importeNeto: f.importeNeto || f.importeBruto || (aMontant ? montant(f.montantHT) : ''),
+    iva: f.iva || f.ivaMontant || (aMontant ? montant(c.tva) : ''),
+    totalIva: f.totalIva || (aMontant ? montant(c.ttc) : '')
   };
 }
-
-// ---------- En-tête proposé (⚙️ Mon en-tête) ----------
-let enteteFactureCharge = false;
-async function chargerEnteteFacture(){
-  if(enteteFactureCharge || !window._db) return;
-  try {
-    const { doc, getDoc } = window._firestore;
-    const snap = await getDoc(doc(window._db, 'contenus', 'facture'));
-    if(snap.exists()){
-      const r = snap.data();
-      enteteFacture = { ...ENTETE_FACTURE_DEFAUT, ...r };
-      if(!r.nifLigne && r.nif) enteteFacture.nifLigne = `N.I.F.: ${r.nif}`; // ancien réglage
-    }
-    enteteFactureCharge = true;
-  } catch (e) { /* en-tête par défaut */ }
-}
-function afficherReglagesFacture(){
-  const logoSite = document.querySelector('img[alt="Logo BOUA Trans"]');
-  const logoFacture = document.getElementById('fldLogo');
-  if(logoSite && logoFacture && !logoFacture.src) logoFacture.src = logoSite.src;
-  document.querySelectorAll('#fldReglages [data-reglage]').forEach(i => { i.value = enteteFacture[i.dataset.reglage] || ''; });
-}
-document.getElementById('fldReglagesBtn').addEventListener('click', () => document.getElementById('fldReglages').classList.toggle('hidden'));
-document.getElementById('fldReglagesEnregistrer').addEventListener('click', async () => {
-  const etat = document.getElementById('fldReglagesEtat');
-  const nouv = {};
-  document.querySelectorAll('#fldReglages [data-reglage]').forEach(i => { nouv[i.dataset.reglage] = i.value.trim(); });
-  try {
-    const { doc, setDoc } = window._firestore;
-    await avecReessais(() => setDoc(doc(window._db, 'contenus', 'facture'), nouv));
-    enteteFacture = { ...ENTETE_FACTURE_DEFAUT, ...nouv };
-    enteteFactureCharge = true;
-    etat.textContent = '✓ Enregistré : utilisé sur les prochaines factures.';
-  } catch (err) { etat.textContent = 'Non enregistré (vérifie la connexion).'; }
-});
 
 // ---------- Brouillon gardé sur l'appareil ----------
 const CLE_BROUILLON_FACTURE = 'boua-facture-brouillon';
 let minuterieBrouillonFacture = null;
-function sauverBrouillonFacture(){ try { localStorage.setItem(CLE_BROUILLON_FACTURE, JSON.stringify({ id: fldIdCourant, statut: fldStatutCourant, d: lireFacture(), t: Date.now(), v: 2 })); } catch (e) {} }
+function sauverBrouillonFacture(){ try { localStorage.setItem(CLE_BROUILLON_FACTURE, JSON.stringify({ id: fldIdCourant, statut: fldStatutCourant, d: lireFacture(), t: Date.now(), v: 3 })); } catch (e) {} }
 function effacerBrouillonFacture(){ try { localStorage.removeItem(CLE_BROUILLON_FACTURE); } catch (e) {} }
 fldFeuille.addEventListener('input', () => { clearTimeout(minuterieBrouillonFacture); minuterieBrouillonFacture = setTimeout(sauverBrouillonFacture, 400); });
 fldFeuille.addEventListener('submit', (e) => e.preventDefault());
 
 function nouvelleFacture(){
   fldIdCourant = null; fldStatutCourant = null;
-  remplirFacture({}); // en-tête proposé, tout le reste vide
+  remplirFacture({});
   fldEtat.textContent = 'Nouvelle facture : écris chaque case.';
 }
 document.getElementById('fldNouvelle').addEventListener('click', () => { effacerBrouillonFacture(); nouvelleFacture(); fldFeuille.scrollIntoView({ block: 'start' }); });
 
 async function ouvrirEcranFactureLd(){
   const premiere = !fldFeuille.dataset.pret;
-  chargerOutilsPdf().catch(() => {});
+  // Outils et modèle préchargés : le PDF sera immédiat
+  chargerScriptPdf(PDF_LIB_URL).catch(() => {});
+  chargerModeleFacture().catch(() => {});
+  if(premiere){
+    fldFeuille.dataset.pret = '1';
+    let b = null; try { b = JSON.parse(localStorage.getItem(CLE_BROUILLON_FACTURE) || 'null'); } catch (e) {}
+    if(b && b.v === 3 && b.d && (b.d.numero || b.d.clientNom || (b.d.lignes || []).length) && Date.now() - b.t < 14 * 86400000){
+      fldIdCourant = b.id || null; fldStatutCourant = b.statut || null;
+      remplirFacture(b.d);
+      fldEtat.innerHTML = 'Brouillon restauré. <button type="button" id="fldEffacerBrouillon" class="underline text-teal font-semibold">Repartir de zéro</button>';
+      document.getElementById('fldEffacerBrouillon').addEventListener('click', () => { effacerBrouillonFacture(); nouvelleFacture(); });
+    } else nouvelleFacture();
+  }
   quandFirebasePret(async () => {
-    await chargerEnteteFacture();
-    afficherReglagesFacture();
-    if(premiere){
-      fldFeuille.dataset.pret = '1';
-      let b = null; try { b = JSON.parse(localStorage.getItem(CLE_BROUILLON_FACTURE) || 'null'); } catch (e) {}
-      if(b && b.v === 2 && b.d && (b.d.numero || b.d.clientNom || (b.d.lignes || []).length) && Date.now() - b.t < 14 * 86400000){
-        fldIdCourant = b.id || null; fldStatutCourant = b.statut || null;
-        remplirFacture(b.d);
-        fldEtat.innerHTML = 'Brouillon restauré. <button type="button" id="fldEffacerBrouillon" class="underline text-teal font-semibold">Repartir de zéro</button>';
-        document.getElementById('fldEffacerBrouillon').addEventListener('click', () => { effacerBrouillonFacture(); nouvelleFacture(); });
-      } else nouvelleFacture();
-    }
     try {
       const { collection, getDocs } = window._firestore;
       const factures = await getDocs(collection(window._db, 'factures'));
       fldListeCache = factures.docs.map(x => ({ id: x.id, ...x.data() }));
-      const suivant = prochainNumeroFacture(fldListeCache);
-      fldFeuille.elements.numero.placeholder = `ex : ${suivant}`;
       afficherListeFactures();
     } catch (err) {
       console.error('Chargement factures :', err);
@@ -7460,17 +7415,17 @@ document.getElementById('fldListe').addEventListener('click', async (e) => {
 });
 
 // ---------- Enregistrer (ce qui est écrit, tel quel) ----------
-function factureVide(d){ return !d.numero && !d.clientNom && !d.lignes.length && !d.importeBruto && !d.totalIva; }
+function factureVide(d){ return !d.numero && !d.clientNom && !d.lignes.length && !d.importeNeto && !d.totalIva; }
 async function enregistrerFacture(){
   const d = lireFacture();
-  if(!d.numero){ fldErreur.textContent = 'Écris le numéro de la facture (FACTURA Nº) avant d\'enregistrer.'; fldErreur.classList.remove('hidden'); fldFeuille.elements.numero.focus(); return null; }
+  if(!d.numero){ fldErreur.textContent = 'Écris le numéro de la facture (Nº factura) avant d\'enregistrer.'; fldErreur.classList.remove('hidden'); fldFeuille.elements.numero.focus(); return null; }
   const avert = [];
-  if(!d.fecha) avert.push('la date (FECHA) est vide');
+  if(!d.fecha) avert.push('la fecha de emisión est vide');
   else if(!d.dateEmission) avert.push(`la date « ${d.fecha} » n'est pas au format jj/mm/aaaa (elle sera imprimée telle quelle)`);
   if(!d.clientNom) avert.push('le client est vide');
   if(!d.totalIva) avert.push('le TOTAL IVA INCLUIDO est vide');
+  if(!d.emisorNif) avert.push('ton NIF (en haut à gauche) est vide : il est obligatoire sur une facture en Espagne');
   if(d.clientNif && typeof nifValide === 'function' && !nifValide(d.clientNif)) avert.push(`N.I.F. du client « ${d.clientNif} » : format ou lettre de contrôle incorrect`);
-  if(!/\d/.test(d.entete.nifLigne || '')) avert.push('ton N.I.F. n\'est pas écrit dans l\'en-tête (obligatoire sur une facture en Espagne)');
   if(avert.length && !confirm(`À vérifier :\n\n• ${avert.join('\n• ')}\n\nEnregistrer quand même ?`)) return null;
   fldErreur.classList.add('hidden');
   const { collection, getDocs, addDoc, doc, updateDoc, serverTimestamp } = window._firestore;
@@ -7480,7 +7435,7 @@ async function enregistrerFacture(){
     if(toutes.some(x => x.id !== fldIdCourant && String(x.numero || '').trim().toUpperCase() === d.numero.toUpperCase())){
       fldErreur.textContent = `Le numéro ${d.numero} est déjà utilisé par une autre facture.`; fldErreur.classList.remove('hidden'); return null;
     }
-    const donnees = { ...d, modele: 'ld-manuel', description: d.lignes.map(l => l.concepto).filter(Boolean).join(' · ').slice(0, 200) };
+    const donnees = { ...d, modele: 'factura-v2', description: d.lignes.map(l => l.concepto).filter(Boolean).join(' · ').slice(0, 200) };
     if(fldIdCourant){
       await avecReessais(() => updateDoc(doc(window._db, 'factures', fldIdCourant), { ...donnees, dateModification: serverTimestamp() }));
     } else {
@@ -7505,112 +7460,87 @@ async function enregistrerFacture(){
 }
 document.getElementById('fldEnregistrer').addEventListener('click', enregistrerFacture);
 
-// ---------- PDF : exactement ce qui est écrit, sur le modèle ----------
+// ---------- PDF : le modèle officiel, rempli ----------
+let modeleFactureOctets = null;
+async function chargerModeleFacture(){
+  if(modeleFactureOctets) return modeleFactureOctets;
+  let derniere;
+  for(let essai = 0; essai < 3; essai++){
+    try {
+      const rep = await fetch(MODELE_FACTURE_URL, { cache: 'no-cache' });
+      if(!rep.ok) throw new Error(`modèle introuvable (${rep.status})`);
+      const octets = new Uint8Array(await rep.arrayBuffer());
+      if(String.fromCharCode(...octets.slice(0, 5)) !== '%PDF-') throw new Error('le fichier factura-modelo.pdf n\'est pas un PDF');
+      modeleFactureOctets = octets;
+      return octets;
+    } catch (err) { derniere = err; await new Promise(r => setTimeout(r, 500 * (essai + 1))); }
+  }
+  throw new Error(`Le modèle de facture (factura-modelo.pdf) est introuvable sur le site : mets ce fichier à la racine du dépôt GitHub, à côté de index.html. (${derniere && derniere.message})`);
+}
+// Les polices standard du PDF ne connaissent pas certains caractères : on les remplace
+function textePourModele(v){ return textePdf(v).replace(/[^\x20-\x7E -ÿ€‚ƒ„…†‡ˆ‰Š‹ŒŽ‘’“”•–—˜™š›œžŸ\n]/g, ''); }
 async function construirePdfFacture(f){
-  await chargerEnteteFacture();
-  const jsPDF = await chargerOutilsPdf();
-  const en = { nomDroite: enteteFacture.nom, ...enteteFacture, ...(f.entete || {}) };
-  const pdf = new jsPDF({ unit: 'mm', format: 'a4', compress: true });
-  const T = (v) => textePdf(v);
-  pdf.setProperties({ title: `Factura ${f.numero || ''}`.trim(), author: T(en.nom), creator: 'BOUA Trans' });
-  pdf.setTextColor(17, 17, 17); pdf.setDrawColor(17, 17, 17); pdf.setLineWidth(0.4);
-  // En-tête : logo, nom, téléphone ; coordonnées à droite
-  const logo = await logoPourPdf();
-  let xNom = 17;
-  if(logo){ pdf.addImage(logo, 'JPEG', 15, 9.5, 26, 26); xNom = 45; }
-  pdf.setFont('helvetica', 'bold'); pdf.setFontSize(22);
-  if(en.nom) pdf.text(T(en.nom), xNom, 22.5, { maxWidth: 140 - xNom });
-  pdf.setFontSize(11); if(en.telephone) pdf.text(T(en.telephone), xNom, 30);
-  const droite = [[en.nomDroite, 'bold'], [en.adresse1, 'bold'], [en.adresse2, 'bold'], [en.nifLigne, 'bold'], [en.email1, 'normal'], [en.email2, 'normal']].filter(l => l[0]);
-  pdf.setFontSize(8.8);
-  droite.forEach(([l, style], i) => { pdf.setFont('helvetica', style); pdf.text(T(l), 193, 14.5 + i * 4.1, { align: 'right' }); });
-  // Champs
-  const champ = (lib, x, y, x2, valeur) => {
-    pdf.setFont('helvetica', 'bold'); pdf.setFontSize(9.5); pdf.text(lib, x, y);
-    const debut = x + pdf.getTextWidth(lib) + 2;
-    pdf.setLineWidth(0.3); pdf.line(debut, y + 0.8, x2, y + 0.8);
-    if(valeur){ pdf.setFont('helvetica', 'normal'); pdf.setFontSize(10); pdf.text(T(valeur), debut + 1.5, y - 0.3, { maxWidth: x2 - debut - 2 }); }
+  const [octets] = await Promise.all([chargerModeleFacture(), chargerScriptPdf(PDF_LIB_URL)]);
+  const { PDFDocument } = window.PDFLib;
+  const pdf = await PDFDocument.load(octets);
+  const formulaire = pdf.getForm();
+  const aDroite = /^(precio_|total_|cant_|importe_neto$|iva$)/;
+  const ecrire = (nom, valeur) => {
+    if(valeur === undefined || valeur === null || valeur === '') return;
+    try {
+      const champ = formulaire.getTextField(nom);
+      if(aDroite.test(nom) && window.PDFLib.TextAlignment) champ.setAlignment(window.PDFLib.TextAlignment.Right);
+      champ.setText(textePourModele(valeur));
+    } catch (err) { console.warn(`Case ${nom} :`, err); }
   };
-  champ('FACTURA Nº:', 17, 43, 72, f.numero);
-  champ('FECHA:', 17, 50, 107, f.fecha);
-  champ('CLIENTE:', 17, 57, 131, f.clientNom);
-  champ('N.I.F.:', 136, 57, 193, f.clientNif);
-  champ('DOMICILIO:', 17, 64, 193, f.clientDomicilio);
-  // Tableau
-  const cols = [15, 41, 62, 139, 163, 190];
-  const yH = 71, hH = 14;
-  const lignes = (f.lignes || []).slice(0, LIGNES_FACTURE_MAX);
-  const nb = Math.max(LIGNES_FACTURE_MIN, lignes.length);
-  const hL = Math.min(10, 100 / nb);
-  const yFin = yH + hH + nb * hL;
-  pdf.setLineWidth(0.45);
-  pdf.rect(cols[0], yH, cols[5] - cols[0], yFin - yH);
-  cols.slice(1, 5).forEach(x => pdf.line(x, yH, x, yFin));
-  pdf.line(cols[0], yH + hH, cols[5], yH + hH);
-  for(let i = 1; i < nb; i++) pdf.line(cols[0], yH + hH + i * hL, cols[5], yH + hH + i * hL);
-  pdf.setFont('helvetica', 'bold'); pdf.setFontSize(8.5);
-  const centre = (a, b) => (cols[a] + cols[b]) / 2;
-  pdf.text('FECHA', centre(0, 1), yH + 8.3, { align: 'center' });
-  pdf.text('CANTIDAD', centre(1, 2), yH + 8.3, { align: 'center' });
-  pdf.text('CONCEPTO', centre(2, 3), yH + 8.3, { align: 'center' });
-  pdf.text(['PRECIO', 'UNITARIO'], centre(3, 4), yH + 6.3, { align: 'center' });
-  pdf.text('TOTAL', centre(4, 5), yH + 4.6, { align: 'center' });
-  pdf.setFont('helvetica', 'normal'); pdf.setFontSize(6.5);
-  pdf.text(['(IVA NO', 'INCLUIDO)'], centre(4, 5), yH + 8, { align: 'center' });
-  lignes.forEach((l, i) => {
-    const yb = yH + hH + i * hL, ym = yb + hL / 2 + 1.2;
-    pdf.setFontSize(9);
-    if(l.fecha) pdf.text(T(l.fecha), centre(0, 1), ym, { align: 'center', maxWidth: cols[1] - cols[0] - 2 });
-    if(l.cantidad) pdf.text(T(l.cantidad), cols[2] - 2, ym, { align: 'right' });
-    if(l.concepto){
-      const morceaux = pdf.splitTextToSize(T(l.concepto), cols[3] - cols[2] - 4).slice(0, 2);
-      pdf.setFontSize(morceaux.length > 1 ? 8 : 9);
-      pdf.text(morceaux, cols[2] + 2, morceaux.length > 1 ? yb + hL / 2 - 0.6 : ym);
-      pdf.setFontSize(9);
-    }
-    if(l.precio) pdf.text(T(l.precio), cols[4] - 2, ym, { align: 'right' });
-    if(l.total) pdf.text(T(l.total), cols[5] - 2, ym, { align: 'right' });
+  ecrire('emisor_nif', f.emisorNif);
+  ecrire('factura_num', f.numero);
+  ecrire('factura_fecha', f.fecha);
+  ecrire('factura_periodo', f.periodo);
+  ecrire('cliente_nombre', f.clientNom);
+  ecrire('cliente_nif', f.clientNif);
+  ecrire('cliente_domicilio', f.clientDomicilio);
+  ecrire('cliente_localidad', f.clientLocalidad);
+  ecrire('cliente_tel', f.clientTel);
+  (f.lignes || []).slice(0, LIGNES_FACTURE_MAX).forEach((l, i) => {
+    const n = i + 1;
+    ecrire(`fecha_${n}`, l.fecha); ecrire(`cant_${n}`, l.cantidad); ecrire(`concepto_${n}`, l.concepto);
+    ecrire(`precio_${n}`, l.precio); ecrire(`total_${n}`, l.total);
   });
-  // Totaux (tels qu'écrits)
-  const yT = yFin + 6, hT = 7.3, xT = [105, 156, 190];
-  pdf.setLineWidth(0.45);
-  pdf.rect(xT[0], yT, xT[2] - xT[0], hT * 3);
-  pdf.line(xT[1], yT, xT[1], yT + hT * 3);
-  pdf.line(xT[0], yT + hT, xT[2], yT + hT); pdf.line(xT[0], yT + 2 * hT, xT[2], yT + 2 * hT);
-  pdf.setFont('helvetica', 'bold'); pdf.setFontSize(9);
-  [['IMPORTE BRUTO:', f.importeBruto], [`I.V.A.: ${f.ivaTaux || ''}`.trim(), f.ivaMontant], ['TOTAL IVA INCLUIDO:', f.totalIva]].forEach(([lib, val], i) => {
-    pdf.text(T(lib), xT[1] - 2.5, yT + i * hT + 4.9, { align: 'right' });
-    if(val) pdf.text(T(val), xT[2] - 2.5, yT + i * hT + 4.9, { align: 'right' });
-  });
-  // Paiement
-  const yP = yT + hT * 3 + 9, hP = 8.5;
-  pdf.rect(12, yP, 178, hP * 2);
-  pdf.line(57, yP, 57, yP + hP * 2);
-  pdf.line(12, yP + hP, 190, yP + hP);
-  pdf.text('FORMA DE PAGO:', 15, yP + 5.6);
-  pdf.text('NUMERO DE CUENTA:', 15, yP + hP + 5.6);
-  pdf.setFont('helvetica', 'normal'); pdf.setFontSize(9.5);
-  if(f.formaPago) pdf.text(T(f.formaPago), 60, yP + 5.6, { maxWidth: 127 });
-  if(f.numeroCuenta) pdf.text(T(f.numeroCuenta), 60, yP + hP + 5.6, { maxWidth: 127 });
-  // Pied de page
-  pdf.setFontSize(7.5); pdf.setTextColor(156, 163, 175);
-  if(f.piedPage) pdf.text(T(f.piedPage), 19, 284);
-  pdf.text('Page 1', 191, 284, { align: 'right' });
-  return pdf;
+  ecrire('forma_pago', f.formaPago);
+  ecrire('iban', f.iban);
+  ecrire('observaciones', f.observaciones);
+  ecrire('importe_neto', f.importeNeto);
+  ecrire('iva', f.iva);
+  ecrire('total_iva_incluido', f.totalIva);
+  pdf.setTitle(`Factura ${f.numero || ''}`.trim());
+  pdf.setAuthor('Lassine Diakite');
+  pdf.setModificationDate(new Date());
+  // Les cases restent remplissables : on peut encore écrire ou corriger dans le PDF
+  return pdf.save();
 }
 function nomPdfFacture(f){ return nomFichierPdf(`Factura_${f.numero || 'sin_numero'}`); }
-async function telechargerPdfFacture(f){ const pdf = await construirePdfFacture(f); pdf.save(nomPdfFacture(f)); return pdf; }
+function telechargerOctets(octets, nom){
+  const url = URL.createObjectURL(new Blob([octets], { type: 'application/pdf' }));
+  const a = document.createElement('a');
+  a.href = url; a.download = nom; document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 60000);
+}
+async function telechargerPdfFacture(f){ const octets = await construirePdfFacture(f); telechargerOctets(octets, nomPdfFacture(f)); return octets; }
 
-// PDF de la feuille affichée : enregistrée d'abord si un numéro est écrit ;
-// sinon (feuille vide ou sans numéro) téléchargée telle quelle, sans enregistrer.
+async function telechargerFactureVierge(){
+  const octets = await chargerModeleFacture();
+  telechargerOctets(octets, 'Factura_vierge.pdf');
+}
+document.getElementById('fldVierge').addEventListener('click', (e) => avecBoutonFacture(e.currentTarget, telechargerFactureVierge));
 async function factureCouranteOuVierge(){
   const d = lireFacture();
   if(factureVide(d)){
-    if(!confirm('La facture est vide.\nTélécharger le modèle vierge (avec ton en-tête) à remplir à la main ?')) return null;
+    if(!confirm('La facture est vide.\nTélécharger le modèle vierge à remplir à la main ?')) return null;
     return d;
   }
   if(!d.numero){
-    if(!confirm('Aucun numéro écrit (FACTURA Nº) : la facture ne sera pas enregistrée.\nTélécharger quand même le PDF tel qu\'il est écrit ?')) return null;
+    if(!confirm('Aucun numéro écrit (Nº factura) : la facture ne sera pas enregistrée.\nTélécharger quand même le PDF tel qu\'il est écrit ?')) return null;
     return d;
   }
   const fiche = await enregistrerFacture();
@@ -7632,12 +7562,11 @@ document.getElementById('fldImprimer').addEventListener('click', (e) => {
   avecBoutonFacture(e.currentTarget, async () => {
     const f = await factureCouranteOuVierge();
     if(!f){ if(onglet) onglet.close(); return; }
-    const pdf = await construirePdfFacture(f);
-    const adresse = URL.createObjectURL(pdf.output('blob'));
+    const octets = await construirePdfFacture(f);
+    const adresse = URL.createObjectURL(new Blob([octets], { type: 'application/pdf' }));
     if(onglet) onglet.location = adresse; else window.location.href = adresse;
   });
 });
-
 
 /* ============================================================
    ESPACE CHAUFFEUR — compte personnalisé + carnet de route
