@@ -1782,8 +1782,9 @@
         <input type="file" id="scanFichierCamera" accept="image/*" capture="environment" class="hidden">
         <input type="file" id="scanFichiers" accept="image/*,application/pdf" multiple class="hidden">
         <label class="flex items-center gap-2 text-xs text-slate-600 dark:text-cream/70 mb-3"><input type="checkbox" id="scanEffet" checked> Effet scanner (noir et blanc net, plus léger)</label>
+        <label class="flex items-center gap-2 text-xs text-slate-600 dark:text-cream/70 -mt-2 mb-3"><input type="checkbox" id="scanRecadrage" checked> Recadrage automatique (feuille découpée et redressée)</label>
         <div id="scanPages" class="grid grid-cols-3 gap-2"></div>
-        <p id="scanPagesVide" class="text-xs text-slate-400 dark:text-cream/40 text-center py-6 border-2 border-dashed border-slate-200 dark:border-white/10 rounded-xl">Aucune page. Prends la feuille en photo, bien à plat et éclairée. Plusieurs pages ? Reprends une photo pour chaque page.</p>
+        <p id="scanPagesVide" class="text-xs text-slate-400 dark:text-cream/40 text-center py-6 px-3 border-2 border-dashed border-slate-200 dark:border-white/10 rounded-xl">Aucune page. « Caméra » : pose la feuille à plat sur un fond plus foncé et vise-la — elle est repérée, photographiée toute seule quand elle est bien cadrée, puis découpée et redressée. Plusieurs pages ? Change de page, la suivante est prise aussi.</p>
         <p id="scanEtat" class="text-xs font-medium text-teal mt-3 min-h-[1rem]" aria-live="polite"></p>
         <div class="flex flex-wrap gap-2 mt-2">
           <button type="button" id="scanRelire" class="hidden text-xs font-semibold text-teal hover:text-amberdark">🔎 Relire le texte</button>
@@ -3847,23 +3848,29 @@ chauffeurMissionsList.addEventListener('click', (e) => {
   const b = e.target.closest('.mission-scan-btn');
   if(!b) return;
   missionScanChauffeur = { id: b.dataset.missionId, trajet: b.dataset.trajet };
-  chScanInput.value = '';
-  chScanInput.click();
+  const repli = () => { chScanInput.value = ''; chScanInput.click(); };
+  if(!cameraDirectPossible()) return repli();
+  ouvrirScannerDirect({ titre: `Feuille du voyage ${b.dataset.trajet}` }).then(prises => {
+    if(prises === null) return repli();
+    if(prises.length) envoyerFeuilleChauffeur(missionScanChauffeur, prises.map(c => ({ canvas: c })));
+  });
 });
-chScanInput.addEventListener('change', async () => {
+chScanInput.addEventListener('change', () => {
   const fichiers = [...chScanInput.files];
-  const m = missionScanChauffeur;
-  if(!fichiers.length || !m) return;
+  if(fichiers.length && missionScanChauffeur) envoyerFeuilleChauffeur(missionScanChauffeur, fichiers.map(f => ({ fichier: f })));
+});
+async function envoyerFeuilleChauffeur(m, elements){
   const etat = () => document.querySelector(`[data-mission-etat="${CSS.escape(m.id)}"]`);
   const dire = (t) => { const el = etat(); if(el){ el.textContent = t; el.classList.remove('hidden'); } };
   const u = window._auth && window._auth.currentUser;
   if(!u){ alert('Reconnecte-toi à ton Espace Chauffeur.'); return; }
   try {
     const pages = [];
-    for(const f of fichiers){
+    for(const { fichier: f, canvas } of elements){
       dire(`Préparation de ${pages.length + 1} page(s)…`);
-      if(f.type === 'application/pdf' || /\.pdf$/i.test(f.name || '')) (await pagesDepuisPdf(f)).pages.forEach(c => pages.push(preparerPage({ source: c, rotation: 0, effet: false })));
-      else pages.push(preparerPage({ source: await imageDepuisFichier(f), rotation: 0, effet: true }));
+      if(canvas) pages.push(preparerPage({ source: canvas, rotation: 0, effet: true }));
+      else if(f.type === 'application/pdf' || /\.pdf$/i.test(f.name || '')) (await pagesDepuisPdf(f)).pages.forEach(c => pages.push(preparerPage({ source: c, rotation: 0, effet: false })));
+      else pages.push(preparerPage({ source: recadrerAuto(await imageDepuisFichier(f)).canvas, rotation: 0, effet: true }));
       if(pages.length >= PAGES_SCAN_MAX) break;
     }
     pages.forEach(p => { p.source = null; });
@@ -3876,7 +3883,7 @@ chScanInput.addEventListener('change', async () => {
     dire('');
     alert(`La feuille n'a pas pu être envoyée : ${/permission|insufficient/i.test(String(err.code || err.message)) ? 'accès refusé (règles Firestore à publier par le bureau)' : (err.message || err)}. Réessaie.`);
   }
-});
+}
 
 // Délégation d'événements : un seul écouteur pour tous les boutons de mission,
 // puisque la liste est reconstruite à chaque mise à jour temps réel.
@@ -8005,6 +8012,290 @@ function messageErreurScan(err){
   return (err && err.message) || String(err);
 }
 
+/* ---------- Scanner en direct : détection de la feuille, prise automatique, redressement ----------
+   La caméra filme ; la feuille (claire sur un fond plus foncé) est repérée à
+   chaque instant et entourée. Dès qu'elle est entière, assez grande et
+   immobile, la photo est prise toute seule, puis la feuille est découpée et
+   redressée (perspective corrigée) comme un vrai scanner. Aucun outil
+   extérieur : tout est calculé dans le navigateur. */
+function niveauxGrisDe(data, n){
+  const g = new Uint8Array(n);
+  for(let i = 0, j = 0; j < n; i += 4, j++) g[j] = (data[i] * 77 + data[i + 1] * 150 + data[i + 2] * 29) >> 8;
+  return g;
+}
+function seuilOtsu(g){
+  const hist = new Uint32Array(256); g.forEach(v => hist[v]++);
+  const total = g.length; let somme = 0; for(let i = 0; i < 256; i++) somme += i * hist[i];
+  let sB = 0, wB = 0, max = 0, seuil = 128;
+  for(let t = 0; t < 256; t++){
+    wB += hist[t]; if(!wB) continue;
+    const wF = total - wB; if(!wF) break;
+    sB += t * hist[t];
+    const mB = sB / wB, mF = (somme - sB) / wF, v = wB * wF * (mB - mF) * (mB - mF);
+    if(v > max){ max = v; seuil = t; }
+  }
+  return seuil;
+}
+function aireQuad(c){ let a = 0; for(let i = 0; i < 4; i++){ const p = c[i], q = c[(i + 1) % 4]; a += p.x * q.y - q.x * p.y; } return Math.abs(a) / 2; }
+function quadConvexe(c){
+  let signe = 0;
+  for(let i = 0; i < 4; i++){
+    const a = c[i], b = c[(i + 1) % 4], d = c[(i + 2) % 4];
+    const z = (b.x - a.x) * (d.y - b.y) - (b.y - a.y) * (d.x - b.x);
+    if(Math.abs(z) < 1e-9) return false;
+    if(!signe) signe = Math.sign(z); else if(Math.sign(z) !== signe) return false;
+  }
+  return true;
+}
+// Repère la feuille dans une petite image en niveaux de gris (w × h)
+function detecterFeuille(g, w, h){
+  const n = w * h, seuil = seuilOtsu(g);
+  const vu = new Uint8Array(n), pile = new Int32Array(n);
+  let meilleur = null;
+  for(let p = 0; p < n; p++){
+    if(vu[p] || g[p] <= seuil) continue;
+    let sp = 0; pile[sp++] = p; vu[p] = 1;
+    let compte = 0, bords = 0, sMin = Infinity, sMax = -Infinity, dMin = Infinity, dMax = -Infinity, tl = p, br = p, tr = p, bl = p;
+    while(sp){
+      const q = pile[--sp], x = q % w, y = (q / w) | 0;
+      compte++;
+      const s = x + y, d = x - y;
+      if(s < sMin){ sMin = s; tl = q; } if(s > sMax){ sMax = s; br = q; }
+      if(d > dMax){ dMax = d; tr = q; } if(d < dMin){ dMin = d; bl = q; }
+      if(x === 0 || y === 0 || x === w - 1 || y === h - 1) bords++;
+      if(x > 0){ const r = q - 1; if(!vu[r] && g[r] > seuil){ vu[r] = 1; pile[sp++] = r; } }
+      if(x < w - 1){ const r = q + 1; if(!vu[r] && g[r] > seuil){ vu[r] = 1; pile[sp++] = r; } }
+      if(y > 0){ const r = q - w; if(!vu[r] && g[r] > seuil){ vu[r] = 1; pile[sp++] = r; } }
+      if(y < h - 1){ const r = q + w; if(!vu[r] && g[r] > seuil){ vu[r] = 1; pile[sp++] = r; } }
+    }
+    const poids = compte * (bords > (w + h) * 0.25 ? 0.35 : 1); // un mur clair qui touche tout le bord compte moins
+    if(!meilleur || poids > meilleur.poids) meilleur = { poids, compte, bords, coins: [tl, tr, br, bl] };
+  }
+  if(!meilleur) return { ok: false, raison: 'aucune' };
+  const coins = meilleur.coins.map(q => ({ x: q % w + 0.5, y: ((q / w) | 0) + 0.5 }));
+  const aire = aireQuad(coins), fraction = aire / n, remplissage = meilleur.compte / Math.max(aire, 1);
+  const r = { coins, fraction, remplissage, bords: meilleur.bords / (2 * (w + h)) };
+  if(fraction < 0.15) r.raison = 'petite';
+  else if(r.bords > 0.35 || fraction > 0.96) r.raison = 'bord';
+  else if(!quadConvexe(coins) || remplissage < 0.7 || remplissage > 1.2) r.raison = 'forme';
+  r.ok = !r.raison;
+  return r;
+}
+// Coins de la feuille dans une image (canvas, photo, vidéo) ; null si la feuille n'est pas nette
+function feuilleDansImage(source, largeur, hauteur, cote = 260){
+  const k = cote / Math.max(largeur, hauteur);
+  const w = Math.max(8, Math.round(largeur * k)), h = Math.max(8, Math.round(hauteur * k));
+  const c = document.createElement('canvas'); c.width = w; c.height = h;
+  const ctx = c.getContext('2d', { willReadFrequently: true });
+  ctx.drawImage(source, 0, 0, w, h);
+  const r = detecterFeuille(niveauxGrisDe(ctx.getImageData(0, 0, w, h).data, w * h), w, h);
+  r.echelle = 1 / k;
+  return r;
+}
+// Homographie : point du rectangle (x, y) → point de la photo
+function homographie(rect, quad){
+  const A = [], b = [];
+  for(let i = 0; i < 4; i++){
+    const { x, y } = rect[i], { x: u, y: v } = quad[i];
+    A.push([x, y, 1, 0, 0, 0, -u * x, -u * y]); b.push(u);
+    A.push([0, 0, 0, x, y, 1, -v * x, -v * y]); b.push(v);
+  }
+  for(let c = 0; c < 8; c++){
+    let piv = c; for(let r = c + 1; r < 8; r++) if(Math.abs(A[r][c]) > Math.abs(A[piv][c])) piv = r;
+    [A[c], A[piv]] = [A[piv], A[c]]; [b[c], b[piv]] = [b[piv], b[c]];
+    for(let r = 0; r < 8; r++){
+      if(r === c) continue;
+      const f = A[r][c] / A[c][c];
+      for(let k = c; k < 8; k++) A[r][k] -= f * A[c][k];
+      b[r] -= f * b[c];
+    }
+  }
+  return b.map((v, i) => v / A[i][i]);
+}
+// Découpe et redresse la feuille (coins dans les coordonnées de la photo)
+function redresserFeuille(photo, coins, coteMax = 2000){
+  const centre = coins.reduce((s, p) => ({ x: s.x + p.x / 4, y: s.y + p.y / 4 }), { x: 0, y: 0 });
+  const q = coins.map(p => ({ x: p.x + (centre.x - p.x) * 0.008, y: p.y + (centre.y - p.y) * 0.008 })); // on rentre d'un cheveu : pas de liseré de fond
+  const L = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
+  let W = Math.max(L(q[0], q[1]), L(q[3], q[2])), H = Math.max(L(q[0], q[3]), L(q[1], q[2]));
+  const k = Math.min(1, coteMax / Math.max(W, H));
+  W = Math.max(10, Math.round(W * k)); H = Math.max(10, Math.round(H * k));
+  const m = homographie([{ x: 0, y: 0 }, { x: W, y: 0 }, { x: W, y: H }, { x: 0, y: H }], q);
+  const sw = photo.width, sh = photo.height;
+  const src = photo.getContext('2d', { willReadFrequently: true }).getImageData(0, 0, sw, sh).data;
+  const sortie = document.createElement('canvas'); sortie.width = W; sortie.height = H;
+  const octx = sortie.getContext('2d'), img = octx.createImageData(W, H), d = img.data;
+  let o = 0;
+  for(let y = 0; y < H; y++){
+    for(let x = 0; x < W; x++, o += 4){
+      const den = m[6] * x + m[7] * y + 1;
+      let sx = (m[0] * x + m[1] * y + m[2]) / den, sy = (m[3] * x + m[4] * y + m[5]) / den;
+      sx = Math.min(sw - 1.001, Math.max(0, sx)); sy = Math.min(sh - 1.001, Math.max(0, sy));
+      const x0 = sx | 0, y0 = sy | 0, fx = sx - x0, fy = sy - y0;
+      const i00 = (y0 * sw + x0) * 4, i10 = i00 + 4, i01 = i00 + sw * 4, i11 = i01 + 4;
+      for(let c = 0; c < 3; c++){
+        d[o + c] = (src[i00 + c] * (1 - fx) + src[i10 + c] * fx) * (1 - fy) + (src[i01 + c] * (1 - fx) + src[i11 + c] * fx) * fy;
+      }
+      d[o + 3] = 255;
+    }
+  }
+  octx.putImageData(img, 0, 0);
+  return sortie;
+}
+function enCanvas(source, coteMax = 3000){
+  const w0 = source.videoWidth || source.width, h0 = source.videoHeight || source.height;
+  const k = Math.min(1, coteMax / Math.max(w0, h0));
+  const c = document.createElement('canvas'); c.width = Math.round(w0 * k); c.height = Math.round(h0 * k);
+  c.getContext('2d', { willReadFrequently: true }).drawImage(source, 0, 0, c.width, c.height);
+  return c;
+}
+// Photo importée : feuille repérée → découpée et redressée ; sinon la photo telle quelle
+function recadrerAuto(source){
+  try {
+    const photo = enCanvas(source);
+    const r = feuilleDansImage(photo, photo.width, photo.height, 320);
+    if(!r.ok) return { canvas: photo, recadre: false };
+    return { canvas: redresserFeuille(photo, r.coins.map(p => ({ x: p.x * r.echelle, y: p.y * r.echelle }))), recadre: true };
+  } catch (e) { return { canvas: source, recadre: false }; }
+}
+
+const MESSAGES_CADRAGE = {
+  aucune: 'Montre la feuille entière, posée sur un fond plus foncé',
+  petite: 'Rapproche-toi de la feuille',
+  bord: 'Recule un peu : la feuille doit être entière dans le cadre',
+  forme: 'Feuille mal visible : plus de lumière, feuille bien à plat',
+  bouge: 'Ne bouge plus…',
+  ok: 'Parfait, ne bouge plus…'
+};
+let cameraDirectRefusee = false; // refusée une fois : on passe directement par l'appareil photo du téléphone
+function cameraDirectPossible(){ return !cameraDirectRefusee && !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia && window.isSecureContext); }
+
+// Ouvre le scanner ; renvoie les pages prises (canvas) ou null si la caméra est indisponible
+function ouvrirScannerDirect({ titre = 'Scanner la feuille', maxPages = PAGES_SCAN_MAX } = {}){
+  return new Promise(async (terminer) => {
+    let flux;
+    try {
+      flux = await navigator.mediaDevices.getUserMedia({ audio: false, video: { facingMode: { ideal: 'environment' }, width: { ideal: 2560 }, height: { ideal: 1440 } } });
+    } catch (err) { console.warn('Caméra :', err); cameraDirectRefusee = true; return terminer(null); }
+    const e = echapperHtmlAdmin;
+    const boite = document.createElement('div');
+    boite.id = 'scanDirect';
+    boite.className = 'fixed inset-0 z-[100] bg-black flex flex-col text-white select-none';
+    boite.style.zIndex = '100'; // au-dessus du tableau de bord et des espaces chauffeur
+    boite.innerHTML = `
+      <div class="flex items-center gap-3 px-4 py-3 bg-black/80">
+        <p class="font-semibold mr-auto truncate">${e(titre)}</p>
+        <button type="button" data-sd="torche" class="hidden text-xl px-2" title="Lampe">💡</button>
+        <button type="button" data-sd="fermer" class="text-2xl px-2" aria-label="Fermer">✕</button>
+      </div>
+      <div class="relative flex-1 overflow-hidden">
+        <video playsinline muted autoplay class="absolute inset-0 w-full h-full object-contain"></video>
+        <canvas class="absolute inset-0 w-full h-full pointer-events-none"></canvas>
+        <div data-sd="flash" class="absolute inset-0 bg-white opacity-0 pointer-events-none transition-opacity duration-200"></div>
+        <p data-sd="message" class="absolute left-1/2 -translate-x-1/2 top-4 max-w-[90%] text-center text-sm font-semibold bg-black/70 rounded-full px-4 py-2">Préparation de la caméra…</p>
+      </div>
+      <div data-sd="miniatures" class="flex gap-2 overflow-x-auto px-3 pt-2 min-h-[3.5rem] bg-black/80"></div>
+      <div class="flex items-center justify-between gap-3 px-4 py-4 bg-black/80">
+        <label class="flex items-center gap-2 text-sm"><input type="checkbox" data-sd="auto" checked class="w-5 h-5"> Prise auto</label>
+        <button type="button" data-sd="declencher" class="w-16 h-16 rounded-full border-4 border-white bg-white/20 active:bg-white/60" aria-label="Prendre la photo"></button>
+        <button type="button" data-sd="terminer" class="bg-amber text-navy font-bold text-sm px-4 py-2.5 rounded-full disabled:opacity-40" disabled>Terminer (0)</button>
+      </div>`;
+    document.body.appendChild(boite);
+    const $ = (n) => boite.querySelector(`[data-sd="${n}"]`);
+    const video = boite.querySelector('video'), calque = boite.querySelector('canvas'), message = $('message');
+    const auto = $('auto');
+    try { auto.checked = localStorage.getItem('boua-scan-auto') !== 'non'; } catch (err) {}
+    auto.addEventListener('change', () => { try { localStorage.setItem('boua-scan-auto', auto.checked ? 'oui' : 'non'); } catch (err) {} });
+    video.srcObject = flux;
+    try { await video.play(); } catch (err) {}
+    const piste = flux.getVideoTracks()[0];
+    try { if(piste.getCapabilities && piste.getCapabilities().torch) $('torche').classList.remove('hidden'); } catch (err) {}
+    let torche = false;
+    $('torche').addEventListener('click', async () => { torche = !torche; try { await piste.applyConstraints({ advanced: [{ torch: torche }] }); } catch (err) {} });
+
+    const pages = [];
+    let dernier = null, stable = 0, arme = true, occupe = false, fini = false, detection = null;
+    const PAS_STABLES = 7; // ~1 s immobile
+    const fin = (resultat) => {
+      if(fini) return; fini = true;
+      clearInterval(boucle); flux.getTracks().forEach(t => t.stop()); boite.remove();
+      terminer(resultat);
+    };
+    $('fermer').addEventListener('click', () => fin(pages.length && confirm(`Garder les ${pages.length} page(s) déjà prises ?`) ? pages : []));
+    $('terminer').addEventListener('click', () => fin(pages));
+
+    const dessinerCalque = (r, couleur, progression) => {
+      const dpr = window.devicePixelRatio || 1;
+      const cw = calque.clientWidth, ch = calque.clientHeight;
+      if(calque.width !== Math.round(cw * dpr)){ calque.width = Math.round(cw * dpr); calque.height = Math.round(ch * dpr); }
+      const ctx = calque.getContext('2d');
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.clearRect(0, 0, cw, ch);
+      if(!r || !r.coins || !video.videoWidth) return;
+      const k = Math.min(cw / video.videoWidth, ch / video.videoHeight);
+      const ox = (cw - video.videoWidth * k) / 2, oy = (ch - video.videoHeight * k) / 2;
+      const pts = r.coins.map(p => ({ x: ox + p.x * r.echelle * k, y: oy + p.y * r.echelle * k }));
+      ctx.beginPath(); pts.forEach((p, i) => i ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y)); ctx.closePath();
+      ctx.fillStyle = couleur === 'vert' ? 'rgba(27,122,114,.25)' : 'rgba(232,163,61,.18)'; ctx.fill();
+      ctx.lineWidth = 4; ctx.strokeStyle = couleur === 'vert' ? '#22c55e' : '#E8A33D'; ctx.stroke();
+      if(progression > 0){
+        const c = pts.reduce((s, p) => ({ x: s.x + p.x / 4, y: s.y + p.y / 4 }), { x: 0, y: 0 });
+        ctx.beginPath(); ctx.arc(c.x, c.y, 26, -Math.PI / 2, -Math.PI / 2 + 2 * Math.PI * progression);
+        ctx.lineWidth = 6; ctx.strokeStyle = '#fff'; ctx.stroke();
+      }
+    };
+    const ecart = (a, b, r) => {
+      if(!a || !b) return 1;
+      const diag = Math.hypot(r.largeur, r.hauteur);
+      return Math.max(...a.map((p, i) => Math.hypot(p.x - b[i].x, p.y - b[i].y))) / diag;
+    };
+
+    const prendre = (manuel) => {
+      if(occupe || pages.length >= maxPages) return;
+      occupe = true;
+      try {
+        const photo = enCanvas(video);
+        let r = detection && detection.ok ? detection : null;
+        if(manuel && !r){ const r2 = feuilleDansImage(photo, photo.width, photo.height, 320); if(r2.ok) r = { ...r2, echelle: r2.echelle * video.videoWidth / photo.width }; }
+        const kPhoto = photo.width / video.videoWidth;
+        const page = r ? redresserFeuille(photo, r.coins.map(p => ({ x: p.x * r.echelle * kPhoto, y: p.y * r.echelle * kPhoto }))) : photo;
+        pages.push(page);
+        const flash = $('flash'); flash.style.opacity = '0.8'; setTimeout(() => { flash.style.opacity = '0'; }, 120);
+        if(navigator.vibrate) navigator.vibrate(60);
+        const mini = document.createElement('img');
+        mini.src = page.toDataURL('image/jpeg', 0.4); mini.className = 'h-12 w-auto rounded border border-white/40 bg-white';
+        $('miniatures').appendChild(mini);
+        $('terminer').disabled = false; $('terminer').textContent = `Terminer (${pages.length})`;
+        message.textContent = `✓ Page ${pages.length} prise${r ? ' et redressée' : ''}. Page suivante, ou « Terminer ».`;
+        arme = false; stable = 0;
+        if(pages.length >= maxPages) fin(pages);
+      } catch (err) { console.error('Prise de vue :', err); message.textContent = 'La photo a échoué : réessaie.'; }
+      finally { occupe = false; }
+    };
+    $('declencher').addEventListener('click', () => prendre(true));
+
+    const boucle = setInterval(() => {
+      if(fini || occupe || !video.videoWidth) return;
+      const r = feuilleDansImage(video, video.videoWidth, video.videoHeight, 240);
+      r.largeur = video.videoWidth / r.echelle; r.hauteur = video.videoHeight / r.echelle;
+      detection = r;
+      const mouvement = ecart(r.coins, dernier, r);
+      dernier = r.coins;
+      if(!arme){
+        // Après une prise : on attend que la feuille change (page suivante) ou disparaisse
+        if(!r.ok || mouvement > 0.06) arme = true;
+        dessinerCalque(r, r.ok ? 'vert' : 'orange', 0);
+        return;
+      }
+      if(!r.ok){ stable = 0; message.textContent = MESSAGES_CADRAGE[r.raison] || MESSAGES_CADRAGE.aucune; dessinerCalque(r.raison === 'aucune' ? null : r, 'orange', 0); return; }
+      stable = mouvement < 0.012 ? stable + 1 : 0;
+      if(!auto.checked){ message.textContent = 'Feuille trouvée : appuie sur le bouton rond'; dessinerCalque(r, 'vert', 0); return; }
+      message.textContent = stable ? MESSAGES_CADRAGE.ok : MESSAGES_CADRAGE.bouge;
+      dessinerCalque(r, 'vert', Math.min(1, stable / PAS_STABLES));
+      if(stable >= PAS_STABLES) prendre(false);
+    }, 140);
+  });
+}
+
 /* ---------- Écran admin ---------- */
 const formScan = document.getElementById('formScan');
 const scanEtat = document.getElementById('scanEtat');
@@ -8080,7 +8371,8 @@ async function ajouterFichiersScan(fichiers){
         pages.forEach(c => { if(scanPages.length < PAGES_SCAN_MAX) scanPages.push(preparerPage({ source: c, rotation: 0, effet: false })); });
         if(texte.replace(/\s/g, '').length > 40) texteNumerique += (texteNumerique ? '\n\n' : '') + texte;
       } else {
-        scanPages.push(preparerPage({ source: await imageDepuisFichier(f), rotation: 0, effet }));
+        const image = await imageDepuisFichier(f);
+        scanPages.push(preparerPage({ source: document.getElementById('scanRecadrage').checked ? recadrerAuto(image).canvas : image, rotation: 0, effet }));
       }
     } catch (err) {
       console.error('Scan :', err);
@@ -8091,7 +8383,18 @@ async function ajouterFichiersScan(fichiers){
   if(scanPages.length) lireEtAnalyser(texteNumerique);
   else scanEtat.textContent = '';
 }
-document.getElementById('scanCamera').addEventListener('click', () => { const i = document.getElementById('scanFichierCamera'); i.value = ''; i.click(); });
+document.getElementById('scanCamera').addEventListener('click', async () => {
+  const repli = () => { const i = document.getElementById('scanFichierCamera'); i.value = ''; i.click(); };
+  if(!cameraDirectPossible()) return repli();
+  const prises = await ouvrirScannerDirect({ titre: 'Scanner la feuille du voyage', maxPages: PAGES_SCAN_MAX - scanPages.length });
+  if(prises === null){ scanEtat.textContent = "Caméra en direct indisponible (autorisation refusée ?) : l'appareil photo du téléphone s'ouvre à la place."; return repli(); }
+  if(!prises.length) return;
+  scanResultat.classList.add('hidden');
+  const effet = document.getElementById('scanEffet').checked;
+  prises.forEach(c => scanPages.push(preparerPage({ source: c, rotation: 0, effet })));
+  afficherPagesScan();
+  lireEtAnalyser('');
+});
 document.getElementById('scanImporter').addEventListener('click', () => { const i = document.getElementById('scanFichiers'); i.value = ''; i.click(); });
 document.getElementById('scanFichierCamera').addEventListener('change', (e) => ajouterFichiersScan([...e.target.files]));
 document.getElementById('scanFichiers').addEventListener('change', (e) => ajouterFichiersScan([...e.target.files]));
@@ -8289,7 +8592,10 @@ document.getElementById('scanSerieFichiers').addEventListener('change', async (e
         const lu = await pagesDepuisPdf(f);
         pages = lu.pages.map(c => preparerPage({ source: c, rotation: 0, effet: false }));
         if(lu.texte.replace(/\s/g, '').length > 40) texte = lu.texte;
-      } else pages = [preparerPage({ source: await imageDepuisFichier(f), rotation: 0, effet })];
+      } else {
+        const image = await imageDepuisFichier(f);
+        pages = [preparerPage({ source: document.getElementById('scanRecadrage').checked ? recadrerAuto(image).canvas : image, rotation: 0, effet })];
+      }
       if(!texte){
         try { texte = await lireTextePages(pages.map(p => p.image), (m) => { etat.textContent = messageOcr(m, prefixe); }); }
         catch (err) { texte = ''; }
