@@ -219,6 +219,9 @@
   .cmr-signatures{ display: grid; grid-template-columns: 1fr 1fr 1fr; grid-column: 1 / -1; }
   .cmr-signatures .cmr-case{ min-height: 132px; }
 
+  /* ---------- Scanner des voyages ---------- */
+  .scan-lu{ box-shadow: inset 0 0 0 2px #E8A33D; background: #FFF7E8 !important; }
+  .dark .scan-lu{ background: rgba(232,163,61,.15) !important; }
   /* ---------- Formulaire de facture (modèle « Factura rellenable ») ---------- */
   .fv2-feuille{ width: 794px; background: #fff; color: #111; font-family: Arial, Helvetica, sans-serif; font-size: 12px; padding: 40px 46px 30px; box-shadow: 0 10px 30px rgba(15,31,56,.18); border-radius: 6px; border-top: 3px solid #1F3A5F; }
   .fv2-feuille input, .fv2-feuille textarea{ font-family: inherit; color: #111; }
@@ -1003,17 +1006,19 @@
 
 <!-- ============================================================
      MODALE CONNEXION ADMINISTRATEUR
-     ⚠️ Mot de passe unique — verrou d'interface simple, pas une vraie
-     sécurité (voir l'avertissement dans le JS plus bas).
+     Compte Firebase de l'administrateur (e-mail + mot de passe) : les
+     règles Firestore le reconnaissent et protègent les feuilles scannées.
      ============================================================ -->
 <div id="adminLoginModal" class="hidden fixed inset-0 z-[70] flex items-center justify-center p-5">
   <div class="absolute inset-0 bg-navy/80 backdrop-blur-sm" id="adminLoginOverlay"></div>
   <div class="relative bg-white dark:bg-navylight rounded-2xl shadow-2xl w-full max-w-sm p-7">
     <button id="adminLoginClose" aria-label="Fermer" class="absolute top-4 right-4 text-slate-400 hover:text-amber">✕</button>
     <h3 class="text-2xl font-bold text-navy dark:text-white mb-1.5">Administration</h3>
-    <p class="text-sm text-slate-500 dark:text-cream/60 mb-6">Accès réservé. Entrez le mot de passe.</p>
+    <p class="text-sm text-slate-500 dark:text-cream/60 mb-6">Accès réservé. Entre ton e-mail administrateur et ton mot de passe.</p>
     <form id="adminLoginForm">
-      <input type="password" id="adminPasswordInput" placeholder="Mot de passe" required autocomplete="off"
+      <input type="email" id="adminEmailInput" value="bouatrans@gmail.com" placeholder="E-mail administrateur" autocomplete="username"
+        class="w-full px-3.5 py-3 rounded-lg border border-slate-200 dark:border-white/15 bg-cream dark:bg-navy focus:outline-none focus:border-amber mb-3">
+      <input type="password" id="adminPasswordInput" placeholder="Mot de passe" required autocomplete="current-password"
         class="w-full px-3.5 py-3 rounded-lg border border-slate-200 dark:border-white/15 bg-cream dark:bg-navy focus:outline-none focus:border-amber mb-4">
       <button type="submit" id="adminLoginSubmitBtn" class="w-full bg-amber hover:bg-amberdark text-navy font-semibold py-3.5 rounded-full transition">Entrer</button>
       <p id="adminLoginError" class="hidden text-xs mt-3 text-red-500 font-medium">Mot de passe incorrect.</p>
@@ -1041,10 +1046,12 @@
         <button id="adminCloseBtn" aria-label="Fermer" class="text-cream/70 hover:text-amber text-xl leading-none">✕</button>
       </div>
     </div>
+    <div id="adminSecuBandeau" class="hidden max-w-6xl mx-auto px-5 pb-3"></div>
     <!-- Onglets de collections -->
     <div class="max-w-6xl mx-auto px-5 pb-3 flex gap-2 flex-wrap">
       <button class="admin-tab" data-collection="publier">📤 Publier</button>
       <button class="admin-tab" data-collection="nouveauVoyage">🚚 Frets &amp; voyages</button>
+      <button class="admin-tab" data-collection="scanVoyages">📷 Scanner</button>
       <button class="admin-tab" data-collection="cmr">📄 CMR</button>
       <button class="admin-tab" data-collection="deca">🧾 DeCA</button>
       <button class="admin-tab" data-collection="factureLd">📝 Facture</button>
@@ -1325,6 +1332,16 @@
             </div>
           </details>
 
+          <div class="rounded-xl border border-slate-200 dark:border-white/10 p-3">
+            <label class="flex items-center gap-2 text-sm font-semibold text-navy dark:text-white"><input type="checkbox" id="nvAvecDeca" checked> 🧾 Générer le DeCA automatiquement</label>
+            <div id="nvChampsDeca" class="grid grid-cols-2 gap-3 mt-3">
+              <div class="col-span-2"><label class="etiquette-pro" for="nvCargador">Cargador (client) *</label><input id="nvCargador" name="cargadorNombre" list="scanCargadores" class="champ-pro"></div>
+              <div><label class="etiquette-pro" for="nvCargadorNif">NIF / CIF cargador *</label><input id="nvCargadorNif" name="cargadorNif" class="champ-pro uppercase font-mono-num"></div>
+              <div><label class="etiquette-pro" for="nvMercancia">Mercancía *</label><input id="nvMercancia" name="mercancia" class="champ-pro"></div>
+              <div class="col-span-2"><label class="etiquette-pro" for="nvCargadorDomicilio">Domicilio cargador *</label><input id="nvCargadorDomicilio" name="cargadorDomicilio" class="champ-pro"></div>
+              <p class="col-span-2 text-[0.7rem] text-slate-500 dark:text-cream/50">Poids et camion : dans « Détails ». Tes données de transporteur sont reprises automatiquement. Tu as la feuille papier ? L'onglet 📷 Scanner remplit tout seul.</p>
+            </div>
+          </div>
           <p id="nvErreur" class="hidden text-sm font-medium text-red-500"></p>
           <button type="submit" id="nvEnregistrer" class="w-full bg-amber hover:bg-amberdark text-navy font-bold py-3.5 rounded-full transition">Enregistrer le fret</button>
           <p id="nvSucces" class="hidden text-sm font-semibold text-teal text-center"></p>
@@ -1736,6 +1753,129 @@
       </div>
       <div id="fldListe" class="space-y-2"></div>
       <p id="fldListeVide" class="hidden text-sm text-slate-500 dark:text-cream/50">Aucune facture pour l'instant.</p>
+    </div>
+  </div>
+
+  <!-- ÉCRAN "SCANNER" : feuilles de voyage (albaranes, CMR, hojas de ruta) scannées
+       à la caméra ou importées → texte lu automatiquement → voyage + DeCA générés,
+       feuilles archivées dans les collections protégées "albaranes" / "albaranes_pages". -->
+  <div id="adminScan" class="hidden max-w-6xl mx-auto px-5 py-8">
+    <div class="flex items-end justify-between flex-wrap gap-3 mb-5">
+      <div>
+        <h2 class="text-2xl font-bold text-navy dark:text-white mb-1">📷 Scanner les voyages</h2>
+        <p class="text-sm text-slate-500 dark:text-cream/60 max-w-2xl">Photographie la feuille du voyage (albarán, CMR, hoja de ruta) : le texte est lu automatiquement, tu vérifies, puis un clic crée le voyage, génère le DeCA et range la feuille dans les archives.</p>
+      </div>
+    </div>
+
+    <div id="scanSecurite" class="hidden mb-5 rounded-2xl border-2 border-amber bg-amber/10 p-4 text-sm text-navy dark:text-cream"></div>
+
+    <div class="grid lg:grid-cols-5 gap-6">
+      <!-- 1. Pages scannées -->
+      <div class="carte-pro lg:col-span-2 self-start">
+        <h3 class="font-bold text-navy dark:text-white text-lg mb-3">1. Scanner la feuille</h3>
+        <div class="grid grid-cols-2 gap-2 mb-3">
+          <button type="button" id="scanCamera" class="bg-amber hover:bg-amberdark text-navy font-bold py-3 rounded-xl">📷 Caméra</button>
+          <button type="button" id="scanImporter" class="border-2 border-navy dark:border-cream/40 text-navy dark:text-cream font-semibold py-2.5 rounded-xl">📁 Photos / PDF</button>
+        </div>
+        <input type="file" id="scanFichierCamera" accept="image/*" capture="environment" class="hidden">
+        <input type="file" id="scanFichiers" accept="image/*,application/pdf" multiple class="hidden">
+        <label class="flex items-center gap-2 text-xs text-slate-600 dark:text-cream/70 mb-3"><input type="checkbox" id="scanEffet" checked> Effet scanner (noir et blanc net, plus léger)</label>
+        <div id="scanPages" class="grid grid-cols-3 gap-2"></div>
+        <p id="scanPagesVide" class="text-xs text-slate-400 dark:text-cream/40 text-center py-6 border-2 border-dashed border-slate-200 dark:border-white/10 rounded-xl">Aucune page. Prends la feuille en photo, bien à plat et éclairée. Plusieurs pages ? Reprends une photo pour chaque page.</p>
+        <p id="scanEtat" class="text-xs font-medium text-teal mt-3 min-h-[1rem]" aria-live="polite"></p>
+        <div class="flex flex-wrap gap-2 mt-2">
+          <button type="button" id="scanRelire" class="hidden text-xs font-semibold text-teal hover:text-amberdark">🔎 Relire le texte</button>
+          <button type="button" id="scanVider" class="hidden text-xs font-semibold text-slate-500 hover:text-red-500">✕ Tout effacer</button>
+        </div>
+        <details class="mt-3">
+          <summary class="cursor-pointer text-xs font-semibold text-slate-500 dark:text-cream/60">Texte lu sur la feuille</summary>
+          <pre id="scanTexte" class="mt-2 max-h-60 overflow-auto whitespace-pre-wrap text-[0.7rem] bg-slate-50 dark:bg-white/5 rounded-lg p-2 text-slate-600 dark:text-cream/70"></pre>
+        </details>
+      </div>
+
+      <!-- 2. Voyage détecté -->
+      <form id="formScan" novalidate class="carte-pro lg:col-span-3">
+        <h3 class="font-bold text-navy dark:text-white text-lg mb-1">2. Vérifier le voyage</h3>
+        <p class="text-xs text-slate-500 dark:text-cream/60 mb-4">Les cases <span class="scan-lu px-1.5 rounded">entourées</span> ont été lues sur la feuille : vérifie-les. * = obligatoire pour le DeCA.</p>
+        <div class="grid sm:grid-cols-2 gap-3">
+          <div><label class="etiquette-pro">Nº albarán / document</label><input name="numero" class="champ-pro font-mono-num"></div>
+          <div><label class="etiquette-pro">Type de commerce *</label><select name="typeCommerce" class="champ-pro"></select></div>
+          <div><label class="etiquette-pro">Date de carga *</label><input name="fechaCarga" type="date" class="champ-pro"></div>
+          <div><label class="etiquette-pro">Date de descarga</label><input name="fechaDescarga" type="date" class="champ-pro"></div>
+          <div><label class="etiquette-pro">Origen (lieu de chargement) *</label><input name="origen" list="villesEurope" class="champ-pro"></div>
+          <div><label class="etiquette-pro">Destino (lieu de livraison) *</label><input name="destino" list="villesEurope" class="champ-pro"></div>
+          <div><label class="etiquette-pro">Cargador (client) *</label><input name="cargadorNombre" list="scanCargadores" class="champ-pro"></div>
+          <div><label class="etiquette-pro">NIF / CIF cargador *</label><input name="cargadorNif" class="champ-pro uppercase font-mono-num"></div>
+          <div class="sm:col-span-2"><label class="etiquette-pro">Domicilio cargador *</label><input name="cargadorDomicilio" class="champ-pro"></div>
+          <div class="sm:col-span-2"><label class="etiquette-pro">Mercancía *</label><input name="mercancia" class="champ-pro"></div>
+          <div><label class="etiquette-pro">Peso (kg) *</label><input name="pesoKg" type="number" min="0" step="1" class="champ-pro"></div>
+          <div><label class="etiquette-pro">Bultos / palets</label><input name="bultos" class="champ-pro"></div>
+          <div><label class="etiquette-pro">Matrícula camión *</label><input name="matricula" class="champ-pro uppercase font-mono-num"></div>
+          <div><label class="etiquette-pro">Matrícula remolque</label><input name="matriculaRemolque" class="champ-pro uppercase font-mono-num"></div>
+          <div><label class="etiquette-pro">Chauffeur</label><select name="chauffeurEmail" class="champ-pro"><option value="">—</option></select></div>
+          <div><label class="etiquette-pro">Prix HT (€)</label><input name="prixFacture" type="number" min="0" step="0.01" class="champ-pro"></div>
+          <div class="sm:col-span-2"><label class="etiquette-pro">Notes</label><input name="notes" class="champ-pro" placeholder="Référence, quai, horaires…"></div>
+        </div>
+        <datalist id="scanCargadores"></datalist>
+
+        <details id="scanTransporteur" class="mt-4 rounded-xl border border-slate-200 dark:border-white/10 p-3">
+          <summary class="cursor-pointer text-sm font-semibold text-navy dark:text-white">🚛 Transportista (toi) — mémorisé pour le DeCA <span id="scanTransporteurEtat" class="text-xs font-normal"></span></summary>
+          <div class="grid sm:grid-cols-2 gap-3 mt-3">
+            <div><label class="etiquette-pro">Nom *</label><input name="transportistaNombre" class="champ-pro"></div>
+            <div><label class="etiquette-pro">NIF / NIE *</label><input name="transportistaNif" class="champ-pro uppercase font-mono-num"></div>
+            <div class="sm:col-span-2"><label class="etiquette-pro">Domicilio *</label><input name="transportistaDomicilio" class="champ-pro"></div>
+            <div><label class="etiquette-pro">Nº autorización</label><input name="transportistaAutorizacion" class="champ-pro"></div>
+            <div><label class="etiquette-pro">Conductor</label><input name="conductorNombre" class="champ-pro"></div>
+            <div><label class="etiquette-pro">DNI / NIE conductor</label><input name="conductorDni" class="champ-pro uppercase font-mono-num"></div>
+          </div>
+        </details>
+
+        <label class="flex items-center gap-2 mt-4 text-sm font-semibold text-navy dark:text-white"><input type="checkbox" id="scanAvecDeca" checked> 🧾 Générer le DeCA automatiquement</label>
+        <p id="scanErreur" class="hidden text-sm font-medium text-red-500 mt-3"></p>
+        <div class="flex flex-wrap gap-3 mt-4">
+          <button type="submit" id="scanEnregistrer" class="bg-amber hover:bg-amberdark text-navy font-bold px-5 py-3 rounded-full">✓ Créer le voyage + DeCA + archiver</button>
+          <button type="button" id="scanArchiverSeul" class="border-2 border-teal text-teal hover:bg-teal hover:text-white font-semibold px-5 py-2.5 rounded-full">🗂 Archiver la feuille seulement</button>
+        </div>
+        <div id="scanResultat" class="hidden mt-4 rounded-xl bg-teal/10 p-3 text-sm text-navy dark:text-cream"></div>
+      </form>
+    </div>
+
+    <!-- Scan en série -->
+    <div class="carte-pro mt-6">
+      <div class="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h3 class="font-bold text-navy dark:text-white text-lg">🗂 Scanner toutes les feuilles en série</h3>
+          <p class="text-xs text-slate-500 dark:text-cream/60">Choisis autant de photos ou de PDF que tu veux : chaque fichier devient une feuille archivée, son texte est lu et elle est rattachée automatiquement à son voyage quand c'est possible.</p>
+        </div>
+        <button type="button" id="scanSerieBtn" class="bg-navy dark:bg-amber text-white dark:text-navy font-bold px-5 py-3 rounded-full">📚 Choisir les fichiers</button>
+        <input type="file" id="scanSerieFichiers" accept="image/*,application/pdf" multiple class="hidden">
+      </div>
+      <p id="scanSerieEtat" class="text-xs font-medium text-teal mt-2 min-h-[1rem]" aria-live="polite"></p>
+    </div>
+
+    <!-- Archives -->
+    <div class="mt-6">
+      <div class="flex flex-wrap items-center gap-3 mb-3">
+        <h3 class="font-bold text-navy dark:text-white text-lg mr-auto">Feuilles de voyage archivées <span id="scanCompte" class="text-sm font-normal text-slate-400"></span></h3>
+        <select id="scanFiltre" class="champ-pro !w-auto !py-2 text-sm">
+          <option value="toutes">Toutes</option>
+          <option value="sans">Sans voyage</option>
+          <option value="chauffeur">Envoyées par les chauffeurs</option>
+        </select>
+        <input id="scanRecherche" type="search" placeholder="Chercher (nº, client, ville, texte…)" class="champ-pro !w-auto min-w-[220px] !py-2">
+      </div>
+      <div id="scanListe" class="space-y-2"></div>
+      <p id="scanListeVide" class="hidden text-sm text-slate-400 dark:text-cream/40 text-center py-8">Aucune feuille archivée pour le moment.</p>
+    </div>
+
+    <!-- Visionneuse -->
+    <div id="scanVisionneuse" class="hidden fixed inset-0 z-[90] bg-navy/90 flex flex-col">
+      <div class="flex items-center gap-3 p-3 text-white">
+        <p id="scanVisionneuseTitre" class="font-semibold mr-auto truncate"></p>
+        <button type="button" id="scanVisionneusePdf" class="bg-amber text-navy font-bold text-sm px-4 py-2 rounded-full">⬇ PDF</button>
+        <button type="button" id="scanVisionneuseFermer" class="text-2xl px-2" aria-label="Fermer">✕</button>
+      </div>
+      <div id="scanVisionneusePages" class="flex-1 overflow-y-auto px-3 pb-6 space-y-3"></div>
     </div>
   </div>
 
@@ -2193,7 +2333,8 @@
   import {
     getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword,
     signOut, onAuthStateChanged, deleteUser,
-    EmailAuthProvider, reauthenticateWithCredential
+    EmailAuthProvider, reauthenticateWithCredential,
+    sendEmailVerification, sendPasswordResetEmail, reload, setPersistence, browserSessionPersistence
   } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-auth.js";
 
   // --- Configuration de ton projet Firebase (boua-trans) ---
@@ -2214,6 +2355,14 @@
   storage.maxUploadRetryTime = 60000;
   storage.maxOperationRetryTime = 20000;
   const auth = getAuth(app);
+  // Application séparée pour l'administrateur : sa connexion sécurisée ne se
+  // mélange jamais avec celle d'un client ou d'un chauffeur sur le même appareil,
+  // et elle ne dure que le temps de l'onglet ouvert.
+  const appAdmin = initializeApp(firebaseConfig, 'admin');
+  const authAdmin = getAuth(appAdmin);
+  setPersistence(authAdmin, browserSessionPersistence).catch(() => {});
+  window._authAdmin = authAdmin;
+  window._dbAdmin = getFirestore(appAdmin);
 
   // On rend "db", "storage", "auth" et les fonctions Firebase accessibles au
   // script classique plus bas (qui gère aussi la logique non-Firebase du site).
@@ -2225,7 +2374,8 @@
   window._authFns = {
     signInWithEmailAndPassword, createUserWithEmailAndPassword,
     signOut, onAuthStateChanged, deleteUser,
-    EmailAuthProvider, reauthenticateWithCredential
+    EmailAuthProvider, reauthenticateWithCredential,
+    sendEmailVerification, sendPasswordResetEmail, reload
   };
 
   // Ce module s'exécute APRÈS le script classique plus bas (les modules sont
@@ -3667,6 +3817,8 @@ function construireCarteMission(id, mission){
         <span class="text-xs font-bold uppercase tracking-wide bg-teal/15 text-teal px-2.5 py-1 rounded-full">${etapeLabel}</span>
       </div>
       <p class="text-sm font-semibold text-navy dark:text-white mb-3">${echapperHtml(mission.villeDepart || '?')} → ${echapperHtml(mission.villeArrivee || '?')}</p>
+      <button type="button" class="mission-scan-btn w-full mb-2 border-2 border-navy dark:border-cream/40 text-navy dark:text-cream font-semibold text-sm py-2 rounded-full" data-mission-id="${echapperHtml(id)}" data-trajet="${echapperHtml(`${mission.villeDepart || '?'} → ${mission.villeArrivee || '?'}`)}">📷 Scanner l'albarán / la feuille</button>
+      <p class="mission-scan-etat text-xs text-teal font-medium mb-2 hidden" data-mission-etat="${echapperHtml(id)}"></p>
       ${estTerminee
         ? `<p class="text-xs text-teal font-medium">✓ Mission terminée</p>`
         : `<button class="mission-avancer-btn w-full bg-amber hover:bg-amberdark text-navy font-semibold text-sm py-2.5 rounded-full transition" data-mission-id="${echapperHtml(id)}" data-etape-actuelle="${etapeIndex}">
@@ -3682,6 +3834,47 @@ function libelleActionSuivante(etapeIndex){
   const actions = ["Démarrer la mission", "Chargement effectué", "En route", "Arrivé à destination — Terminer"];
   return actions[etapeIndex] || "Continuer";
 }
+
+// Scanner la feuille du voyage (albarán, CMR…) : photos nettoyées, envoyées
+// dans les archives protégées, visibles par l'administrateur (onglet 📷 Scanner)
+let missionScanChauffeur = null;
+const chScanInput = document.createElement('input');
+chScanInput.type = 'file'; chScanInput.accept = 'image/*,application/pdf'; chScanInput.multiple = true; chScanInput.className = 'hidden';
+document.body.appendChild(chScanInput);
+chauffeurMissionsList.addEventListener('click', (e) => {
+  const b = e.target.closest('.mission-scan-btn');
+  if(!b) return;
+  missionScanChauffeur = { id: b.dataset.missionId, trajet: b.dataset.trajet };
+  chScanInput.value = '';
+  chScanInput.click();
+});
+chScanInput.addEventListener('change', async () => {
+  const fichiers = [...chScanInput.files];
+  const m = missionScanChauffeur;
+  if(!fichiers.length || !m) return;
+  const etat = () => document.querySelector(`[data-mission-etat="${CSS.escape(m.id)}"]`);
+  const dire = (t) => { const el = etat(); if(el){ el.textContent = t; el.classList.remove('hidden'); } };
+  const u = window._auth && window._auth.currentUser;
+  if(!u){ alert('Reconnecte-toi à ton Espace Chauffeur.'); return; }
+  try {
+    const pages = [];
+    for(const f of fichiers){
+      dire(`Préparation de ${pages.length + 1} page(s)…`);
+      if(f.type === 'application/pdf' || /\.pdf$/i.test(f.name || '')) (await pagesDepuisPdf(f)).pages.forEach(c => pages.push(preparerPage({ source: c, rotation: 0, effet: false })));
+      else pages.push(preparerPage({ source: await imageDepuisFichier(f), rotation: 0, effet: true }));
+      if(pages.length >= PAGES_SCAN_MAX) break;
+    }
+    pages.forEach(p => { p.source = null; });
+    dire('Envoi…');
+    await archiverAlbaran(pages.slice(0, PAGES_SCAN_MAX), { db: window._db, missionId: m.id, trajet: m.trajet, chauffeurEmail: String(u.email || '').toLowerCase(),
+      chauffeurNom: (typeof chauffeurCourant !== 'undefined' && chauffeurCourant && chauffeurCourant.nom) || '', ajoutePar: 'chauffeur' });
+    dire(`✓ ${pages.length} page(s) envoyée(s) au bureau.`);
+  } catch (err) {
+    console.error('Scan chauffeur :', err);
+    dire('');
+    alert(`La feuille n'a pas pu être envoyée : ${/permission|insufficient/i.test(String(err.code || err.message)) ? 'accès refusé (règles Firestore à publier par le bureau)' : (err.message || err)}. Réessaie.`);
+  }
+});
 
 // Délégation d'événements : un seul écouteur pour tous les boutons de mission,
 // puisque la liste est reconstruite à chaque mise à jour temps réel.
@@ -3840,16 +4033,10 @@ if('IntersectionObserver' in window && elementsARevelerAuScroll.length){
 /* ================================================================
    TABLEAU DE BORD ADMINISTRATEUR
    ================================================================
-   ⚠️ AVERTISSEMENT DE SÉCURITÉ : ce mot de passe unique n'est qu'un
-   verrou d'interface, pas une vraie sécurité — il est visible par
-   quiconque lit le code source du site. La vraie protection de tes
-   données doit venir des règles Firestore/Storage (garde les règles
-   "fonctionnelles" qu'on avait mises en place avant l'authentification
-   Firebase, pas celles basées sur request.auth.uid, sinon l'admin ne
-   pourra plus rien lire ni modifier).
+   Connexion par le compte Firebase de l'administrateur (voir plus bas,
+   « Connexion administrateur sécurisée »). L'ancien mot de passe n'est
+   plus écrit en clair dans le code.
    ================================================================ */
-const MOT_DE_PASSE_ADMIN = "boua1985";
-
 const adminAccessBtn = document.getElementById('adminAccessBtn');
 const adminLoginModal = document.getElementById('adminLoginModal');
 const adminLoginOverlay = document.getElementById('adminLoginOverlay');
@@ -3877,6 +4064,7 @@ function ouvrirTableauDeBord(){
   // L'écran "Publier" est l'accueil du tableau de bord
   document.querySelectorAll('.admin-tab').forEach(t => t.classList.toggle('active', t.dataset.collection === 'publier'));
   chargerCollection('publier', true);
+  afficherBandeauSecurite();
 }
 function fermerTableauDeBord(){
   adminDashboard.classList.add('hidden');
@@ -3893,20 +4081,163 @@ adminAccessBtn.addEventListener('click', () => {
 adminLoginClose.addEventListener('click', fermerConnexionAdmin);
 adminLoginOverlay.addEventListener('click', fermerConnexionAdmin);
 
-adminLoginForm.addEventListener('submit', (e) => {
-  e.preventDefault();
-  if(adminPasswordInput.value === MOT_DE_PASSE_ADMIN){
-    sessionStorage.setItem('boua-admin-auth', 'ok'); // valable le temps de l'onglet ouvert uniquement
-    fermerConnexionAdmin();
-    ouvrirTableauDeBord();
+/* ---------- Connexion administrateur sécurisée (Firebase Authentication) ----------
+   L'administrateur se connecte avec son compte Firebase (e-mail + mot de passe).
+   Les règles Firestore reconnaissent ce compte (adresse confirmée) : les
+   feuilles de voyage scannées ne sont lisibles qu'avec lui. L'ancien mot de
+   passe n'est plus écrit dans le code (seule son empreinte SHA-256 reste) et
+   ne sert qu'en transition, tant que le compte sécurisé n'est pas activé. */
+const EMAILS_ADMIN = ['bouatrans@gmail.com', 'bouadiakite@gmail.com'];
+const EMPREINTE_ANCIEN_MDP = '721206e39002a5de869e322b2e554ee979e2a1f33e32511e8bada3bf2e988054';
+const adminEmailInput = document.getElementById('adminEmailInput');
+const adminSecuBandeau = document.getElementById('adminSecuBandeau');
+
+async function empreinteSha256(texte){
+  const h = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(texte));
+  return [...new Uint8Array(h)].map(b => b.toString(16).padStart(2, '0')).join('');
+}
+function utilisateurAdmin(){ return window._authAdmin && window._authAdmin.currentUser; }
+function etatSecuriteAdmin(){
+  const u = utilisateurAdmin();
+  if(u && EMAILS_ADMIN.includes(String(u.email || '').toLowerCase())) return u.emailVerified ? 'securise' : 'non_verifie';
+  return 'historique';
+}
+async function compteSecuriseActive(){
+  try {
+    const { doc, getDoc } = window._firestore;
+    const s = await getDoc(doc(window._db, 'contenus', 'securite'));
+    return s.exists() && s.data().adminSecurise === true;
+  } catch (e) { return false; }
+}
+function attendreFirebase(){ return new Promise(r => quandFirebasePret(r)); }
+
+function afficherBandeauSecurite(){
+  const etat = etatSecuriteAdmin();
+  const e = echapperHtmlAdmin;
+  if(etat === 'securise'){
+    adminSecuBandeau.innerHTML = `<p class="text-xs text-cream/70">🔒 Connexion sécurisée · ${e(utilisateurAdmin().email)}</p>`;
+  } else if(etat === 'non_verifie'){
+    adminSecuBandeau.innerHTML = `<div class="rounded-xl bg-amber/15 border border-amber/50 p-3 text-sm text-cream">
+      📧 <b>Confirme ton adresse ${e(utilisateurAdmin().email)}</b> : ouvre l'e-mail de Firebase et clique le lien (regarde aussi dans les spams).
+      <span class="inline-flex gap-2 ml-1 flex-wrap"><button type="button" id="secuJaiConfirme" class="bg-amber text-navy font-bold text-xs px-3 py-1.5 rounded-full">J'ai confirmé</button>
+      <button type="button" id="secuRenvoyer" class="underline text-xs">Renvoyer l'e-mail</button></span>
+      <span id="secuMessage" class="block text-xs mt-1"></span></div>`;
   } else {
-    adminLoginError.classList.remove('hidden');
+    adminSecuBandeau.innerHTML = `<div class="rounded-xl bg-red-500/15 border border-red-400/50 p-3 text-sm text-cream">
+      🔓 <b>Connexion non sécurisée</b> (ancien mot de passe). Active ton compte administrateur sécurisé : il protège tes feuilles de voyage scannées.
+      <button type="button" id="secuActiver" class="ml-1 bg-amber text-navy font-bold text-xs px-3 py-1.5 rounded-full">Activer la connexion sécurisée</button>
+      <form id="secuForm" class="hidden mt-3 grid sm:grid-cols-4 gap-2 items-end">
+        <label class="text-xs sm:col-span-2">E-mail administrateur<select id="secuEmail" class="block w-full mt-1 rounded-lg text-navy px-2 py-2">${EMAILS_ADMIN.map(x => `<option>${x}</option>`).join('')}</select></label>
+        <label class="text-xs">Nouveau mot de passe (8+)<input id="secuMdp" type="password" autocomplete="new-password" minlength="8" class="block w-full mt-1 rounded-lg text-navy px-2 py-2"></label>
+        <label class="text-xs">Confirmer<input id="secuMdp2" type="password" autocomplete="new-password" class="block w-full mt-1 rounded-lg text-navy px-2 py-2"></label>
+        <button type="submit" class="sm:col-span-4 bg-amber text-navy font-bold text-sm py-2 rounded-full">Créer mon compte sécurisé</button>
+      </form>
+      <span id="secuMessage" class="block text-xs mt-1"></span></div>`;
+  }
+  adminSecuBandeau.classList.remove('hidden');
+  if(vueActive === 'scanVoyages') afficherSecuriteScan();
+}
+adminSecuBandeau.addEventListener('click', async (e) => {
+  const msg = () => document.getElementById('secuMessage');
+  if(e.target.id === 'secuActiver'){ document.getElementById('secuForm').classList.toggle('hidden'); document.getElementById('secuMdp').focus(); return; }
+  if(e.target.id === 'secuRenvoyer'){
+    try { await window._authFns.sendEmailVerification(utilisateurAdmin()); msg().textContent = '✓ E-mail renvoyé.'; }
+    catch (err) { msg().textContent = /too-many/.test(err.code) ? 'Trop de demandes : attends quelques minutes.' : `Envoi impossible (${err.code || err.message}).`; }
+    return;
+  }
+  if(e.target.id === 'secuJaiConfirme'){
+    const u = utilisateurAdmin();
+    try {
+      await window._authFns.reload(u);
+      if(!u.emailVerified){ msg().textContent = "Pas encore confirmé : clique le lien dans l'e-mail, puis réessaie."; return; }
+      await u.getIdToken(true); // les règles voient tout de suite l'adresse confirmée
+      const { doc, setDoc } = window._firestore;
+      await setDoc(doc(window._dbAdmin, 'contenus', 'securite'), { adminSecurise: true, email: u.email, depuis: new Date().toISOString() }).catch(() => {});
+      sessionStorage.setItem('boua-admin-mode', 'securise');
+      afficherBandeauSecurite();
+      if(vueActive === 'scanVoyages') ouvrirEcranScan();
+    } catch (err) { msg().textContent = `Vérification impossible (${err.code || err.message}).`; }
+  }
+});
+adminSecuBandeau.addEventListener('submit', async (e) => {
+  if(e.target.id !== 'secuForm') return;
+  e.preventDefault();
+  const msg = document.getElementById('secuMessage');
+  const email = document.getElementById('secuEmail').value, mdp = document.getElementById('secuMdp').value, mdp2 = document.getElementById('secuMdp2').value;
+  if(mdp.length < 8){ msg.textContent = 'Mot de passe : 8 caractères minimum.'; return; }
+  if(mdp !== mdp2){ msg.textContent = 'Les deux mots de passe ne sont pas identiques.'; return; }
+  if(await empreinteSha256(mdp) === EMPREINTE_ANCIEN_MDP){ msg.textContent = "Choisis un mot de passe différent de l'ancien."; return; }
+  const { createUserWithEmailAndPassword, sendEmailVerification, sendPasswordResetEmail } = window._authFns;
+  try {
+    const { user } = await createUserWithEmailAndPassword(window._authAdmin, email, mdp);
+    await sendEmailVerification(user).catch(() => {});
+    sessionStorage.setItem('boua-admin-mode', 'non_verifie');
+    afficherBandeauSecurite();
+    document.getElementById('secuMessage').textContent = `✓ Compte créé. E-mail de confirmation envoyé à ${email}. À la prochaine connexion, utilise cet e-mail et ce nouveau mot de passe.`;
+  } catch (err) {
+    if(err.code === 'auth/email-already-in-use'){
+      try { await sendPasswordResetEmail(window._authAdmin, email); msg.textContent = `Ce compte existe déjà. Un e-mail vient d'être envoyé à ${email} pour choisir son mot de passe : ensuite, déconnecte-toi et reconnecte-toi avec ${email} et ce mot de passe.`; }
+      catch (e2) { msg.textContent = `Ce compte existe déjà : déconnecte-toi et reconnecte-toi avec ${email} et son mot de passe.`; }
+    } else if(err.code === 'auth/operation-not-allowed'){
+      msg.textContent = "Active d'abord « E-mail/Mot de passe » dans Firebase → Authentication → Sign-in method.";
+    } else msg.textContent = `Création impossible (${err.code || err.message}).`;
   }
 });
 
+adminLoginForm.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const bouton = document.getElementById('adminLoginSubmitBtn');
+  if(bouton.disabled) return;
+  const email = adminEmailInput.value.trim().toLowerCase();
+  const mdp = adminPasswordInput.value;
+  const erreur = (t) => { adminLoginError.textContent = t; adminLoginError.classList.remove('hidden'); };
+  adminLoginError.classList.add('hidden');
+  bouton.disabled = true; bouton.textContent = 'Vérification…';
+  try {
+    await attendreFirebase();
+    let codeErreur = '';
+    if(email){
+      try {
+        const { user } = await window._authFns.signInWithEmailAndPassword(window._authAdmin, email, mdp);
+        if(!EMAILS_ADMIN.includes(String(user.email || '').toLowerCase())){
+          await window._authFns.signOut(window._authAdmin);
+          return erreur("Ce compte n'est pas un compte administrateur.");
+        }
+        if(!user.emailVerified && !sessionStorage.getItem('boua-verif-envoyee')){
+          window._authFns.sendEmailVerification(user).catch(() => {});
+          sessionStorage.setItem('boua-verif-envoyee', '1');
+        }
+        sessionStorage.setItem('boua-admin-auth', 'ok');
+        sessionStorage.setItem('boua-admin-mode', user.emailVerified ? 'securise' : 'non_verifie');
+        fermerConnexionAdmin(); ouvrirTableauDeBord(); afficherBandeauSecurite();
+        return;
+      } catch (err) { codeErreur = err.code || ''; }
+    }
+    if(/too-many-requests/.test(codeErreur)) return erreur('Trop de tentatives : attends quelques minutes.');
+    // Transition : ancien mot de passe, accepté tant que le compte sécurisé n'est pas activé
+    if(await empreinteSha256(mdp) === EMPREINTE_ANCIEN_MDP){
+      if(!/network/.test(codeErreur) && await compteSecuriseActive()) return erreur(`Le compte sécurisé est activé : connecte-toi avec ton e-mail administrateur et ton nouveau mot de passe.`);
+      sessionStorage.setItem('boua-admin-auth', 'ok');
+      sessionStorage.setItem('boua-admin-mode', 'historique');
+      fermerConnexionAdmin(); ouvrirTableauDeBord(); afficherBandeauSecurite();
+      return;
+    }
+    erreur(/network/.test(codeErreur) ? 'Pas de connexion internet : réessaie.' : 'E-mail ou mot de passe incorrect.');
+  } finally {
+    bouton.disabled = false; bouton.textContent = 'Entrer';
+  }
+});
+// Onglet rouvert : le compte Firebase de l'admin est retrouvé (session de l'onglet)
+quandFirebasePret(() => {
+  if(!window._authAdmin) return;
+  window._authFns.onAuthStateChanged(window._authAdmin, () => { if(!adminDashboard.classList.contains('hidden')) afficherBandeauSecurite(); });
+});
+
 adminCloseBtn.addEventListener('click', fermerTableauDeBord);
-adminLogoutBtn.addEventListener('click', () => {
+adminLogoutBtn.addEventListener('click', async () => {
   sessionStorage.removeItem('boua-admin-auth');
+  sessionStorage.removeItem('boua-admin-mode');
+  if(window._authAdmin && window._authAdmin.currentUser) await window._authFns.signOut(window._authAdmin).catch(() => {});
   fermerTableauDeBord();
 });
 
@@ -4937,12 +5268,13 @@ let ciblePublierActive = null;
 let publicationEnCours = false;
 
 // Deux onglets ne sont pas des tableaux : "publier" et "textes"
-const ECRANS_SPECIAUX = ['publier', 'textes', 'nouveauVoyage', 'cmr', 'deca', 'factureLd', 'messagesChauffeurs'];
+const ECRANS_SPECIAUX = ['publier', 'textes', 'nouveauVoyage', 'scanVoyages', 'cmr', 'deca', 'factureLd', 'messagesChauffeurs'];
 function afficherEcranAdmin(nomVue){
   const special = ECRANS_SPECIAUX.includes(nomVue);
   adminPublier.classList.toggle('hidden', nomVue !== 'publier');
   document.getElementById('adminTextes').classList.toggle('hidden', nomVue !== 'textes');
   document.getElementById('adminVoyagesFret').classList.toggle('hidden', nomVue !== 'nouveauVoyage');
+  document.getElementById('adminScan').classList.toggle('hidden', nomVue !== 'scanVoyages');
   document.getElementById('adminCmr').classList.toggle('hidden', nomVue !== 'cmr');
   document.getElementById('adminDeca').classList.toggle('hidden', nomVue !== 'deca');
   document.getElementById('adminFactureLd').classList.toggle('hidden', nomVue !== 'factureLd');
@@ -4952,6 +5284,7 @@ function afficherEcranAdmin(nomVue){
   if(nomVue === 'textes') afficherEditeurTextes();
   if(nomVue === 'nouveauVoyage') ouvrirEcranVoyages(); else fermerEcranVoyages();
   if(nomVue === 'cmr') ouvrirEcranCmr();
+  if(nomVue === 'scanVoyages') ouvrirEcranScan();
   if(nomVue === 'deca') ouvrirEcranDeca();
   if(nomVue === 'factureLd') ouvrirEcranFactureLd();
   if(nomVue === 'messagesChauffeurs') ouvrirEcranMessages(); else { fermerEcranMessages(); if(window._db) majBadgeMessagesAdmin(); }
@@ -6984,31 +7317,13 @@ document.getElementById('decaGenerer').addEventListener('click', async (e) => {
       if(!cambios.length){ decaEtat.textContent = 'Aucune modification à enregistrer.'; return; }
       d = { ...ancien, ...saisie, modificacion: maintenant, version: (ancien.version || 1) + 1, historial: [...(ancien.historial || []), { fecha: maintenant, cambios }] };
     } else {
-      // Liste relue juste avant : jamais deux fois le même numéro, même depuis deux appareils
-      try {
-        const { collection, getDocs } = window._firestore;
-        const snap = await avecReessais(() => getDocs(collection(window._db, 'deca')));
-        const connus = new Map(decaListeCache.map(x => [x.id, x]));
-        snap.docs.forEach(x => connus.set(x.id, { id: x.id, ...x.data() }));
-        decaListeCache = [...connus.values()];
-      } catch (e) { /* on garde la liste en mémoire */ }
-      const id = genererIdDeca();
-      d = { ...saisie, id, numero: prochainNumeroDeca(), url: urlPubliqueDeca(id), emision: maintenant, modificacion: maintenant, version: 1, historial: [], statut: 'actif' };
+      d = await preparerNouveauDeca(saisie, maintenant);
     }
-    const pdf = await construirePdfDeca(d);
-    const base64 = sortiePdfDeca(pdf);
-    if(base64.length > 950000) throw new Error('PDF trop lourd pour la base');
-    const { id, ...donnees } = d;
     decaEtat.textContent = 'Enregistrement en ligne…';
-    await avecReessais(() => setDoc(doc(window._db, 'deca_pdf', id), { contenu: base64, taille: Math.round(base64.length * 0.75), version: d.version, numero: d.numero, maj: serverTimestamp() }));
-    await avecReessais(() => setDoc(doc(window._db, 'deca', id), { ...donnees, dateMaj: serverTimestamp() }));
+    await publierDeca(d);
+    const id = d.id;
     clearTimeout(minuterieBrouillonDeca);
     effacerBrouillonDeca();
-    const memo = {};
-    ['transportistaNombre', 'transportistaNif', 'transportistaDomicilio', 'transportistaAutorizacion', 'matricula', 'matriculaRemolque', 'conductorNombre', 'conductorDni'].forEach(c => { memo[c] = d[c] || ''; });
-    setDoc(doc(window._db, 'contenus', 'deca'), memo).catch(() => {});
-    const i = decaListeCache.findIndex(x => x.id === id);
-    if(i >= 0) decaListeCache[i] = d; else decaListeCache.push(d);
     decaIdCourant = id;
     formDeca.elements.numero.value = d.numero;
     afficherListeDeca();
@@ -7026,6 +7341,34 @@ document.getElementById('decaGenerer').addEventListener('click', async (e) => {
     bouton.textContent = '📄 Générer le DeCA + QR';
   }
 });
+
+async function preparerNouveauDeca(saisie, maintenant){
+  // Liste relue juste avant : jamais deux fois le même numéro, même depuis deux appareils
+  try {
+    const { collection, getDocs } = window._firestore;
+    const snap = await avecReessais(() => getDocs(collection(window._db, 'deca')));
+    const connus = new Map(decaListeCache.map(x => [x.id, x]));
+    snap.docs.forEach(x => connus.set(x.id, { id: x.id, ...x.data() }));
+    decaListeCache = [...connus.values()];
+  } catch (e) { /* on garde la liste en mémoire */ }
+  const id = genererIdDeca();
+  return { ...saisie, id, numero: prochainNumeroDeca(), url: urlPubliqueDeca(id), emision: maintenant, modificacion: maintenant, version: 1, historial: [], statut: 'actif' };
+}
+async function publierDeca(d){
+  const { doc, setDoc, serverTimestamp } = window._firestore;
+  const pdf = await construirePdfDeca(d);
+  const base64 = sortiePdfDeca(pdf);
+  if(base64.length > 950000) throw new Error('PDF trop lourd pour la base');
+  const { id, ...donnees } = d;
+  await avecReessais(() => setDoc(doc(window._db, 'deca_pdf', id), { contenu: base64, taille: Math.round(base64.length * 0.75), version: d.version, numero: d.numero, maj: serverTimestamp() }));
+  await avecReessais(() => setDoc(doc(window._db, 'deca', id), { ...donnees, dateMaj: serverTimestamp() }));
+  const memo = {};
+  ['transportistaNombre', 'transportistaNif', 'transportistaDomicilio', 'transportistaAutorizacion', 'matricula', 'matriculaRemolque', 'conductorNombre', 'conductorDni'].forEach(c => { memo[c] = d[c] || ''; });
+  setDoc(doc(window._db, 'contenus', 'deca'), memo).catch(() => {});
+  const i = decaListeCache.findIndex(x => x.id === id);
+  if(i >= 0) decaListeCache[i] = d; else decaListeCache.push(d);
+  return d;
+}
 
 // ---------- Liste ----------
 async function ouvrirEcranDeca(){
@@ -7199,6 +7542,893 @@ async function ajouterAnnexesDeca(fichiers){
 }
 document.getElementById('decaScanCamera').addEventListener('change', (e) => ajouterAnnexesDeca([...e.target.files]));
 document.getElementById('decaScanFichier').addEventListener('change', (e) => ajouterAnnexesDeca([...e.target.files]));
+
+/* ============================================================
+   SCANNER DES VOYAGES — feuilles de voyage (albaranes, CMR, hojas de ruta)
+   Caméra ou fichiers (photos / PDF) → effet scanner → texte lu
+   automatiquement (Tesseract, gratuit, dans le navigateur ; le texte des
+   PDF numériques est lu directement) → voyage pré-rempli à vérifier →
+   un clic : voyage (missions) + DeCA généré + feuille archivée.
+   Les feuilles sont rangées dans "albaranes" (fiche + miniature + texte)
+   et "albaranes_pages" (une page = un document), deux collections
+   protégées par les règles Firestore : seul l'administrateur connecté
+   avec son compte sécurisé (et le chauffeur pour ses propres envois)
+   peut les lire.
+   ============================================================ */
+const TESSERACT_URL = 'https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js';
+const OPTIONS_OCR = {
+  workerPath: 'https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/worker.min.js',
+  corePath: 'https://cdn.jsdelivr.net/npm/tesseract.js-core@5.1.1',
+  langPath: 'https://cdn.jsdelivr.net/npm/@tesseract.js-data/spa@1.0.0/4.0.0_best_int'
+};
+const PDFJS_URL = 'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js';
+const PDFJS_WORKER_URL = 'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.worker.min.js';
+const PAGES_SCAN_MAX = 20;
+const TAILLE_PAGE_MAX = 900000; // une page = un document Firestore (limite 1 Mo)
+const CHAMPS_OBLIGATOIRES_DECA = ['cargadorNombre', 'cargadorNif', 'cargadorDomicilio', 'transportistaNombre', 'transportistaNif', 'transportistaDomicilio', 'origen', 'destino', 'fechaCarga', 'mercancia', 'pesoKg', 'matricula'];
+const CHAMPS_TRANSPORTEUR = ['transportistaNombre', 'transportistaNif', 'transportistaDomicilio', 'transportistaAutorizacion', 'matricula', 'matriculaRemolque', 'conductorNombre', 'conductorDni'];
+const dbScan = () => window._dbAdmin || window._db; // base reliée au compte administrateur sécurisé
+
+// ---------- Images : orientation, effet scanner, compression ----------
+async function imageDepuisFichier(fichier){
+  try { return await createImageBitmap(fichier, { imageOrientation: 'from-image' }); }
+  catch (e) {
+    const url = URL.createObjectURL(fichier);
+    try { const img = new Image(); img.src = url; await img.decode(); return img; }
+    catch (err) { throw new Error(`« ${fichier.name || 'photo'} » n'est pas une image lisible`); }
+    finally { setTimeout(() => URL.revokeObjectURL(url), 2000); }
+  }
+}
+function effetScanner(ctx, w, h){
+  const im = ctx.getImageData(0, 0, w, h), d = im.data, hist = new Uint32Array(256);
+  for(let i = 0; i < d.length; i += 4){ const g = (d[i] * 0.299 + d[i + 1] * 0.587 + d[i + 2] * 0.114) | 0; d[i] = g; hist[g]++; }
+  const total = d.length / 4;
+  const centile = (p) => { let s = 0; for(let v = 0; v < 256; v++){ s += hist[v]; if(s >= total * p) return v; } return 255; };
+  const noir = centile(0.01), papier = Math.max(centile(0.55) - 8, noir + 40);
+  const table = new Uint8ClampedArray(256);
+  for(let v = 0; v < 256; v++){ const x = Math.min(1, Math.max(0, (v - noir) / (papier - noir))); table[v] = Math.round(255 * Math.pow(x, 1.35)); }
+  for(let i = 0; i < d.length; i += 4){ const g = table[d[i]]; d[i] = d[i + 1] = d[i + 2] = g; }
+  ctx.putImageData(im, 0, 0);
+}
+function dessinerPage(source, rotation, effet){
+  const echelle = Math.min(1, 1800 / Math.max(source.width, source.height));
+  const w = Math.round(source.width * echelle), h = Math.round(source.height * echelle);
+  const tourne = rotation % 180 !== 0;
+  const c = document.createElement('canvas');
+  c.width = tourne ? h : w; c.height = tourne ? w : h;
+  const ctx = c.getContext('2d', { willReadFrequently: true });
+  ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, c.width, c.height);
+  ctx.translate(c.width / 2, c.height / 2); ctx.rotate(rotation * Math.PI / 180);
+  ctx.drawImage(source, -w / 2, -h / 2, w, h);
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  if(effet) effetScanner(ctx, c.width, c.height);
+  return c;
+}
+function canvasEnJpeg(c, maxOctets = TAILLE_PAGE_MAX){
+  let qualite = 0.62, canvas = c, url = canvas.toDataURL('image/jpeg', qualite);
+  while(url.length > maxOctets && (qualite > 0.36 || canvas.width > 900)){
+    if(qualite > 0.36) qualite -= 0.08;
+    else { const r = document.createElement('canvas'); r.width = Math.round(canvas.width * 0.8); r.height = Math.round(canvas.height * 0.8); r.getContext('2d').drawImage(canvas, 0, 0, r.width, r.height); canvas = r; }
+    url = canvas.toDataURL('image/jpeg', qualite);
+  }
+  return { url, largeur: canvas.width, hauteur: canvas.height };
+}
+function miniature(c){
+  const r = document.createElement('canvas'); const l = 180;
+  r.width = l; r.height = Math.round(c.height * l / c.width);
+  const ctx = r.getContext('2d'); ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, r.width, r.height); ctx.drawImage(c, 0, 0, r.width, r.height);
+  return r.toDataURL('image/jpeg', 0.55);
+}
+function preparerPage(page){
+  const c = dessinerPage(page.source, page.rotation || 0, page.effet);
+  const j = canvasEnJpeg(c);
+  page.image = j.url; page.largeur = j.largeur; page.hauteur = j.hauteur; page.miniature = miniature(c);
+  return page;
+}
+
+// ---------- PDF importés (pdf.js) : pages en images + texte numérique ----------
+let pdfjsPret = null;
+async function chargerPdfJs(){
+  if(!pdfjsPret){
+    pdfjsPret = chargerScriptPdf(PDFJS_URL).then(() => {
+      const lib = window.pdfjsLib;
+      if(!lib) throw new Error('lecteur PDF indisponible');
+      lib.GlobalWorkerOptions.workerSrc = URL.createObjectURL(new Blob([`importScripts(${JSON.stringify(PDFJS_WORKER_URL)});`], { type: 'text/javascript' }));
+      return lib;
+    }).catch(err => { pdfjsPret = null; throw new Error("Impossible de charger le lecteur de PDF (connexion internet ?)."); });
+  }
+  return pdfjsPret;
+}
+async function pagesDepuisPdf(fichier){
+  const lib = await chargerPdfJs();
+  const pdf = await lib.getDocument({ data: new Uint8Array(await fichier.arrayBuffer()), isEvalSupported: false }).promise;
+  const pages = []; let texte = '';
+  for(let i = 1; i <= Math.min(pdf.numPages, PAGES_SCAN_MAX); i++){
+    const p = await pdf.getPage(i);
+    const v1 = p.getViewport({ scale: 1 });
+    const v = p.getViewport({ scale: Math.min(3, 1800 / Math.max(v1.width, v1.height)) });
+    const c = document.createElement('canvas'); c.width = Math.round(v.width); c.height = Math.round(v.height);
+    const ctx = c.getContext('2d'); ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, c.width, c.height);
+    await p.render({ canvasContext: ctx, viewport: v }).promise;
+    pages.push(c);
+    try {
+      const contenu = await p.getTextContent();
+      texte += (i > 1 ? '\n\n' : '') + contenu.items.map(it => it.str + (it.hasEOL ? '\n' : ' ')).join('');
+    } catch (e) { /* PDF sans texte : on lira l'image */ }
+  }
+  return { pages, texte: texte.replace(/[ \t]+\n/g, '\n').trim() };
+}
+
+// ---------- Lecture du texte (OCR Tesseract, espagnol) ----------
+let ocrPret = null;
+let ocrSuivi = null;
+async function moteurOcr(){
+  if(!ocrPret){
+    ocrPret = (async () => {
+      await chargerScriptPdf(TESSERACT_URL);
+      return window.Tesseract.createWorker('spa', 1, { ...OPTIONS_OCR, logger: (m) => { if(ocrSuivi) ocrSuivi(m); } });
+    })().catch(err => { console.error('OCR :', err); ocrPret = null; throw new Error("La lecture automatique n'a pas pu démarrer (connexion internet ?). Tu peux remplir les cases à la main."); });
+  }
+  return ocrPret;
+}
+function messageOcr(m, prefixe = ''){
+  const p = Math.round((m.progress || 0) * 100);
+  if(/recognizing/.test(m.status)) return `${prefixe}Lecture du texte… ${p} %`;
+  if(/loading language|loading tesseract|initializ/.test(m.status)) return `${prefixe}Préparation de la lecture automatique (1re fois : quelques secondes)…`;
+  return `${prefixe}Lecture…`;
+}
+async function lireTextePages(images, surMessage){
+  ocrSuivi = (m) => { if(surMessage) surMessage(m); };
+  const moteur = await moteurOcr();
+  let texte = '';
+  for(let i = 0; i < images.length; i++){
+    const { data } = await moteur.recognize(images[i]);
+    texte += (i ? '\n\n' : '') + (data.text || '');
+  }
+  ocrSuivi = null;
+  return texte.trim();
+}
+
+// ---------- Analyse du texte : on retrouve les cases du voyage ----------
+const RE_DATE = /\b(\d{1,2})\s?[\/.\-]\s?(\d{1,2})\s?[\/.\-]\s?(\d{4}|\d{2})\b/g;
+function isoDepuis(j, m, a){
+  const an = a.length === 2 ? 2000 + Number(a) : Number(a);
+  if(m < 1 || m > 12 || j < 1 || j > 31 || an < 2000 || an > 2099) return '';
+  return `${an}-${String(m).padStart(2, '0')}-${String(j).padStart(2, '0')}`;
+}
+function nombreEcrit(t){
+  let s = String(t).replace(/\s/g, '');
+  if(/,\d{1,3}$/.test(s) && !/^\d{1,3}(\.\d{3})+$/.test(s)) s = s.replace(/\./g, '').replace(',', '.');
+  else if(/^\d{1,3}([.,]\d{3})+$/.test(s)) s = s.replace(/[.,]/g, '');
+  else s = s.replace(/,/g, '.');
+  const n = Number(s);
+  return isNaN(n) ? null : n;
+}
+function deviner(texte, contexte = {}){
+  const r = {};
+  const lignes = String(texte || '').split(/\r?\n/).map(l => l.replace(/[|_]{2,}/g, ' ').replace(/\s+/g, ' ').trim()).filter(l => l.length > 1);
+  const propre = (v) => String(v || '').replace(/^[\s:.\-–#=]+/, '').replace(/[\s:.\-–,;]+$/, '').trim();
+  const valeurApres = (re, exclure) => {
+    for(let i = 0; i < lignes.length; i++){
+      if(exclure && exclure.test(lignes[i])) continue;
+      const m = lignes[i].match(re);
+      if(!m) continue;
+      let v = propre(lignes[i].slice(m.index + m[0].length));
+      if(v.length < 3 && lignes[i + 1]) v = propre(lignes[i + 1]);
+      if(v.replace(RE_DATE, '').replace(/[\s:.\-]/g, '').length < 2) continue; // seulement une date : ce n'est pas la bonne case
+      if(v.length >= 2) return { v, i };
+    }
+    return null;
+  };
+
+  // Numéro du document
+  for(const l of lignes){
+    if(!/albar[aá]n|n[ºo°]\.?\s*(de\s*)?(doc|pedido|albar)|delivery\s*note|hoja\s*de\s*ruta|carta\s*de\s*porte|\bcmr\b|n[ºo°]\s*:/i.test(l)) continue;
+    const jetons = l.replace(RE_DATE, ' ').split(/[\s:]+/);
+    const n = jetons.find(t => /\d/.test(t) && t.replace(/[^\dA-Z]/gi, '').length >= 3 && !/^\d{4}[BCDFGHJKLMNPRSTVWXYZ]{3}$/i.test(t) && !/kg|€/i.test(t));
+    if(n){ r.numero = n.replace(/[.,;]+$/, '').toUpperCase(); break; }
+  }
+
+  // Dates
+  const dates = [];
+  lignes.forEach((l, i) => {
+    let fin = 0;
+    for(const m of l.matchAll(RE_DATE)){
+      const iso = isoDepuis(+m[1], +m[2], m[3]);
+      // Le mot juste avant la date dit de quelle date il s'agit (carga, descarga…)
+      if(iso) dates.push({ iso, i, l: l.slice(Math.max(fin, m.index - 40), m.index) || l });
+      fin = m.index + m[0].length;
+    }
+  });
+  const dDescarga = dates.find(d => /descarga|entrega|llegada|destino/i.test(d.l));
+  const dCarga = dates.find(d => d !== dDescarga && /(?<!des)carga|salida|emisi|fecha|expedici/i.test(d.l)) || dates.find(d => d !== dDescarga);
+  if(dCarga) r.fechaCarga = dCarga.iso;
+  if(dDescarga && (!dCarga || dDescarga.iso >= dCarga.iso)) r.fechaDescarga = dDescarga.iso;
+
+  // NIF / CIF
+  const exclus = [contexte.transportistaNif, contexte.conductorDni].map(x => String(x || '').toUpperCase().replace(/[\s.-]/g, '')).filter(Boolean);
+  const nifs = [];
+  lignes.forEach((l, i) => {
+    for(const m of l.toUpperCase().matchAll(/\b([A-HJNPQRSUVW][\s.-]?\d{2}[\s.-]?\d{3}[\s.-]?\d{2}[\s.-]?[0-9A-J]|\d{8}[\s-]?[A-Z]|[XYZ][\s-]?\d{7}[\s-]?[A-Z])\b/g)){
+      const v = m[1].replace(/[\s.-]/g, '');
+      if(nifValide(v) && !exclus.includes(v) && !nifs.some(n => n.v === v)) nifs.push({ v, i, l });
+    }
+  });
+
+  // Cargador (remitente / expedidor / cliente)
+  const RE_CARGADOR = /\b(?:remitente|cargador(?:\s+contractual)?|expedidor|shipper|ordenante|cliente|empresa\s+cargadora)\b\s*[:.\-]?/i;
+  const cargador = valeurApres(RE_CARGADOR);
+  const nifCargador = (cargador && nifs.find(n => n.i >= cargador.i && n.i <= cargador.i + 3)) || nifs[0];
+  if(nifCargador) r.cargadorNif = nifCargador.v;
+  const sansNif = (t) => propre(String(t).replace(/\b(N\.?I\.?F|C\.?I\.?F|N\.?I\.?E|D\.?N\.?I|VAT)\b\.?\s*:?/gi, ' ').replace(/[A-Z0-9][\s.-]?\d{2}[\s.-]?\d{3}[\s.-]?\d{2}[\s.-]?[0-9A-Z]/gi, ' ').replace(/\s+/g, ' '));
+  if(cargador) r.cargadorNombre = sansNif(cargador.v);
+  else if(nifCargador){
+    const autour = sansNif(nifCargador.l);
+    if(autour.length >= 3) r.cargadorNombre = autour;
+    else if(lignes[nifCargador.i - 1]) r.cargadorNombre = sansNif(lignes[nifCargador.i - 1]);
+  }
+  if(!r.cargadorNombre){
+    const societe = lignes.find(l => /\b(S\.?L\.?U?|S\.?A\.?U?|S\.?COOP|SOCIEDAD|COOPERATIVA|LTDA|SARL|SAS|GMBH)\b\.?$/i.test(l) && !(contexte.transportistaNombre && l.toLowerCase().includes(String(contexte.transportistaNombre).toLowerCase())));
+    if(societe) r.cargadorNombre = sansNif(societe);
+  }
+  if(r.cargadorNombre && r.cargadorNombre.length > 80) r.cargadorNombre = r.cargadorNombre.slice(0, 80);
+  // Domicilio : ligne suivante avec une rue ou un code postal
+  const debut = cargador ? cargador.i : (nifCargador ? nifCargador.i : -1);
+  const domicilioEtiquete = valeurApres(/\b(?:domicilio|direcci[oó]n)\b\s*[:.\-]?/i, /carga|descarga|entrega/i);
+  if(domicilioEtiquete && (debut < 0 || Math.abs(domicilioEtiquete.i - debut) <= 4)) r.cargadorDomicilio = domicilioEtiquete.v;
+  else if(debut >= 0){
+    const rue = lignes.slice(debut, debut + 5).find(l => /\b(c\/|calle|avda|avenida|av\.|pol[ií]gono|p\.?\s?i\.|ctra|carretera|plaza|paseo|camino|parcela|nave)\b|\b\d{5}\b/i.test(l) && !RE_CARGADOR.test(l));
+    if(rue) r.cargadorDomicilio = sansNif(rue);
+  }
+
+  // Origen / destino
+  const RE_DESTINO = /\b(?:lugar|punto|direcci[oó]n)\s+de\s+(?:descarga|entrega)\b|\bdestino\b|\bdestinatario\b|\bconsignatario\b|\bentregar\s+en\b|\bdescarga\s+en\b|\bdescarga\b\s*:/i;
+  const RE_ORIGEN = /\b(?:lugar|punto|direcci[oó]n)\s+de\s+carga\b|\borigen\b|\brecogida\b|\bcarga\s+en\b|(?<!des)\bcarga\b\s*:|\bsalida\b\s*:/i;
+  const ville = (x) => {
+    if(!x) return '';
+    let v = x.v;
+    const suivante = lignes[x.i + 1] || '';
+    if(!/\b\d{5}\b/.test(v) && /\b\d{5}\b/.test(suivante) && !RE_DESTINO.test(suivante) && !RE_ORIGEN.test(suivante)) v += ', ' + suivante;
+    return v.replace(RE_DATE, '').replace(/\s+,/g, ',').trim().slice(0, 120);
+  };
+  const destino = valeurApres(RE_DESTINO);
+  const origen = valeurApres(RE_ORIGEN, /descarga|entrega/i);
+  if(origen) r.origen = ville(origen);
+  if(destino) r.destino = ville(destino);
+
+  // Mercancía
+  const merc = valeurApres(/\b(?:mercanc[ií]as?|naturaleza(?:\s+de\s+la\s+mercanc[ií]a)?|descripci[oó]n(?:\s+de\s+la\s+mercanc[ií]a)?|producto|g[eé]nero|art[ií]culos?)\b\s*[:.\-]?/i);
+  if(merc) r.mercancia = merc.v.replace(/\b\d[\d.,\s]*\s*(kg|kgs|kilos)\b.*$/i, '').trim().slice(0, 120);
+
+  // Poids
+  let poids = null;
+  for(const l of lignes){
+    const m = l.match(/peso(?:\s*bruto|\s*total)?[^\d]{0,12}(\d[\d.,\s]{0,9}\d|\d)/i);
+    if(m){ const n = nombreEcrit(m[1]); if(n && n <= 45000){ poids = n; break; } }
+  }
+  if(poids === null){
+    const kg = [...String(texte).matchAll(/(\d[\d.,\s]{0,9}\d|\d)\s*(?:kg|kgs|kilos|k\.g\.)\b/gi)].map(m => nombreEcrit(m[1])).filter(n => n && n <= 45000);
+    if(kg.length) poids = Math.max(...kg);
+    else { const t = String(texte).match(/(\d+(?:[.,]\d+)?)\s*(?:t|tn|toneladas)\b/i); if(t){ const n = nombreEcrit(t[1]); if(n && n <= 45) poids = n * 1000; } }
+  }
+  if(poids !== null) r.pesoKg = Math.round(poids);
+
+  // Bultos / palets
+  const b = String(texte).match(/\b(\d{1,4})\s*(palets?|pal[eé]s|pallets?|europalets?|bultos|cajas|unidades)\b/i);
+  if(b) r.bultos = `${b[1]} ${b[2].toLowerCase()}`;
+
+  // Matrículas (camion / remolque)
+  const plat = lignes.join('\n').toUpperCase();
+  const rem = plat.match(/\bR\s?-?\s?(\d{4})\s?-?\s?([BCDFGHJKLMNPRSTVWXYZ]{3})\b/);
+  if(rem) r.matriculaRemolque = `R${rem[1]}${rem[2]}`;
+  const sansRem = plat.replace(/\bR\s?-?\s?\d{4}\s?-?\s?[BCDFGHJKLMNPRSTVWXYZ]{3}\b/g, ' ');
+  const lMat = sansRem.split('\n').find(l => /MATR[IÍ]CULA|TRACTORA|VEH[IÍ]CULO|CAMI[OÓ]N/.test(l) && /\d{4}\s?-?\s?[BCDFGHJKLMNPRSTVWXYZ]{3}/.test(l));
+  const mat = (lMat || sansRem).match(/\b(\d{4})\s?-?\s?([BCDFGHJKLMNPRSTVWXYZ]{3})\b/);
+  if(mat) r.matricula = `${mat[1]}${mat[2]}`;
+
+  // Type de commerce, d'après la marchandise
+  const m = `${r.mercancia || ''} ${String(texte).slice(0, 3000)}`.toLowerCase();
+  r.typeCommerce = /\badr\b|\bun\s?\d{4}\b|peligros/.test(m) ? 'adr'
+    : /frut|verdur|hortaliz|aliment|refriger|congelad|carne|pescado|bebida|agua mineral|leche|fresco|naranja|patata/.test(m) ? 'alimentaire'
+    : /ladrillo|cemento|arena|hormig|azulejo|cer[aá]mica|madera|yeso|material(es)? de construcci|tuber[ií]a|palet de obra/.test(m) ? 'materiaux'
+    : /maquinaria|m[aá]quina|pieza|acero|metal|bobina|industrial|recambio/.test(m) ? 'industrie'
+    : /mudanza|muebles|enseres/.test(m) ? 'demenagement'
+    : /veh[ií]culos?|turismos?|coches?/.test(m) ? 'vehicules'
+    : '';
+  if(!r.typeCommerce) delete r.typeCommerce;
+
+  // Client connu (déjà dans un DeCA) : on complète nom et adresse
+  const connu = r.cargadorNif && contexte.connus && contexte.connus.get(r.cargadorNif);
+  if(connu){
+    if(connu.nombre) r.cargadorNombre = connu.nombre;
+    if(connu.domicilio && !r.cargadorDomicilio) r.cargadorDomicilio = connu.domicilio;
+  }
+  Object.keys(r).forEach(k => { if(r[k] === '' || r[k] === undefined || r[k] === null) delete r[k]; });
+  return r;
+}
+
+// ---------- Données mémorisées : transporteur, clients connus, chauffeurs, voyages ----------
+let scanTransporteur = null;
+let scanConnus = new Map();
+let scanChauffeurs = [];
+let scanMissions = [];
+async function chargerReferencesScan(){
+  const { collection, getDocs, doc, getDoc } = window._firestore;
+  const [memo, decas, chauffeurs, missions] = await Promise.all([
+    getDoc(doc(window._db, 'contenus', 'deca')).then(s => s.exists() ? s.data() : {}).catch(() => ({})),
+    getDocs(collection(window._db, 'deca')).then(s => s.docs.map(x => x.data())).catch(() => []),
+    getDocs(collection(window._db, 'chauffeurs')).then(s => s.docs.map(x => x.data())).catch(() => []),
+    getDocs(collection(window._db, 'missions')).then(s => s.docs.map(x => ({ id: x.id, ...x.data() }))).catch(() => [])
+  ]);
+  scanTransporteur = memo || {};
+  scanConnus = new Map();
+  decas.filter(d => d.cargadorNif).sort((a, b) => String(a.emision || '').localeCompare(String(b.emision || '')))
+    .forEach(d => scanConnus.set(String(d.cargadorNif).toUpperCase(), { nombre: d.cargadorNombre || '', domicilio: d.cargadorDomicilio || '' }));
+  scanChauffeurs = chauffeurs;
+  scanMissions = missions;
+  return { transporteur: scanTransporteur, connus: scanConnus };
+}
+function donneesTransporteur(){ return { transportistaNombre: 'LASSINE Diakité', ...(scanTransporteur || {}) }; }
+async function memoriserTransporteur(valeurs){
+  const memo = { ...(scanTransporteur || {}) };
+  CHAMPS_TRANSPORTEUR.forEach(c => { if(valeurs[c] !== undefined && String(valeurs[c]).trim() !== '') memo[c] = String(valeurs[c]).trim(); });
+  scanTransporteur = memo;
+  const { doc, setDoc } = window._firestore;
+  try { await setDoc(doc(window._db, 'contenus', 'deca'), memo); } catch (e) { /* facultatif */ }
+}
+
+// ---------- Création automatique : voyage → DeCA → feuille archivée ----------
+async function archiverAlbaran(pages, infos){
+  const { doc, setDoc, serverTimestamp } = window._firestore;
+  const db = infos.db || dbScan();
+  const id = genererIdDeca();
+  const chauffeurEmail = String(infos.chauffeurEmail || '').toLowerCase();
+  for(let i = 0; i < pages.length; i++){
+    const p = pages[i];
+    await avecReessais(() => setDoc(doc(db, 'albaranes_pages', `${id}_${String(i + 1).padStart(2, '0')}`),
+      { albaranId: id, ordre: i + 1, image: p.image, largeur: p.largeur, hauteur: p.hauteur, chauffeurEmail }));
+  }
+  const fiche = {
+    numero: infos.numero || '', dateDoc: infos.fechaCarga || '', cargadorNombre: infos.cargadorNombre || '', cargadorNif: infos.cargadorNif || '',
+    origen: infos.origen || '', destino: infos.destino || '', mercancia: infos.mercancia || '', pesoKg: infos.pesoKg === '' || infos.pesoKg === undefined ? null : Number(infos.pesoKg),
+    matricula: infos.matricula || '', texte: String(infos.texte || '').slice(0, 15000), nbPages: pages.length, miniature: pages[0] ? pages[0].miniature : '',
+    missionId: infos.missionId || '', trajet: infos.trajet || '', decaId: infos.decaId || '', decaNumero: infos.decaNumero || '',
+    chauffeurEmail, chauffeurNom: infos.chauffeurNom || '', ajoutePar: infos.ajoutePar || 'admin', dateScan: new Date().toISOString(), creeLe: serverTimestamp()
+  };
+  await avecReessais(() => setDoc(doc(db, 'albaranes', id), fiche));
+  return { id, ...fiche };
+}
+async function supprimerAlbaran(a){
+  const { collection, getDocs, query, where, doc, deleteDoc } = window._firestore;
+  const db = dbScan();
+  const pages = await getDocs(query(collection(db, 'albaranes_pages'), where('albaranId', '==', a.id)));
+  for(const p of pages.docs) await avecReessais(() => deleteDoc(doc(db, 'albaranes_pages', p.id)));
+  await avecReessais(() => deleteDoc(doc(db, 'albaranes', a.id)));
+}
+async function pagesAlbaran(id){
+  const { collection, getDocs, query, where } = window._firestore;
+  const s = await getDocs(query(collection(dbScan(), 'albaranes_pages'), where('albaranId', '==', id)));
+  return s.docs.map(x => x.data()).sort((a, b) => a.ordre - b.ordre);
+}
+async function pdfAlbaran(a){
+  const pages = await pagesAlbaran(a.id);
+  if(!pages.length) throw new Error('aucune page enregistrée');
+  const jsPDF = await chargerOutilsPdf();
+  const pdf = new jsPDF({ unit: 'mm', format: 'a4', compress: true });
+  pages.forEach((p, i) => {
+    const paysage = p.largeur > p.hauteur;
+    if(i) pdf.addPage('a4', paysage ? 'l' : 'p'); else if(paysage) { pdf.deletePage(1); pdf.addPage('a4', 'l'); }
+    const W = paysage ? 297 : 210, H = paysage ? 210 : 297, marge = 6;
+    const echelle = Math.min((W - 2 * marge) / p.largeur, (H - 2 * marge) / p.hauteur);
+    const w = p.largeur * echelle, h = p.hauteur * echelle;
+    pdf.addImage(p.image, 'JPEG', (W - w) / 2, (H - h) / 2, w, h);
+  });
+  pdf.setProperties({ title: `Albarán ${a.numero || ''}`.trim(), author: 'BOUA Trans' });
+  const nom = nomFichierPdf(`Albaran_${a.numero || a.dateDoc || a.id}`);
+  pdf.save(nom);
+  return nom;
+}
+
+// Le DeCA est créé avec les mêmes fonctions que l'onglet DeCA (même numérotation, même QR)
+async function creerDecaAutomatique(saisie){
+  const d = {};
+  CHAMPS_DECA.forEach(c => { const v = saisie[c]; d[c] = v === undefined || v === null ? '' : (typeof v === 'string' ? v.trim() : v); });
+  ['cargadorNif', 'transportistaNif', 'matricula', 'matriculaRemolque', 'conductorDni'].forEach(c => { d[c] = String(d[c]).toUpperCase().replace(/\s+/g, ''); });
+  d.chauffeurEmail = String(d.chauffeurEmail || '').toLowerCase();
+  const manquants = CHAMPS_OBLIGATOIRES_DECA.filter(c => d[c] === '' || d[c] === null);
+  if(manquants.length){ const e = new Error(`il manque : ${manquants.map(c => LIBELLES_DECA[c]).join(', ')}`); e.manquants = manquants; throw e; }
+  d.pesoKg = Number(d.pesoKg);
+  if(location.protocol !== 'https:') throw new Error("ouvre l'admin depuis l'adresse https de ton site pour que le QR fonctionne");
+  const nouveau = await preparerNouveauDeca(d, new Date().toISOString());
+  await publierDeca(nouveau);
+  return nouveau;
+}
+
+// Voyage complet (utilisé par le scanner et par le formulaire Frets & voyages)
+async function creerVoyageComplet({ voyage, deca, pages, albaran, albaranExistant }){
+  const { collection, addDoc, doc, updateDoc, serverTimestamp } = window._firestore;
+  const res = { voyageId: null, deca: null, erreurDeca: null, albaran: null, erreurAlbaran: null };
+  const ref = await avecReessais(() => addDoc(collection(window._db, 'missions'), { ...voyage, dateCreation: serverTimestamp() }));
+  res.voyageId = ref.id;
+  const trajet = `${voyage.villeDepart} → ${voyage.villeArrivee}`;
+  if(deca){
+    try { res.deca = await creerDecaAutomatique({ ...deca, missionId: ref.id }); }
+    catch (err) { console.error('DeCA automatique :', err); res.erreurDeca = err; }
+  }
+  const lien = { missionId: ref.id, trajet, decaId: res.deca ? res.deca.id : '', decaNumero: res.deca ? res.deca.numero : '' };
+  try {
+    if(albaranExistant){
+      const a = albaran || {};
+      const maj = { numero: a.numero || '', dateDoc: a.fechaCarga || '', cargadorNombre: a.cargadorNombre || '', cargadorNif: a.cargadorNif || '', origen: a.origen || '', destino: a.destino || '',
+        mercancia: a.mercancia || '', pesoKg: a.pesoKg === '' || a.pesoKg === undefined ? null : Number(a.pesoKg), matricula: a.matricula || '',
+        texte: String(a.texte || albaranExistant.texte || '').slice(0, 15000), ...lien };
+      await avecReessais(() => updateDoc(doc(dbScan(), 'albaranes', albaranExistant.id), maj));
+      res.albaran = { ...albaranExistant, ...lien };
+    } else if(pages && pages.length){
+      res.albaran = await archiverAlbaran(pages, { ...(albaran || {}), ...lien });
+    }
+  } catch (err) { console.error('Archivage feuille :', err); res.erreurAlbaran = err; }
+  const maj = {};
+  if(res.deca){ maj.decaId = res.deca.id; maj.decaNumero = res.deca.numero; }
+  if(res.albaran){ maj.albaranId = res.albaran.id; if(res.albaran.numero) maj.albaranNumero = res.albaran.numero; }
+  if(Object.keys(maj).length) updateDoc(doc(window._db, 'missions', ref.id), maj).catch(() => {});
+  return res;
+}
+function messageErreurScan(err){
+  const code = String((err && (err.code || err.message)) || '');
+  if(/permission|insufficient/i.test(code)) return "accès refusé par la sécurité : connecte-toi à l'admin avec ton compte sécurisé (e-mail confirmé) et publie les nouvelles règles Firestore";
+  return (err && err.message) || String(err);
+}
+
+/* ---------- Écran admin ---------- */
+const formScan = document.getElementById('formScan');
+const scanEtat = document.getElementById('scanEtat');
+const scanErreur = document.getElementById('scanErreur');
+const scanResultat = document.getElementById('scanResultat');
+let scanPages = [];          // { source, rotation, effet, image, miniature, largeur, hauteur }
+let scanTexteCourant = '';
+let scanAlbaranEnCours = null; // feuille déjà archivée (ex : envoyée par un chauffeur) en cours de traitement
+let scanListeCache = [];
+let scanLectureNumero = 0;
+
+formScan.elements.typeCommerce.innerHTML = '<option value="">— Choisir —</option>' + TYPES_COMMERCE.map(([v, l]) => `<option value="${v}">${l}</option>`).join('');
+
+function afficherPagesScan(){
+  const e = echapperHtmlAdmin;
+  document.getElementById('scanPages').innerHTML = scanPages.map((p, i) => `
+    <div class="relative rounded-lg overflow-hidden border border-slate-200 dark:border-white/10 bg-white">
+      <img src="${p.miniature}" alt="Page ${i + 1}" class="w-full h-28 object-cover object-top">
+      <span class="absolute top-1 left-1 text-[0.65rem] font-bold bg-navy text-white rounded px-1.5">${i + 1}</span>
+      <div class="absolute bottom-1 right-1 flex gap-1">
+        ${p.source ? `<button type="button" data-scan-tourner="${i}" class="bg-white/90 text-navy text-xs rounded px-1.5" title="Tourner">↻</button>` : ''}
+        <button type="button" data-scan-retirer="${i}" class="bg-white/90 text-red-600 text-xs rounded px-1.5" title="Retirer">✕</button>
+      </div>
+    </div>`).join('');
+  document.getElementById('scanPagesVide').classList.toggle('hidden', scanPages.length > 0);
+  document.getElementById('scanRelire').classList.toggle('hidden', !scanPages.length);
+  document.getElementById('scanVider').classList.toggle('hidden', !scanPages.length && !scanAlbaranEnCours);
+  void e;
+}
+
+function champsFormScan(){ const d = {}; [...formScan.elements].forEach(el => { if(el.name) d[el.name] = el.value.trim(); }); return d; }
+function appliquerLecture(r){
+  const f = formScan.elements;
+  Object.entries(r).forEach(([k, v]) => {
+    const el = f[k];
+    if(!el || v === undefined || v === null || v === '') return;
+    if(el.value.trim() && el.dataset.scan !== '1') return; // ce que tu as écrit n'est jamais remplacé
+    el.value = v;
+    el.dataset.scan = '1';
+    el.classList.add('scan-lu');
+  });
+}
+formScan.addEventListener('input', (e) => { if(e.target.dataset){ e.target.dataset.scan = ''; e.target.classList.remove('scan-lu', 'champ-touche'); } });
+
+async function lireEtAnalyser(texteDejaLu){
+  const numero = ++scanLectureNumero;
+  let texte = texteDejaLu || '';
+  if(!texte && scanPages.length){
+    scanEtat.textContent = 'Préparation de la lecture automatique…';
+    try { texte = await lireTextePages(scanPages.map(p => p.image), (m) => { if(numero === scanLectureNumero) scanEtat.textContent = messageOcr(m); }); }
+    catch (err) { if(numero === scanLectureNumero) scanEtat.textContent = `⚠️ ${err.message}`; return; }
+  }
+  if(numero !== scanLectureNumero) return;
+  scanTexteCourant = texte;
+  document.getElementById('scanTexte').textContent = texte || '(aucun texte lu)';
+  const r = deviner(texte, { ...donneesTransporteur(), connus: scanConnus });
+  appliquerLecture(r);
+  const n = Object.keys(r).length;
+  scanEtat.textContent = n ? `✓ ${n} case(s) remplie(s) depuis la feuille : vérifie-les avant d'enregistrer.` : 'Texte lu, mais aucune information reconnue : remplis les cases à la main.';
+}
+
+async function ajouterFichiersScan(fichiers){
+  if(!fichiers.length) return;
+  scanResultat.classList.add('hidden');
+  const effet = document.getElementById('scanEffet').checked;
+  let texteNumerique = '';
+  for(const f of fichiers){
+    if(scanPages.length >= PAGES_SCAN_MAX){ alert(`${PAGES_SCAN_MAX} pages maximum par feuille.`); break; }
+    try {
+      scanEtat.textContent = `Préparation de « ${f.name || 'photo'} »…`;
+      if(f.type === 'application/pdf' || /\.pdf$/i.test(f.name || '')){
+        const { pages, texte } = await pagesDepuisPdf(f);
+        pages.forEach(c => { if(scanPages.length < PAGES_SCAN_MAX) scanPages.push(preparerPage({ source: c, rotation: 0, effet: false })); });
+        if(texte.replace(/\s/g, '').length > 40) texteNumerique += (texteNumerique ? '\n\n' : '') + texte;
+      } else {
+        scanPages.push(preparerPage({ source: await imageDepuisFichier(f), rotation: 0, effet }));
+      }
+    } catch (err) {
+      console.error('Scan :', err);
+      alert(`« ${f.name || 'fichier'} » n'a pas pu être lu : ${err.message || err}`);
+    }
+  }
+  afficherPagesScan();
+  if(scanPages.length) lireEtAnalyser(texteNumerique);
+  else scanEtat.textContent = '';
+}
+document.getElementById('scanCamera').addEventListener('click', () => { const i = document.getElementById('scanFichierCamera'); i.value = ''; i.click(); });
+document.getElementById('scanImporter').addEventListener('click', () => { const i = document.getElementById('scanFichiers'); i.value = ''; i.click(); });
+document.getElementById('scanFichierCamera').addEventListener('change', (e) => ajouterFichiersScan([...e.target.files]));
+document.getElementById('scanFichiers').addEventListener('change', (e) => ajouterFichiersScan([...e.target.files]));
+document.getElementById('scanPages').addEventListener('click', (e) => {
+  const t = e.target.closest('[data-scan-tourner]'), r = e.target.closest('[data-scan-retirer]');
+  if(t){ const p = scanPages[+t.dataset.scanTourner]; p.rotation = ((p.rotation || 0) + 90) % 360; preparerPage(p); afficherPagesScan(); }
+  if(r){ scanPages.splice(+r.dataset.scanRetirer, 1); afficherPagesScan(); }
+});
+document.getElementById('scanRelire').addEventListener('click', () => {
+  formScan.querySelectorAll('[data-scan="1"]').forEach(el => { el.value = ''; el.dataset.scan = ''; el.classList.remove('scan-lu'); });
+  lireEtAnalyser('');
+});
+function viderScan(garderTransporteur = true){
+  scanLectureNumero++;
+  scanPages = []; scanTexteCourant = ''; scanAlbaranEnCours = null;
+  const memo = {}; CHAMPS_TRANSPORTEUR.filter(c => c !== 'matricula' && c !== 'matriculaRemolque').forEach(c => { memo[c] = formScan.elements[c].value; });
+  formScan.reset();
+  formScan.querySelectorAll('.scan-lu,.champ-touche').forEach(el => el.classList.remove('scan-lu', 'champ-touche'));
+  formScan.querySelectorAll('[data-scan]').forEach(el => { el.dataset.scan = ''; });
+  if(garderTransporteur) Object.entries(memo).forEach(([c, v]) => { formScan.elements[c].value = v; });
+  document.getElementById('scanTexte').textContent = '';
+  scanErreur.classList.add('hidden');
+  scanEtat.textContent = '';
+  afficherPagesScan();
+}
+document.getElementById('scanVider').addEventListener('click', () => viderScan());
+
+// Client connu / chauffeur choisi : on complète ce qui est vide
+formScan.elements.cargadorNif.addEventListener('change', () => {
+  const c = scanConnus.get(formScan.elements.cargadorNif.value.trim().toUpperCase());
+  if(!c) return;
+  if(!formScan.elements.cargadorNombre.value.trim()) formScan.elements.cargadorNombre.value = c.nombre;
+  if(!formScan.elements.cargadorDomicilio.value.trim()) formScan.elements.cargadorDomicilio.value = c.domicilio;
+});
+formScan.elements.cargadorNombre.addEventListener('change', () => {
+  const nom = formScan.elements.cargadorNombre.value.trim().toLowerCase();
+  const trouve = [...scanConnus.entries()].find(([, c]) => String(c.nombre).toLowerCase() === nom);
+  if(!trouve) return;
+  if(!formScan.elements.cargadorNif.value.trim()) formScan.elements.cargadorNif.value = trouve[0];
+  if(!formScan.elements.cargadorDomicilio.value.trim()) formScan.elements.cargadorDomicilio.value = trouve[1].domicilio;
+});
+formScan.elements.chauffeurEmail.addEventListener('change', () => {
+  const ch = scanChauffeurs.find(c => String(c.email || '').toLowerCase() === formScan.elements.chauffeurEmail.value);
+  if(!ch) return;
+  if(ch.nom) formScan.elements.conductorNombre.value = ch.nom;
+  if(ch.matricula && !formScan.elements.matricula.value.trim()) formScan.elements.matricula.value = String(ch.matricula).toUpperCase();
+});
+
+function remplirReferencesFormScan(){
+  const f = formScan.elements;
+  const t = donneesTransporteur();
+  CHAMPS_TRANSPORTEUR.forEach(c => { if(t[c] && !f[c].value.trim() && !['matricula', 'matriculaRemolque'].includes(c)) f[c].value = t[c]; });
+  const complet = ['transportistaNombre', 'transportistaNif', 'transportistaDomicilio'].every(c => f[c].value.trim());
+  document.getElementById('scanTransporteurEtat').textContent = complet ? '✓' : '— à remplir une fois';
+  document.getElementById('scanTransporteurEtat').className = complet ? 'text-xs font-normal text-teal' : 'text-xs font-normal text-red-500';
+  if(!complet) document.getElementById('scanTransporteur').open = true;
+  document.getElementById('scanCargadores').innerHTML = [...scanConnus.values()].map(c => `<option value="${echapperHtmlAdmin(c.nombre)}">`).join('');
+  const sel = f.chauffeurEmail, actuel = sel.value;
+  sel.innerHTML = '<option value="">—</option>' + scanChauffeurs.filter(c => c.email).map(c => `<option value="${echapperHtmlAdmin(String(c.email).toLowerCase())}">${echapperHtmlAdmin(c.nom || c.email)}</option>`).join('');
+  sel.value = actuel;
+}
+
+function verifierFormScan(avecDeca){
+  const f = formScan.elements;
+  const requis = ['origen', 'destino', 'fechaCarga', 'typeCommerce'].concat(avecDeca ? CHAMPS_OBLIGATOIRES_DECA : []);
+  const manquants = [...new Set(requis)].filter(c => !f[c].value.trim());
+  formScan.querySelectorAll('.champ-touche').forEach(el => el.classList.remove('champ-touche'));
+  manquants.forEach(c => f[c].classList.add('champ-touche'));
+  if(manquants.some(c => c.startsWith('transportista'))) document.getElementById('scanTransporteur').open = true;
+  if(manquants.length){
+    const noms = manquants.map(c => c === 'typeCommerce' ? 'Type de commerce' : (LIBELLES_DECA[c] || c));
+    scanErreur.textContent = `À remplir : ${noms.join(', ')}.${avecDeca ? ' (Ou décoche « Générer le DeCA » pour créer seulement le voyage.)' : ''}`;
+    scanErreur.classList.remove('hidden');
+    f[manquants[0]].focus();
+    return false;
+  }
+  if(f.fechaDescarga.value && f.fechaDescarga.value < f.fechaCarga.value){
+    scanErreur.textContent = 'La date de descarga ne peut pas être avant la date de carga.';
+    scanErreur.classList.remove('hidden'); f.fechaDescarga.focus(); return false;
+  }
+  const avert = [];
+  if(f.cargadorNif.value.trim() && !nifValide(f.cargadorNif.value)) avert.push(`NIF du cargador « ${f.cargadorNif.value} » : format ou lettre de contrôle incorrect`);
+  if(f.transportistaNif.value.trim() && !nifValide(f.transportistaNif.value)) avert.push(`ton NIF « ${f.transportistaNif.value} » : format ou lettre de contrôle incorrect`);
+  if(f.matricula.value.trim() && !matriculaEspagnole(f.matricula.value)) avert.push(`matrícula « ${f.matricula.value} » inhabituelle`);
+  const num = f.numero.value.trim().toUpperCase();
+  if(num && scanListeCache.some(a => a.id !== (scanAlbaranEnCours && scanAlbaranEnCours.id) && String(a.numero || '').toUpperCase() === num)) avert.push(`une feuille nº ${num} est déjà archivée`);
+  if(avert.length && !confirm(`À vérifier :\n\n• ${avert.join('\n• ')}\n\nContinuer quand même ?`)) return false;
+  scanErreur.classList.add('hidden');
+  return true;
+}
+
+let enregistrementScan = false;
+formScan.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  if(enregistrementScan) return;
+  const avecDeca = document.getElementById('scanAvecDeca').checked;
+  if(!verifierFormScan(avecDeca)) return;
+  const d = champsFormScan();
+  const bouton = document.getElementById('scanEnregistrer');
+  enregistrementScan = true; bouton.disabled = true; bouton.textContent = 'Création en cours…';
+  try {
+    await memoriserTransporteur(d);
+    const chauffeur = scanChauffeurs.find(c => String(c.email || '').toLowerCase() === d.chauffeurEmail);
+    const voyage = { villeDepart: d.origen, villeArrivee: d.destino, dateDepart: d.fechaCarga, typeCommerce: d.typeCommerce, statutVoyage: 'planifie', etapeIndex: 0, source: 'scan' };
+    if(d.fechaDescarga) voyage.dateArrivee = d.fechaDescarga;
+    if(d.cargadorNombre) voyage.clientNom = d.cargadorNombre;
+    if(d.matricula) voyage.vehicule = d.matricula.toUpperCase().replace(/\s+/g, '');
+    if(d.chauffeurEmail) voyage.chauffeurEmail = d.chauffeurEmail;
+    if(d.pesoKg !== '') voyage.poidsKg = Number(d.pesoKg);
+    if(d.prixFacture !== '') voyage.prixFacture = Number(d.prixFacture);
+    const notes = [d.numero ? `Albarán nº ${d.numero}` : '', d.notes].filter(Boolean).join(' · ');
+    if(notes) voyage.notes = notes;
+    const deca = avecDeca ? { ...d, observaciones: d.numero ? `Albarán nº ${d.numero}` : '', chauffeurEmail: d.chauffeurEmail } : null;
+    const albaran = { ...d, texte: scanTexteCourant, chauffeurNom: chauffeur ? chauffeur.nom || '' : '' };
+    scanEtat.textContent = 'Enregistrement du voyage…';
+    const res = await creerVoyageComplet({ voyage, deca, pages: scanPages, albaran, albaranExistant: scanAlbaranEnCours });
+    if(d.cargadorNif && d.cargadorNombre) scanConnus.set(d.cargadorNif.toUpperCase(), { nombre: d.cargadorNombre, domicilio: d.cargadorDomicilio });
+    const e2 = echapperHtmlAdmin;
+    const lignes = [`✓ Voyage <b>${e2(voyage.villeDepart)} → ${e2(voyage.villeArrivee)}</b> créé (onglets Frets &amp; voyages et Voyages).`];
+    if(res.deca) lignes.push(`✓ DeCA <b class="font-mono-num">${e2(res.deca.numero)}</b> généré · <button type="button" class="underline font-semibold text-teal" data-scan-qr="${e2(res.deca.id)}">Afficher le QR</button> · <button type="button" class="underline font-semibold text-teal" data-scan-deca-pdf="${e2(res.deca.id)}">Voir le PDF</button>`);
+    else if(res.erreurDeca) lignes.push(`⚠️ DeCA non généré : ${e2(String(res.erreurDeca.message).replace(/\.+$/, ''))}. <button type="button" class="underline font-semibold text-teal" data-scan-completer-deca="${e2(res.voyageId)}">Le compléter dans l'onglet DeCA</button>`);
+    if(res.albaran) lignes.push(`✓ Feuille archivée${res.albaran.nbPages ? ` (${res.albaran.nbPages} page(s))` : ''}.`);
+    else if(res.erreurAlbaran) lignes.push(`⚠️ Feuille non archivée : ${e2(messageErreurScan(res.erreurAlbaran))}. Les photos restent à l'écran : réessaie avec « Archiver la feuille seulement ».`);
+    scanResultat.innerHTML = lignes.map(l => `<p class="mb-1">${l}</p>`).join('');
+    scanResultat.classList.remove('hidden');
+    if(!res.erreurAlbaran) viderScan(); else { scanAlbaranEnCours = null; }
+    scanResultat.scrollIntoView({ block: 'nearest' });
+    chargerListeScan();
+  } catch (err) {
+    console.error('Scan → voyage :', err);
+    scanErreur.textContent = `Le voyage n'a pas pu être créé : ${messageErreurScan(err)}. Ta saisie est toujours à l'écran : réessaie.`;
+    scanErreur.classList.remove('hidden');
+  } finally {
+    enregistrementScan = false; bouton.disabled = false; bouton.textContent = '✓ Créer le voyage + DeCA + archiver';
+  }
+});
+scanResultat.addEventListener('click', (e) => {
+  const qr = e.target.closest('[data-scan-qr]'), pdf = e.target.closest('[data-scan-deca-pdf]'), c = e.target.closest('[data-scan-completer-deca]');
+  if(qr) afficherQrDeca(qr.dataset.scanQr);
+  if(pdf) ouvrirPdfDeca(pdf.dataset.scanDecaPdf);
+  if(c){ decaVoyageEnAttente = c.dataset.scanCompleterDeca; allerSurOnglet('deca'); }
+});
+
+document.getElementById('scanArchiverSeul').addEventListener('click', async (e) => {
+  const bouton = e.currentTarget;
+  if(!scanPages.length){ scanErreur.textContent = "Ajoute d'abord la photo ou le PDF de la feuille."; scanErreur.classList.remove('hidden'); return; }
+  if(bouton.disabled) return;
+  bouton.disabled = true;
+  try {
+    const d = champsFormScan();
+    const a = await archiverAlbaran(scanPages, { ...d, texte: scanTexteCourant });
+    scanResultat.innerHTML = `<p>✓ Feuille ${a.numero ? 'nº <b>' + echapperHtmlAdmin(a.numero) + '</b> ' : ''}archivée (${a.nbPages} page(s)). Tu pourras créer son voyage plus tard avec « Traiter ».</p>`;
+    scanResultat.classList.remove('hidden');
+    viderScan();
+    chargerListeScan();
+  } catch (err) {
+    scanErreur.textContent = `La feuille n'a pas pu être archivée : ${messageErreurScan(err)}.`;
+    scanErreur.classList.remove('hidden');
+  } finally { bouton.disabled = false; }
+});
+
+// ---------- Scan en série ----------
+function voyagePourFeuille(r){
+  let meilleur = null, score = 0, egalite = false;
+  const mots = (t) => String(t || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').split(/[^a-z0-9]+/).filter(m => m.length > 3);
+  const commun = (a, b) => { const B = new Set(mots(b)); return mots(a).some(m => B.has(m)); };
+  for(const m of scanMissions){
+    let s = 0;
+    if(r.numero && m.albaranNumero && String(m.albaranNumero).toUpperCase() === r.numero) s += 4;
+    if(r.fechaCarga && m.dateDepart === r.fechaCarga) s += 1;
+    if(r.cargadorNombre && m.clientNom && commun(r.cargadorNombre, m.clientNom)) s += 1;
+    if(r.origen && m.villeDepart && commun(r.origen, m.villeDepart)) s += 1;
+    if(r.destino && m.villeArrivee && commun(r.destino, m.villeArrivee)) s += 1;
+    if(s > score){ meilleur = m; score = s; egalite = false; } else if(s === score && s > 0) egalite = true;
+  }
+  return score >= 3 && !egalite ? meilleur : null;
+}
+document.getElementById('scanSerieBtn').addEventListener('click', () => { const i = document.getElementById('scanSerieFichiers'); i.value = ''; i.click(); });
+document.getElementById('scanSerieFichiers').addEventListener('change', async (e) => {
+  const fichiers = [...e.target.files];
+  if(!fichiers.length) return;
+  const etat = document.getElementById('scanSerieEtat');
+  const bouton = document.getElementById('scanSerieBtn');
+  bouton.disabled = true;
+  const effet = document.getElementById('scanEffet').checked;
+  let archives = 0, rattachees = 0; const erreurs = [];
+  try { await chargerReferencesScan(); } catch (err) { /* on continue sans rattachement */ }
+  for(let n = 0; n < fichiers.length; n++){
+    const f = fichiers[n];
+    const prefixe = `${n + 1}/${fichiers.length} · `;
+    try {
+      etat.textContent = `${prefixe}préparation de « ${f.name} »…`;
+      let pages = [], texte = '';
+      if(f.type === 'application/pdf' || /\.pdf$/i.test(f.name || '')){
+        const lu = await pagesDepuisPdf(f);
+        pages = lu.pages.map(c => preparerPage({ source: c, rotation: 0, effet: false }));
+        if(lu.texte.replace(/\s/g, '').length > 40) texte = lu.texte;
+      } else pages = [preparerPage({ source: await imageDepuisFichier(f), rotation: 0, effet })];
+      if(!texte){
+        try { texte = await lireTextePages(pages.map(p => p.image), (m) => { etat.textContent = messageOcr(m, prefixe); }); }
+        catch (err) { texte = ''; }
+      }
+      const r = deviner(texte, { ...donneesTransporteur(), connus: scanConnus });
+      const m = voyagePourFeuille(r);
+      const infos = { ...r, texte };
+      if(m){ infos.missionId = m.id; infos.trajet = `${m.villeDepart || '?'} → ${m.villeArrivee || '?'}`; if(m.decaId){ infos.decaId = m.decaId; infos.decaNumero = m.decaNumero || ''; } }
+      etat.textContent = `${prefixe}archivage…`;
+      pages.forEach(p => { p.source = null; });
+      await archiverAlbaran(pages, infos);
+      archives++; if(m) rattachees++;
+    } catch (err) {
+      console.error('Scan en série :', f.name, err);
+      erreurs.push(`${f.name} : ${messageErreurScan(err)}`);
+      if(/permission|insufficient/i.test(String(err && (err.code || err.message)))) break;
+    }
+  }
+  bouton.disabled = false;
+  etat.textContent = `✓ ${archives} feuille(s) archivée(s)${rattachees ? `, dont ${rattachees} rattachée(s) à leur voyage` : ''}.${erreurs.length ? ` ⚠️ ${erreurs.length} erreur(s) : ${erreurs.slice(0, 3).join(' · ')}` : ''}`;
+  chargerListeScan();
+});
+
+// ---------- Archives ----------
+async function chargerListeScan(){
+  const liste = document.getElementById('scanListe');
+  try {
+    const { collection, getDocs } = window._firestore;
+    const s = await getDocs(collection(dbScan(), 'albaranes'));
+    scanListeCache = s.docs.map(x => ({ id: x.id, ...x.data() }));
+    afficherListeScan();
+  } catch (err) {
+    console.error('Archives scans :', err);
+    liste.innerHTML = `<p class="text-sm text-red-500">Archives illisibles : ${echapperHtmlAdmin(messageErreurScan(err))}.</p>`;
+  }
+}
+function afficherListeScan(){
+  const e = echapperHtmlAdmin;
+  const q = document.getElementById('scanRecherche').value.trim().toLowerCase();
+  const filtre = document.getElementById('scanFiltre').value;
+  const liste = scanListeCache
+    .filter(a => filtre === 'toutes' || (filtre === 'sans' ? !a.missionId : a.ajoutePar === 'chauffeur'))
+    .filter(a => !q || [a.numero, a.cargadorNombre, a.cargadorNif, a.origen, a.destino, a.trajet, a.decaNumero, a.chauffeurNom, a.matricula, a.texte].some(v => String(v || '').toLowerCase().includes(q)))
+    .sort((a, b) => String(b.dateScan || '').localeCompare(String(a.dateScan || '')));
+  document.getElementById('scanCompte').textContent = `(${scanListeCache.length})`;
+  document.getElementById('scanListeVide').classList.toggle('hidden', liste.length > 0);
+  const missionsParId = new Map(scanMissions.map(m => [m.id, m]));
+  document.getElementById('scanListe').innerHTML = liste.slice(0, 200).map(a => {
+    const trajet = a.trajet || (a.origen || a.destino ? `${a.origen || '?'} → ${a.destino || '?'}` : '');
+    const badges = [
+      a.ajoutePar === 'chauffeur' ? `<span class="badge-pro bg-navy/10 text-navy dark:bg-white/10 dark:text-cream">🧑‍✈️ ${e(a.chauffeurNom || a.chauffeurEmail)}</span>` : '',
+      a.missionId ? `<span class="badge-pro bg-teal/15 text-teal">🚚 voyage</span>` : `<span class="badge-pro bg-amber/20 text-amberdark">sans voyage</span>`,
+      a.decaNumero ? `<span class="badge-pro bg-navy/5 text-navy dark:bg-white/10 dark:text-cream font-mono-num">🧾 ${e(a.decaNumero)}</span>` : ''
+    ].join(' ');
+    const options = scanMissions.slice().sort((x, y) => String(y.dateDepart || '').localeCompare(String(x.dateDepart || ''))).slice(0, 150)
+      .map(m => `<option value="${e(m.id)}" ${m.id === a.missionId ? 'selected' : ''}>${e(`${m.dateDepart ? dateEs(m.dateDepart) + ' · ' : ''}${m.villeDepart || '?'} → ${m.villeArrivee || '?'}${m.clientNom ? ' · ' + m.clientNom : ''}`)}</option>`).join('');
+    void missionsParId;
+    return `<div class="carte-pro !p-3 flex flex-wrap items-center gap-3">
+      ${a.miniature ? `<img src="${a.miniature}" alt="" class="w-14 h-16 object-cover object-top rounded border border-slate-200 bg-white cursor-pointer" data-scan-voir="${e(a.id)}">` : '<div class="w-14 h-16 rounded bg-slate-100"></div>'}
+      <div class="flex-1 min-w-[200px]">
+        <p class="text-sm font-semibold text-navy dark:text-white">${a.numero ? `<span class="font-mono-num text-amberdark">${e(a.numero)}</span> · ` : ''}${e(a.cargadorNombre || 'Feuille de voyage')}</p>
+        <p class="text-xs text-slate-500 dark:text-cream/60">${a.dateDoc ? e(dateEs(a.dateDoc)) + ' · ' : ''}${e(trajet)}${a.nbPages ? ` · ${a.nbPages} p.` : ''}</p>
+        <div class="mt-1 flex flex-wrap gap-1">${badges}</div>
+      </div>
+      <div class="flex flex-wrap gap-1.5 items-center">
+        <button type="button" data-scan-voir="${e(a.id)}" class="text-xs font-semibold text-teal hover:text-amberdark px-1.5">Voir</button>
+        <button type="button" data-scan-pdf="${e(a.id)}" class="text-xs font-bold bg-amber text-navy px-3 py-1 rounded-full">PDF</button>
+        ${a.missionId ? '' : `<button type="button" data-scan-traiter="${e(a.id)}" class="text-xs font-bold border border-teal text-teal px-3 py-1 rounded-full">Créer voyage + DeCA</button>`}
+        <select data-scan-rattacher="${e(a.id)}" class="champ-pro !w-auto !py-1 !text-xs max-w-[190px]" aria-label="Rattacher à un voyage"><option value="">🔗 Rattacher à un voyage…</option>${options}</select>
+        <button type="button" data-scan-supprimer="${e(a.id)}" class="text-xs font-semibold text-slate-400 hover:text-red-500 px-1.5" title="Supprimer">🗑</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+document.getElementById('scanRecherche').addEventListener('input', afficherListeScan);
+document.getElementById('scanFiltre').addEventListener('change', afficherListeScan);
+
+let albaranVisionne = null;
+async function voirAlbaran(a){
+  albaranVisionne = a;
+  const v = document.getElementById('scanVisionneuse');
+  document.getElementById('scanVisionneuseTitre').textContent = `${a.numero ? 'Nº ' + a.numero + ' · ' : ''}${a.cargadorNombre || 'Feuille de voyage'}`;
+  const zone = document.getElementById('scanVisionneusePages');
+  zone.innerHTML = '<p class="text-cream text-center py-10">Chargement…</p>';
+  v.classList.remove('hidden');
+  try {
+    const pages = await pagesAlbaran(a.id);
+    zone.innerHTML = pages.map((p, i) => `<img src="${p.image}" alt="Page ${i + 1}" class="mx-auto max-w-3xl w-full bg-white rounded shadow">`).join('') || '<p class="text-cream text-center py-10">Aucune page.</p>';
+  } catch (err) { zone.innerHTML = `<p class="text-red-300 text-center py-10">${echapperHtmlAdmin(messageErreurScan(err))}</p>`; }
+}
+document.getElementById('scanVisionneuseFermer').addEventListener('click', () => document.getElementById('scanVisionneuse').classList.add('hidden'));
+document.getElementById('scanVisionneusePdf').addEventListener('click', async (e) => {
+  if(!albaranVisionne) return;
+  const b = e.currentTarget; b.disabled = true;
+  try { await pdfAlbaran(albaranVisionne); } catch (err) { alert(`PDF impossible : ${messageErreurScan(err)}`); } finally { b.disabled = false; }
+});
+
+document.getElementById('scanListe').addEventListener('click', async (e) => {
+  const b = e.target.closest('[data-scan-voir],[data-scan-pdf],[data-scan-traiter],[data-scan-supprimer]');
+  if(!b) return;
+  const a = scanListeCache.find(x => x.id === (b.dataset.scanVoir || b.dataset.scanPdf || b.dataset.scanTraiter || b.dataset.scanSupprimer));
+  if(!a) return;
+  if(b.dataset.scanVoir) return voirAlbaran(a);
+  if(b.dataset.scanPdf){
+    b.disabled = true;
+    try { await pdfAlbaran(a); } catch (err) { alert(`PDF impossible : ${messageErreurScan(err)}`); } finally { b.disabled = false; }
+    return;
+  }
+  if(b.dataset.scanSupprimer){
+    if(!confirm(`Supprimer définitivement cette feuille${a.numero ? ' nº ' + a.numero : ''} et ses ${a.nbPages || ''} page(s) ?\nLe voyage et le DeCA ne sont pas supprimés.`)) return;
+    try { await supprimerAlbaran(a); scanListeCache = scanListeCache.filter(x => x.id !== a.id); afficherListeScan(); }
+    catch (err) { alert(`Suppression impossible : ${messageErreurScan(err)}`); }
+    return;
+  }
+  // Traiter : la feuille revient dans le formulaire pour créer son voyage et son DeCA
+  viderScan();
+  scanAlbaranEnCours = a;
+  scanEtat.textContent = 'Chargement des pages…';
+  formScan.scrollIntoView({ block: 'start' });
+  try {
+    const pages = await pagesAlbaran(a.id);
+    scanPages = pages.map(p => ({ source: null, image: p.image, miniature: p.image, largeur: p.largeur, hauteur: p.hauteur }));
+    afficherPagesScan();
+    const f = formScan.elements;
+    if(a.chauffeurEmail && [...f.chauffeurEmail.options].some(o => o.value === a.chauffeurEmail)){ f.chauffeurEmail.value = a.chauffeurEmail; f.chauffeurEmail.dispatchEvent(new Event('change')); }
+    await lireEtAnalyser(a.texte || '');
+    scanEtat.textContent = `Feuille archivée ${a.numero ? 'nº ' + a.numero + ' ' : ''}en cours de traitement : vérifie les cases puis « Créer le voyage + DeCA ». ${scanEtat.textContent}`;
+  } catch (err) { scanEtat.textContent = `⚠️ ${messageErreurScan(err)}`; }
+});
+document.getElementById('scanListe').addEventListener('change', async (e) => {
+  const s = e.target.closest('[data-scan-rattacher]');
+  if(!s) return;
+  const a = scanListeCache.find(x => x.id === s.dataset.scanRattacher);
+  const m = scanMissions.find(x => x.id === s.value);
+  const { doc, updateDoc } = window._firestore;
+  const maj = m ? { missionId: m.id, trajet: `${m.villeDepart || '?'} → ${m.villeArrivee || '?'}`, decaId: m.decaId || a.decaId || '', decaNumero: m.decaNumero || a.decaNumero || '' } : { missionId: '', trajet: '' };
+  try {
+    await avecReessais(() => updateDoc(doc(dbScan(), 'albaranes', a.id), maj));
+    Object.assign(a, maj);
+    if(m) updateDoc(doc(window._db, 'missions', m.id), { albaranId: a.id, ...(a.numero ? { albaranNumero: a.numero } : {}) }).catch(() => {});
+    afficherListeScan();
+  } catch (err) { alert(`Rattachement impossible : ${messageErreurScan(err)}`); }
+});
+
+function afficherSecuriteScan(){
+  const zone = document.getElementById('scanSecurite');
+  const etat = etatSecuriteAdmin();
+  if(etat === 'securise'){ zone.classList.add('hidden'); return; }
+  zone.innerHTML = etat === 'non_verifie'
+    ? '🔐 <b>Dernière étape :</b> confirme ton adresse e-mail (clique le lien reçu), puis « J\'ai confirmé » dans le bandeau en haut. Ensuite les feuilles scannées seront protégées et visibles ici.'
+    : '🔐 <b>Feuilles de voyage protégées :</b> elles ne sont visibles qu\'avec ton compte administrateur sécurisé. Clique « Activer la connexion sécurisée » dans le bandeau en haut (1 minute, une seule fois).';
+  zone.classList.remove('hidden');
+}
+
+async function ouvrirEcranScan(){
+  afficherSecuriteScan();
+  afficherPagesScan();
+  // Outils préchargés : la lecture sera plus rapide
+  chargerScriptPdf(TESSERACT_URL).catch(() => {});
+  quandFirebasePret(async () => {
+    try { await chargerReferencesScan(); remplirReferencesFormScan(); } catch (err) { console.error('Scan, références :', err); }
+    chargerListeScan();
+  });
+}
 
 /* ============================================================
    FACTURE — formulaire « Factura rellenable » LASSINE DIAKITE
@@ -8614,6 +9844,7 @@ async function exporterTableauAdminEnPdf(){
 async function exporterVueActiveEnPdf(){
   if(vueActive === 'cmr') return telechargerCmrPdf();
   if(vueActive === 'nouveauVoyage') return exporterVoyagesEnPdf();
+  if(vueActive === 'scanVoyages') return exporterElementEnPdf(document.getElementById('adminScan'), nomFichierPdf('BOUA_Trans_Feuilles_de_voyage'));
   if(vueActive === 'publier') return exporterElementEnPdf(document.getElementById('adminPublier'), nomFichierPdf('BOUA_Trans_Publier'));
   if(vueActive === 'factureLd') return telechargerFactureCourante();
   if(vueActive === 'messagesChauffeurs') return exporterElementEnPdf(document.getElementById('adminMessages'), nomFichierPdf('BOUA_Trans_Messages'));
@@ -8681,6 +9912,7 @@ function ouvrirEcranVoyages(){
   const champDate = document.getElementById('nvDate');
   if(!champDate.value) champDate.value = aujourdHuiISO();
   quandFirebasePret(async () => {
+    chargerReferencesScan().then(() => remplirReferencesFormScan()).catch(() => {});
     const { collection, getDocs, onSnapshot } = window._firestore;
     try {
       const [vehicules, chauffeurs] = await Promise.all([getDocs(collection(window._db, 'vehicules')), getDocs(collection(window._db, 'chauffeurs'))]);
@@ -8871,18 +10103,46 @@ formNouveauVoyage.addEventListener('submit', async (e) => {
   if(f.prixFacture.value !== '') voyage.prixFacture = Number(f.prixFacture.value);
   if(f.notes.value.trim()) voyage.notes = f.notes.value.trim();
 
+  // DeCA automatique : on vérifie avant de créer quoi que ce soit
+  let deca = null;
+  if(document.getElementById('nvAvecDeca').checked){
+    if(!scanTransporteur){ try { await chargerReferencesScan(); } catch (err) { /* on continue */ } }
+    const t = donneesTransporteur();
+    const ch = scanChauffeurs.find(c => String(c.email || '').toLowerCase() === voyage.chauffeurEmail);
+    deca = { ...t, cargadorNombre: f.cargadorNombre.value.trim(), cargadorNif: f.cargadorNif.value.trim(), cargadorDomicilio: f.cargadorDomicilio.value.trim(),
+      mercancia: f.mercancia.value.trim(), pesoKg: f.poidsKg.value, matricula: voyage.vehicule || t.matricula || '', origen: voyage.villeDepart, destino: voyage.villeArrivee,
+      fechaCarga: voyage.dateDepart, chauffeurEmail: voyage.chauffeurEmail || '', observaciones: voyage.notes || '' };
+    if(ch && ch.nom) deca.conductorNombre = ch.nom;
+    const manquants = CHAMPS_OBLIGATOIRES_DECA.filter(c => !String(deca[c] ?? '').trim());
+    if(manquants.length){
+      const champsForm = { cargadorNombre: 'nvCargador', cargadorNif: 'nvCargadorNif', cargadorDomicilio: 'nvCargadorDomicilio', mercancia: 'nvMercancia', pesoKg: 'nvPoids', matricula: 'nvVehicule' };
+      manquants.forEach(c => { if(champsForm[c]) document.getElementById(champsForm[c]).classList.add('champ-touche'); });
+      if(manquants.includes('pesoKg') || manquants.includes('matricula')) formNouveauVoyage.querySelector('details').open = true;
+      const transp = manquants.filter(c => c.startsWith('transportista'));
+      nvErreur.textContent = `Pour le DeCA, il manque : ${manquants.filter(c => !c.startsWith('transportista')).map(c => LIBELLES_DECA[c]).join(', ')}${transp.length ? `${manquants.length > transp.length ? ' — et ' : ''}tes données de transporteur (${transp.map(c => LIBELLES_DECA[c]).join(', ')}) : remplis-les une fois dans l'onglet 📷 Scanner (section Transportista)` : ''}. Ou décoche « Générer le DeCA ».`;
+      nvErreur.classList.remove('hidden');
+      return;
+    }
+    if(deca.cargadorNif && !nifValide(deca.cargadorNif) && !confirm(`NIF du cargador « ${deca.cargadorNif} » : format ou lettre de contrôle incorrect.\nGénérer quand même ?`)) return;
+    if(!voyage.clientNom) voyage.clientNom = deca.cargadorNombre;
+  }
+
   enregistrementVoyageEnCours = true;
   nvEnregistrer.disabled = true;
   nvEnregistrer.textContent = 'Enregistrement…';
   try {
-    const { collection, addDoc, serverTimestamp } = window._firestore;
-    await addDoc(collection(window._db, 'missions'), { ...voyage, dateCreation: serverTimestamp() });
+    const res = await creerVoyageComplet({ voyage, deca });
+    if(deca && deca.cargadorNif) scanConnus.set(deca.cargadorNif.toUpperCase(), { nombre: deca.cargadorNombre, domicilio: deca.cargadorDomicilio });
     formNouveauVoyage.reset();
     formNouveauVoyage.querySelectorAll('.champ-touche').forEach(c => c.classList.remove('champ-touche'));
     document.getElementById('nvDate').value = aujourdHuiISO();
-    nvSucces.textContent = `✓ Fret ${voyage.villeDepart} → ${voyage.villeArrivee} enregistré.`;
+    const e2 = echapperHtmlAdmin;
+    nvSucces.innerHTML = `✓ Fret ${e2(voyage.villeDepart)} → ${e2(voyage.villeArrivee)} enregistré.`
+      + (res.deca ? `<br>✓ DeCA <span class="font-mono-num">${e2(res.deca.numero)}</span> généré · <button type="button" class="underline" data-nv-qr="${e2(res.deca.id)}">QR</button> · <button type="button" class="underline" data-nv-pdf="${e2(res.deca.id)}">PDF</button>` : '')
+      + (res.erreurDeca ? `<br><span class="text-red-500">⚠️ DeCA non généré : ${e2(String(res.erreurDeca.message).replace(/\.+$/, ''))}.</span> <button type="button" class="underline" data-nv-completer="${e2(res.voyageId)}">Le compléter</button>` : '');
     nvSucces.classList.remove('hidden');
-    setTimeout(() => nvSucces.classList.add('hidden'), 5000);
+    clearTimeout(nvSucces._minuterie);
+    nvSucces._minuterie = setTimeout(() => nvSucces.classList.add('hidden'), 20000);
     document.getElementById('nvOrigine').focus();
   } catch (err) {
     console.error('Enregistrement du fret :', err);
@@ -8893,6 +10153,27 @@ formNouveauVoyage.addEventListener('submit', async (e) => {
     nvEnregistrer.disabled = false;
     nvEnregistrer.textContent = 'Enregistrer le fret';
   }
+});
+
+nvSucces.addEventListener('click', (e) => {
+  const qr = e.target.closest('[data-nv-qr]'), pdf = e.target.closest('[data-nv-pdf]'), c = e.target.closest('[data-nv-completer]');
+  if(qr) afficherQrDeca(qr.dataset.nvQr);
+  if(pdf) ouvrirPdfDeca(pdf.dataset.nvPdf);
+  if(c){ decaVoyageEnAttente = c.dataset.nvCompleter; allerSurOnglet('deca'); }
+});
+document.getElementById('nvAvecDeca').addEventListener('change', (e) => document.getElementById('nvChampsDeca').classList.toggle('hidden', !e.target.checked));
+document.getElementById('nvCargadorNif').addEventListener('change', (e) => {
+  const c = scanConnus.get(e.target.value.trim().toUpperCase());
+  if(!c) return;
+  if(!document.getElementById('nvCargador').value.trim()) document.getElementById('nvCargador').value = c.nombre;
+  if(!document.getElementById('nvCargadorDomicilio').value.trim()) document.getElementById('nvCargadorDomicilio').value = c.domicilio;
+});
+document.getElementById('nvCargador').addEventListener('change', (e) => {
+  const nom = e.target.value.trim().toLowerCase();
+  const t = [...scanConnus.entries()].find(([, c]) => String(c.nombre).toLowerCase() === nom);
+  if(!t) return;
+  if(!document.getElementById('nvCargadorNif').value.trim()) document.getElementById('nvCargadorNif').value = t[0];
+  if(!document.getElementById('nvCargadorDomicilio').value.trim()) document.getElementById('nvCargadorDomicilio').value = t[1].domicilio;
 });
 
 function exporterVoyagesEnPdf(){
