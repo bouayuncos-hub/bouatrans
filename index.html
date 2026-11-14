@@ -4215,7 +4215,6 @@ adminLoginForm.addEventListener('submit', async (e) => {
         return;
       } catch (err) { codeErreur = err.code || ''; }
     }
-    if(/too-many-requests/.test(codeErreur)) return erreur('Trop de tentatives : attends quelques minutes, ou utilise « Mot de passe oublié ? ».');
     if(/operation-not-allowed/.test(codeErreur)) return erreur("La connexion par e-mail est désactivée dans Firebase : Firebase → Authentication → Sign-in method → active « E-mail/Mot de passe ».");
     if(/invalid-api-key|app-not-authorized|unauthorized-domain/.test(codeErreur)) return erreur(`Firebase refuse ce site (${codeErreur}) : ajoute bouatrans.vercel.app dans Firebase → Authentication → Settings → Authorized domains.`);
     // Transition : ancien mot de passe, accepté tant que le compte sécurisé n'est pas activé
@@ -4226,6 +4225,7 @@ adminLoginForm.addEventListener('submit', async (e) => {
       fermerConnexionAdmin(); ouvrirTableauDeBord(); afficherBandeauSecurite();
       return;
     }
+    if(/too-many-requests/.test(codeErreur)) return erreur("Firebase a bloqué ce compte pour un moment après plusieurs essais. Le plus rapide : « Mot de passe oublié ? » ci-dessous (le lien reçu débloque tout de suite). Sinon, attends 15 à 30 minutes.");
     if(/network/.test(codeErreur)) return erreur('Pas de connexion internet : réessaie.');
     if(!EMAILS_ADMIN.includes(email)) return erreur(`L'e-mail doit être un e-mail administrateur : ${EMAILS_ADMIN.join(' ou ')}.`);
     const active = await compteSecuriseActive();
